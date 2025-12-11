@@ -1,9 +1,8 @@
 const fs = require('fs');
 const path = require('path');
-// Note: In a real monorepo, you might need to build the db package first or import from source if using ts-node
-// For simplicity in this script, we assume the prisma client is generated and available.
-// If not, we might need to use a raw query or ensure the build step happened.
-const { PrismaClient } = require('@prisma/client');
+// Import PrismaClient from the workspace
+const prismaClientPath = path.join(__dirname, '../node_modules/@prisma/client');
+const { PrismaClient } = require(prismaClientPath);
 
 const prisma = new PrismaClient();
 
