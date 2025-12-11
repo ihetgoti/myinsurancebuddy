@@ -41,16 +41,16 @@ chmod 700 ~/.ssh
 #### b. Set up your project directory on VPS
 
 ```bash
-# Create project directory
-sudo mkdir -p /var/www/myinsurancebuddy
-sudo chown $USER:$USER /var/www/myinsurancebuddy
+# Create project directory (separate from existing websites)
+sudo mkdir -p /var/www/myinsurancebuddies.com
+sudo chown $USER:$USER /var/www/myinsurancebuddies.com
 
 # Clone your repository
-cd /var/www/myinsurancebuddy
+cd /var/www/myinsurancebuddies.com
 git clone https://github.com/ihetgoti/myinsurancebuddy.git .
 
 # Configure git to allow the directory
-git config --global --add safe.directory /var/www/myinsurancebuddy
+git config --global --add safe.directory /var/www/myinsurancebuddies.com
 ```
 
 ### 3. Configure GitHub Secrets
@@ -66,7 +66,8 @@ Add the following secrets to your GitHub repository:
 | `VPS_USERNAME` | SSH username (usually 'root' or your user) | `root` or `username` |
 | `VPS_SSH_KEY` | Private key content (github_actions_deploy) | Copy entire private key file |
 | `VPS_PORT` | SSH port (default: 22) | `22` |
-| `VPS_PROJECT_PATH` | Project path on VPS | `/var/www/myinsurancebuddy` |
+
+**Note:** VPS_PROJECT_PATH is hardcoded to `/var/www/myinsurancebuddies.com` in the workflow
 
 #### How to copy the private key:
 
@@ -93,14 +94,86 @@ sudo apt-get install -y nodejs
 sudo npm install -g pm2
 
 # Start your app
-cd /var/www/myinsurancebuddy
+cd /var/www/myinsurancebuddies.com
 npm install
-pm2 start npm --name "myinsurancebuddy" -- start
+pm2 start npm --name "myinsurancebuddies" -- start
 pm2 save
 pm2 startup
 ```
 
-#### For Python Applications:
+### 5. Set up Nginx and SSL Certificate
+
+#### a. Install Nginx (if not already installed)
+
+```bash
+sudo apt-get update
+sudo apt-get install -y nginx
+```
+
+#### b. Configure Nginx for your domain
+
+Copy the nginx configuration from the repository:
+
+```bash
+# Copy the Nginx config file
+sudo cp /var/www/myinsurancebuddies.com/nginx.conf /etc/nginx/sites-available/myinsurancebuddies.com
+
+# Enable the site
+sudo ln -s /etc/nginx/sites-available/myinsurancebuddies.com /etc/nginx/sites-enabled/
+
+# Test configuration
+sudo nginx -t
+
+# Reload Nginx
+sudo systemctl reload nginx
+```
+
+#### c. Set up SSL with Let's Encrypt (Free & Auto-Renewal)
+
+**IMPORTANT:** Before running this, ensure your DNS records are pointing to your VPS:
+- A record: `myinsurancebuddies.com` → Your VPS IP
+- A record: `www.myinsurancebuddies.com` → Your VPS IP
+
+Run the SSL setup script:
+
+```bash
+cd /var/www/myinsurancebuddies.com
+
+# Make the script executable
+chmod +x setup-ssl.sh
+
+# Edit the script to add your email
+nano setup-ssl.sh
+# Change: --email your-email@example.com
+# To:     --email your-actual-email@example.com
+
+# Run the script (requires sudo)
+sudo ./setup-ssl.sh
+```
+
+The script will:
+- Install Certbot and required packages
+- Obtain SSL certificate from Let's Encrypt
+- Configure Nginx with HTTPS
+- Set up automatic renewal (renews every 90 days)
+- Add a cron job for automatic renewal
+
+**Manual SSL setup alternative:**
+
+```bash
+# Install Certbot
+sudo apt-get install -y certbot python3-certbot-nginx
+
+# Obtain and install certificate
+sudo certbot --nginx -d myinsurancebuddies.com -d www.myinsurancebuddies.com
+
+# Test auto-renewal
+sudo certbot renew --dry-run
+```
+
+Certificate will auto-renew via cron job at `/etc/cron.d/certbot` or systemd timer.
+
+### 6. Update the Workflow File
 
 ```bash
 # Install Python and pip (on VPS)
@@ -134,7 +207,9 @@ docker-compose up -d
 ```
 
 ### 5. Update the Workflow File
+Edit [.github/workflows/deploy.yml](.github/workflows/deploy.yml) and uncomment the appropriate deployment commands for your stack.
 
+### 7. Test the Deployment
 Edit [.github/workflows/deploy.yml](.github/workflows/deploy.yml) and uncomment the appropriate deployment commands for your stack.
 
 ### 6. Test the Deployment
@@ -148,8 +223,9 @@ Edit [.github/workflows/deploy.yml](.github/workflows/deploy.yml) and uncomment 
    ```
 3. Go to: `https://github.com/ihetgoti/myinsurancebuddy/actions`
 4. Watch the deployment workflow run
+5. Visit your site at: `https://myinsurancebuddies.com`
 
-### 7. Manual Deployment Trigger
+### 8. Manual Deployment Trigger
 
 You can also trigger deployment manually:
 - Go to Actions tab in GitHub
@@ -172,16 +248,42 @@ sudo tail -f /var/log/auth.log
 
 ```bash
 # On VPS, ensure correct ownership
-sudo chown -R $USER:$USER /var/www/myinsurancebuddy
+sudo chown -R $USER:$USER /var/www/myinsurancebuddies.com
 ```
 
 ### Git Pull Fails
 
 ```bash
 # On VPS, reset git to clean state
-cd /var/www/myinsurancebuddy
+cd /var/www/myinsurancebuddies.com
 git fetch origin
 git reset --hard origin/main
+```
+
+### SSL Certificate Issues
+
+```bash
+# Check certificate status
+sudo certbot certificates
+
+# Test renewal
+sudo certbot renew --dry-run
+
+# Force renewal (if needed)
+sudo certbot renew --force-renewal
+
+# Check Nginx SSL configuration
+sudo nginx -t
+```
+
+### Check SSL Auto-Renewal
+
+```bash
+# Check certbot timer status (systemd)
+sudo systemctl status certbot.timer
+
+# Or check cron job
+sudo crontab -l | grep certbot
 ```
 
 ## Security Best Practices

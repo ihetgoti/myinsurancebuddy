@@ -22,7 +22,12 @@ npm run dev
 
 This project uses automated CI/CD deployment to Contabo VPS via GitHub Actions.
 
-See [DEPLOYMENT.md](DEPLOYMENT.md) for complete setup instructions.
+**Quick VPS Setup (One Command):**
+```bash
+curl -fsSL https://raw.githubusercontent.com/ihetgoti/myinsurancebuddy/main/setup-vps.sh | sudo bash
+```
+
+See [QUICK_SETUP.md](QUICK_SETUP.md) for quick setup or [DEPLOYMENT.md](DEPLOYMENT.md) for complete setup instructions.
 
 ## Features
 

@@ -23,7 +23,7 @@ jobs:
           port: ${{ secrets.VPS_PORT || 22 }}
           script: |
             # Navigate to project directory
-            cd ${{ secrets.VPS_PROJECT_PATH || '/var/www/myinsurancebuddy' }}
+            cd /var/www/myinsurancebuddies.com
             
             # Pull latest changes
             git pull origin main
@@ -38,13 +38,13 @@ jobs:
             
             # Restart services (adjust based on your setup)
             # For PM2 (Node.js):
-            # pm2 restart myinsurancebuddy
+            # pm2 restart myinsurancebuddies
             
             # For systemd:
-            # sudo systemctl restart myinsurancebuddy
+            # sudo systemctl restart myinsurancebuddies
             
             # For Docker:
             # docker-compose down
             # docker-compose up -d --build
             
-            echo "Deployment completed successfully!"
+            echo "Deployment completed successfully to myinsurancebuddies.com!"
