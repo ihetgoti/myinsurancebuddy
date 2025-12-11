@@ -1,72 +1,137 @@
-# MyInsuranceBuddy
+# MyInsuranceBuddies - Production-Ready Insurance Guide Platform
 
-A modern insurance management application.
+> Tips & tricks to buy the best and cheapest insurance
 
-## Quick Start
+## Quick Deploy to Contabo VPS
 
-### Local Development
+**TL;DR**: Clone repo, copy `.env`, run `./scripts/build_and_deploy.sh`, access at https://myinsurancebuddies.com
+
+### First Time Deployment
 
 ```bash
-# Clone the repository
-git clone https://github.com/ihetgoti/myinsurancebuddy.git
-cd myinsurancebuddy
+# 1. SSH into your Contabo VPS
+ssh root@YOUR_VPS_IP
 
-# Install dependencies
-npm install
+# 2. Prerequisites (if not installed)
+apt update && apt install -y postgresql nginx certbot python3-certbot-nginx
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
+nvm install 20
+npm install -g pnpm pm2
 
-# Start development server
-npm run dev
+# 3. Create database
+sudo -u postgres psql
+CREATE DATABASE myinsurancebuddy;
+CREATE USER myuser WITH PASSWORD 'yourpassword';
+GRANT ALL ON DATABASE myinsurancebuddy TO myuser;
+\c myinsurancebuddy
+GRANT ALL ON SCHEMA public TO myuser;
+ALTER SCHEMA public OWNER TO myuser;
+\q
+
+# 4. Clone and deploy
+cd /var/www
+git clone https://github.com/ihetgoti/myinsurancebuddy.git myinsurancebuddies.com
+cd myinsurancebuddies.com
+cp env.example .env
+nano .env  # Update DATABASE_URL, NEXTAUTH_SECRET
+chmod 600 .env
+./scripts/build_and_deploy.sh
+
+# 5. Verify
+curl https://myinsurancebuddies.com/api/health
 ```
 
-### Deployment
+See [docs/QUICKSTART.md](./docs/QUICKSTART.md) for complete setup.
 
-This project uses automated CI/CD deployment to Contabo VPS via GitHub Actions.
+## Architecture
 
-**Quick VPS Setup (One Command):**
-```bash
-curl -fsSL https://raw.githubusercontent.com/ihetgoti/myinsurancebuddy/main/setup-vps.sh | sudo bash
+### Tech Stack
+- **Framework**: Next.js 14 (TypeScript, App Router)
+- **Database**: PostgreSQL + Prisma ORM
+- **Auth**: NextAuth.js (JWT, bcrypt)
+- **UI**: React + Tailwind CSS
+- **Templates**: Handlebars (programmatic pages)
+- **Media**: sharp (image processing)
+- **Process Manager**: PM2
+- **Web Server**: Nginx + Certbot SSL
+
+### Project Structure
 ```
-
-See [QUICK_SETUP.md](QUICK_SETUP.md) for quick setup or [DEPLOYMENT.md](DEPLOYMENT.md) for complete setup instructions.
+myinsurancebuddy/
+├── apps/
+│   ├── web/              # Public site (port 3000)
+│   └── admin/            # Admin portal (port 3001)
+├── packages/
+│   └── db/               # Prisma schema & seeds
+├── scripts/              # Deployment & backup
+├── docs/                 # Documentation
+└── infra/                # Nginx configs
+```
 
 ## Features
 
-- Insurance policy management
-- Customer relationship management
-- Claims processing
-- Automated workflows
+### ✅ Implemented
+- **Authentication**: NextAuth.js with RBAC (SUPER_ADMIN, BLOG_ADMIN, EDITOR)
+- **Blog System**: Full CRUD API with draft/scheduled/published states
+- **Programmatic Pages**: Template-based generation for 50 states + 20 cities
+- **SEO**: JSON-LD, sitemaps, RSS, meta tags, robots.txt
+- **Media Upload**: Sharp processing (5 sizes + webp)
+- **Backup/Restore**: Automated PostgreSQL dumps
+- **Security**: Input validation, XSS/SQL injection prevention, audit logs
+- **Monitoring**: Health check endpoint, PM2 integration
 
-## Tech Stack
+### 🚧 Needs Implementation
+- **Admin UI**: Blog editor, template manager, media library, user management
+- **Tests**: Unit, integration, E2E tests
+- **Rate Limiting**: API throttling
+- **Email**: Notifications, password reset
+- **Search**: Full-text search for blog/pages
 
-- **Frontend**: React/Next.js (or your preferred framework)
-- **Backend**: Node.js/Python (adjust as needed)
-- **Database**: PostgreSQL/MongoDB (adjust as needed)
-- **Hosting**: Contabo VPS
-- **CI/CD**: GitHub Actions
+## API Endpoints
 
-## Project Structure
+- `POST /api/auth/signin` - Login
+- `GET/POST /api/posts` - Blog posts
+- `GET/POST /api/templates` - Programmatic templates
+- `POST /api/templates/[id]/generate` - Generate pages
+- `GET/POST /api/regions` - States/cities
+- `POST /api/media` - Upload files
+- `GET /api/health` - Health check
+- `GET /rss.xml` - RSS feed
 
+See full API docs in [docs/API.md](./docs/API.md) (TODO).
+
+## Default Credentials
+
+⚠️ **CHANGE IMMEDIATELY**
+
+- Email: `admin@myinsurancebuddies.com`
+- Password: `changeme123`
+
+## Operations
+
+```bash
+# Deploy updates
+cd /var/www/myinsurancebuddies.com
+git pull origin main
+./scripts/build_and_deploy.sh
+
+# Backup
+./scripts/backup.sh
+
+# Restore
+./scripts/restore.sh /path/to/backup.dump.gz
+
+# View logs
+pm2 logs
 ```
-myinsurancebuddy/
-├── .github/
-│   └── workflows/
-│       └── deploy.yml          # CI/CD workflow
-├── src/                         # Source code
-├── public/                      # Static assets
-├── DEPLOYMENT.md               # Deployment guide
-└── README.md                   # This file
-```
 
-## Environment Variables
+See [docs/RUNBOOK.md](./docs/RUNBOOK.md) for complete operations guide.
 
-Create a `.env` file with the following variables:
+## Documentation
 
-```env
-DATABASE_URL=your_database_url
-API_KEY=your_api_key
-PORT=3000
-NODE_ENV=production
-```
+- [QUICKSTART.md](./docs/QUICKSTART.md) - VPS deployment
+- [RUNBOOK.md](./docs/RUNBOOK.md) - Operations manual
+- [SECURITY.md](./docs/SECURITY.md) - Security guide
 
 ## Contributing
 

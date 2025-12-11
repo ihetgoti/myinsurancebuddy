@@ -1,8 +1,41 @@
-# TODO List
+# TODO - MyInsuranceBuddies Remaining Tasks
 
-- [ ] **Environment Variables**: Copy `env.example` to `.env` and update secrets.
-- [ ] **Database**: Ensure PostgreSQL is running and the user/db exists (see `docs/QUICKSTART.md`).
-- [ ] **DNS**: Point `myinsurancebuddies.com` and `www.myinsurancebuddies.com` to your VPS IP.
-- [ ] **SSL**: Run the Certbot command in `docs/QUICKSTART.md` after DNS propagation.
-- [ ] **Admin User**: The seed script creates a Super Admin (`admin@myinsurancebuddies.com`). You need to update the password hash in `packages/db/prisma/seed.ts` or reset it via DB/Admin UI.
-- [ ] **Content**: Add real content to the templates and blog posts.
+## Current Status: ~60% Complete
+
+**What's Done**: Backend APIs, authentication, database schema, state/city pages, backup scripts, documentation
+**What's Needed**: Admin UI interfaces, tests, rate limiting, sample content
+
+## Priority 1: Admin User Interfaces (Critical)
+
+### Blog Admin (`apps/admin/app/blog/`)
+- [ ] Post list page with filters
+- [ ] TipTap WYSIWYG editor
+- [ ] Media library browser
+- [ ] Auto-save drafts
+- [ ] SEO metadata panel
+- [ ] Preview mode
+
+### Super Admin (`apps/admin/app/super/`)
+- [ ] Template manager (create/edit with CodeMirror)
+- [ ] Region import/export (CSV/JSON)
+- [ ] Page generation UI
+- [ ] User management
+- [ ] Audit log viewer
+- [ ] Site settings panel
+
+## Priority 2: Security & Tests
+- [ ] CSRF protection
+- [ ] Rate limiting (API + login)
+- [ ] Unit tests (Jest)
+- [ ] Integration tests (Supertest)
+- [ ] E2E tests (Cypress)
+
+## Priority 3: Content & Polish
+- [ ] Create 20 sample blog posts
+- [ ] Generate all state/city pages
+- [ ] Enhanced sitemaps (gzipped)
+- [ ] OpenAPI documentation
+
+## Estimated Time: 80 hours remaining
+
+See full details in project documentation.
