@@ -1,0 +1,122 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  name         String?
+  passwordHash String
+  role         UserRole @default(EDITOR)
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+enum UserRole {
+  SUPER_ADMIN
+  BLOG_ADMIN
+  EDITOR
+}
+
+model Post {
+  id              String   @id @default(uuid())
+  title           String
+  slug            String   @unique
+  excerpt         String?
+  bodyHtml        String
+  status          PostStatus @default(DRAFT)
+  publishedAt     DateTime?
+  authorId        String
+  author          User     @relation(fields: [authorId], references: [id])
+  tags            String[]
+  metaTitle       String?
+  metaDescription String?
+  canonicalUrl    String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+enum PostStatus {
+  DRAFT
+  SCHEDULED
+  PUBLISHED
+}
+
+model Region {
+  id           String   @id @default(uuid())
+  type         RegionType
+  name         String
+  slug         String   @unique
+  stateCode    String?
+  population   Int?
+  medianIncome Int?
+  timezone     String?
+  lat          Float?
+  lng          Float?
+  seoSummary   String?
+  legalNotes   String?
+  metadata     Json?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+enum RegionType {
+  STATE
+  CITY
+}
+
+model ProgrammaticTemplate {
+  id           String   @id @default(uuid())
+  name         String
+  slug         String   @unique
+  templateHtml String
+  placeholders String[]
+  createdById  String
+  createdBy    User     @relation(fields: [createdById], references: [id])
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model ProgrammaticPage {
+  id              String   @id @default(uuid())
+  templateId      String
+  regionId        String
+  slug            String   @unique
+  title           String
+  generatedHtml   String
+  metaTitle       String?
+  metaDescription String?
+  isPublished     Boolean  @default(false)
+  lastGeneratedAt DateTime?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model Media {
+  id         String   @id @default(uuid())
+  filename   String
+  path       String
+  width      Int?
+  height     Int?
+  sizeBytes  Int?
+  altText    String?
+  uploadedBy String?
+  createdAt  DateTime @default(now())
+}
+
+model AuditLog {
+  id          String   @id @default(uuid())
+  userId      String?
+  action      String
+  objectType  String
+  objectId    String?
+  beforeState Json?
+  afterState  Json?
+  createdAt   DateTime @default(now())
+}
