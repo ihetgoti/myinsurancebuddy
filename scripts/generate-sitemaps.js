@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
-// Import PrismaClient from the workspace
-const prismaClientPath = path.join(__dirname, '../node_modules/@prisma/client');
+// Import PrismaClient from pnpm workspace location
+const prismaClientPath = path.join(__dirname, '../node_modules/.pnpm/@prisma+client@5.22.0_prisma@5.22.0/node_modules/@prisma/client');
 const { PrismaClient } = require(prismaClientPath);
 
 const prisma = new PrismaClient();
