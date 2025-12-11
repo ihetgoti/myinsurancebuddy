@@ -2,18 +2,18 @@ import type { Metadata } from 'next'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'MyInsuranceBuddies',
-  description: 'Find the best insurance deals',
+    title: 'MyInsuranceBuddies',
+    description: 'Find the best insurance deals',
 }
 
 export default function RootLayout({
-  children,
+    children,
 }: {
-  children: React.ReactNode
+    children: React.ReactNode
 }) {
-  return (
-    <html lang="en">
-      <body>{children}</body>
-    </html>
-  )
+    return (
+        <html lang="en">
+            <body>{children}</body>
+        </html>
+    )
 }

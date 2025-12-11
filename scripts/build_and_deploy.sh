@@ -1,4 +1,4 @@
-#!/bin/bash
+ALTER SCHEMA public OWNER TO myuser;#!/bin/bash
 set -e
 
 # Load environment variables
@@ -24,6 +24,9 @@ pnpm --filter @myinsurancebuddy/db db:push
 # Seed Database (Idempotent)
 echo "🌱 Seeding Database..."
 pnpm --filter @myinsurancebuddy/db seed
+
+echo "📝 Seeding Templates..."
+pnpm --filter @myinsurancebuddy/db exec ts-node prisma/seed-templates.ts
 
 # Build Applications
 echo "🏗️ Building Web App..."
