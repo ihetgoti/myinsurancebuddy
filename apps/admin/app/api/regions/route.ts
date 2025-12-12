@@ -1,21 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
+import { PrismaClient } from '@myinsurancebuddy/db';
 
-const WEB_API_URL = process.env.WEB_API_URL || 'http://localhost:3000';
+const prisma = new PrismaClient();
 
+// GET /api/regions - List all regions (states/cities)
 export async function GET(request: NextRequest) {
-    const apiUrl = `${WEB_API_URL}/api/regions`;
-
     try {
-        const response = await fetch(apiUrl, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-            },
+        const session = await getServerSession(authOptions);
+        
+        if (!session) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+
+        const regions = await prisma.region.findMany({
+            orderBy: { name: 'asc' },
         });
 
-        const data = await response.json();
-        return NextResponse.json(data, { status: response.status });
+        return NextResponse.json(regions);
     } catch (error) {
+        console.error('GET /api/regions error:', error);
         return NextResponse.json({ error: 'Failed to fetch regions' }, { status: 500 });
     }
 }

@@ -28,9 +28,17 @@ export default function TemplatesList() {
         try {
             const res = await fetch('/api/templates');
             const data = await res.json();
-            setTemplates(data);
+            
+            // Check if data is an array, otherwise set empty array
+            if (Array.isArray(data)) {
+                setTemplates(data);
+            } else {
+                console.error('API returned non-array data:', data);
+                setTemplates([]);
+            }
         } catch (error) {
             console.error('Failed to fetch templates:', error);
+            setTemplates([]);
         } finally {
             setLoading(false);
         }
