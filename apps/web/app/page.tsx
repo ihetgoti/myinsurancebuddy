@@ -6,9 +6,17 @@ export default function Home() {
                 <div className="text-center text-white mb-16">
                     <h1 className="text-6xl font-bold mb-6">MyInsuranceBuddies</h1>
                     <p className="text-2xl mb-4">Your Trusted Insurance Guide</p>
-                    <p className="text-xl opacity-90 max-w-2xl mx-auto">
+                    <p className="text-xl opacity-90 max-w-2xl mx-auto mb-6">
                         Find the best insurance coverage for your needs across all 50 states and major cities
                     </p>
+                    <div className="inline-flex gap-3">
+                        <a href="/api/health" target="_blank" className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg font-semibold transition">
+                            API Health
+                        </a>
+                        <a href="/admin" className="bg-purple-700 hover:bg-purple-800 text-white px-6 py-2 rounded-lg font-semibold transition">
+                            Admin Portal
+                        </a>
+                    </div>
                 </div>
 
                 {/* Features Grid */}
@@ -29,17 +37,23 @@ export default function Home() {
 
                 {/* CTA Section */}
                 <div className="text-center">
-                    <div className="inline-block bg-white/20 backdrop-blur-md rounded-lg p-8 text-white">
-                        <h2 className="text-3xl font-bold mb-4">Get Started Today</h2>
-                        <p className="text-lg mb-6">Browse our comprehensive guides to find the perfect insurance coverage</p>
-                        <div className="space-x-4">
-                            <a href="#" className="inline-block bg-white text-blue-600 px-6 py-3 rounded-lg font-semibold hover:bg-gray-100 transition">
-                                Browse States
-                            </a>
-                            <a href="#" className="inline-block bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-800 transition">
-                                View Cities
-                            </a>
+                    <div className="inline-block bg-white/20 backdrop-blur-md rounded-lg p-8 text-white max-w-xl">
+                        <h2 className="text-3xl font-bold mb-4">Platform Status</h2>
+                        <div className="space-y-2 text-sm mb-6">
+                            <div className="flex items-center justify-between">
+                                <span>✅ Backend APIs</span>
+                                <span className="bg-green-600 px-3 py-1 rounded-full text-xs">Live</span>
+                            </div>
+                            <div className="flex items-center justify-between">
+                                <span>✅ Database</span>
+                                <span className="bg-green-600 px-3 py-1 rounded-full text-xs">Ready</span>
+                            </div>
+                            <div className="flex items-center justify-between">
+                                <span>🚧 Admin UI</span>
+                                <span className="bg-yellow-600 px-3 py-1 rounded-full text-xs">In Progress</span>
+                            </div>
                         </div>
+                        <p className="text-base">Backend complete (~60%). Admin interfaces coming soon.</p>
                     </div>
                 </div>
             </div>
