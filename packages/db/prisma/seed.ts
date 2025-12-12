@@ -1,4 +1,5 @@
 import { PrismaClient, RegionType, UserRole } from '@prisma/client';
+import bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
 
@@ -79,18 +80,17 @@ const cities = [
 ];
 
 async function main() {
-    // Create Super Admin
+    // Create Super Admin with bcrypt password
     const email = 'admin@myinsurancebuddies.com';
     const existingUser = await prisma.user.findUnique({ where: { email } });
 
     if (!existingUser) {
-        // Note: In production, use a real hashed password. This is a placeholder.
-        // You can generate one using a script or online tool for Argon2/Bcrypt.
+        const passwordHash = await bcrypt.hash('changeme123', 10);
         await prisma.user.create({
             data: {
                 email,
                 name: 'Super Admin',
-                passwordHash: '$argon2id$v=19$m=65536,t=3,p=4$placeholderhash',
+                passwordHash,
                 role: UserRole.SUPER_ADMIN,
             },
         });
