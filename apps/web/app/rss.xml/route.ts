@@ -2,6 +2,9 @@ import { PrismaClient } from "@myinsurancebuddy/db";
 
 const prisma = new PrismaClient();
 
+// Force dynamic rendering - RSS needs database
+export const dynamic = "force-dynamic";
+
 export async function GET() {
     const posts = await prisma.post.findMany({
         where: { status: "PUBLISHED" },

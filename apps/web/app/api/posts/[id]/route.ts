@@ -103,26 +103,26 @@ export async function DELETE(
 ) {
     const session = await getServerSession(authOptions);
 
-            if (!session?.user) {
-                return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-            }
+    if (!session?.user) {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
 
-            const role = session.user.role;
-            if (role !== "SUPER_ADMIN" && role !== "BLOG_ADMIN") {
-                return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-            }
+    const role = session.user.role;
+    if (role !== "SUPER_ADMIN" && role !== "BLOG_ADMIN") {
+        return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
 
-            const post = await prisma.post.findUnique({
-                where: { id: params.id },
-            });
+    const post = await prisma.post.findUnique({
+        where: { id: params.id },
+    });
 
-            if (!post) {
-                return NextResponse.json({ error: "Post not found" }, { status: 404 });
-            }
+    if (!post) {
+        return NextResponse.json({ error: "Post not found" }, { status: 404 });
+    }
 
-            await prisma.post.delete({
-                where: { id: params.id },
-            });
+    await prisma.post.delete({
+        where: { id: params.id },
+    });
 
     // Audit log
     await prisma.auditLog.create({
