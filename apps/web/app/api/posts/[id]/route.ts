@@ -81,9 +81,13 @@ export async function PATCH(
             data: {
                 userId: session.user.id,
                 action: "UPDATE_POST",
-                    entityType: "Post",
-                    entityId: post.id,
-                    changes: { before: existingPost, after: post },
+                entityType: "Post",
+                entityId: post.id,
+                changes: { before: existingPost, after: post },
+            },
+        });
+
+        return NextResponse.json(post);
     } catch (error) {
         if (error instanceof z.ZodError) {
             return NextResponse.json({ error: error.errors }, { status: 400 });
@@ -99,33 +103,37 @@ export async function DELETE(
 ) {
     const session = await getServerSession(authOptions);
 
-    if (!session?.user) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+            if (!session?.user) {
+                return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+            }
 
-    const role = session.user.role;
-    if (role !== "SUPER_ADMIN" && role !== "BLOG_ADMIN") {
-        return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-    }
+            const role = session.user.role;
+            if (role !== "SUPER_ADMIN" && role !== "BLOG_ADMIN") {
+                return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+            }
 
-    const post = await prisma.post.findUnique({
-        where: { id: params.id },
-    });
+            const post = await prisma.post.findUnique({
+                where: { id: params.id },
+            });
 
-    if (!post) {
-        return NextResponse.json({ error: "Post not found" }, { status: 404 });
-    }
+            if (!post) {
+                return NextResponse.json({ error: "Post not found" }, { status: 404 });
+            }
 
-    await prisma.post.delete({
-        where: { id: params.id },
-    });
+            await prisma.post.delete({
+                where: { id: params.id },
+            });
 
     // Audit log
     await prisma.auditLog.create({
         data: {
             userId: session.user.id,
             action: "DELETE_POST",
-                entityType: "Post",
-                entityId: params.id,
-                changes: { before: post },
+            entityType: "Post",
+            entityId: params.id,
+            changes: { before: post },
+        },
+    });
+
+    return NextResponse.json({ message: "Post deleted" });
 }

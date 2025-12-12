@@ -59,9 +59,13 @@ export async function POST(request: NextRequest) {
       data: {
         userId: session.user.id,
         action: "CREATE_TEMPLATE",
-                entityType: "ProgrammaticTemplate",
-                entityId: template.id,
-                changes: { after: template },
+        entityType: "ProgrammaticTemplate",
+        entityId: template.id,
+        changes: { after: template },
+      },
+    });
+
+    return NextResponse.json(template, { status: 201 });
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json({ error: error.errors }, { status: 400 });
