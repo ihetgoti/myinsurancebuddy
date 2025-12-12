@@ -60,9 +60,9 @@ export async function POST(request: NextRequest) {
             data: {
                 userId: session.user.id,
                 action: "CREATE_REGION",
-                objectType: "Region",
-                objectId: region.id,
-                afterState: region,
+                entityType: "Region",
+                entityId: region.id,
+                changes: { after: region },
             },
         });
 

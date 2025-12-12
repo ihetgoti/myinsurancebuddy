@@ -94,9 +94,9 @@ export async function POST(request: NextRequest) {
             data: {
                 userId: session.user.id,
                 action: "CREATE_POST",
-                objectType: "Post",
-                objectId: post.id,
-                afterState: post,
+                entityType: "Post",
+                entityId: post.id,
+                changes: { after: post },
             },
         });
 

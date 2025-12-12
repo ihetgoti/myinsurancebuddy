@@ -81,14 +81,9 @@ export async function PATCH(
             data: {
                 userId: session.user.id,
                 action: "UPDATE_POST",
-                objectType: "Post",
-                objectId: post.id,
-                beforeState: existingPost,
-                afterState: post,
-            },
-        });
-
-        return NextResponse.json(post);
+                    entityType: "Post",
+                    entityId: post.id,
+                    changes: { before: existingPost, after: post },
     } catch (error) {
         if (error instanceof z.ZodError) {
             return NextResponse.json({ error: error.errors }, { status: 400 });
@@ -130,11 +125,7 @@ export async function DELETE(
         data: {
             userId: session.user.id,
             action: "DELETE_POST",
-            objectType: "Post",
-            objectId: params.id,
-            beforeState: post,
-        },
-    });
-
-    return NextResponse.json({ success: true });
+                entityType: "Post",
+                entityId: params.id,
+                changes: { before: post },
 }
