@@ -30,9 +30,17 @@ export default function PostsList() {
         try {
             const res = await fetch('/api/posts');
             const data = await res.json();
-            setPosts(data);
+
+            // Check if data is an array, otherwise set empty array
+            if (Array.isArray(data)) {
+                setPosts(data);
+            } else {
+                console.error('API returned non-array data:', data);
+                setPosts([]);
+            }
         } catch (error) {
             console.error('Failed to fetch posts:', error);
+            setPosts([]);
         } finally {
             setLoading(false);
         }
@@ -79,8 +87,8 @@ export default function PostsList() {
                                 key={status}
                                 onClick={() => setFilter(status)}
                                 className={`px-4 py-2 rounded-md transition capitalize ${filter === status
-                                        ? 'bg-blue-600 text-white'
-                                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                    ? 'bg-blue-600 text-white'
+                                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                                     }`}
                             >
                                 {status}
@@ -119,8 +127,8 @@ export default function PostsList() {
                                         </td>
                                         <td className="px-6 py-4">
                                             <span className={`px-2 py-1 text-xs rounded-full ${post.status === 'PUBLISHED' ? 'bg-green-100 text-green-800' :
-                                                    post.status === 'DRAFT' ? 'bg-yellow-100 text-yellow-800' :
-                                                        'bg-gray-100 text-gray-800'
+                                                post.status === 'DRAFT' ? 'bg-yellow-100 text-yellow-800' :
+                                                    'bg-gray-100 text-gray-800'
                                                 }`}>
                                                 {post.status}
                                             </span>

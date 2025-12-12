@@ -1,70 +1,102 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
+import { PrismaClient } from '@myinsurancebuddy/db';
 
-const WEB_API_URL = process.env.WEB_API_URL || 'http://localhost:3000';
+const prisma = new PrismaClient();
 
+// GET /api/posts/[id]
 export async function GET(
     request: NextRequest,
     { params }: { params: { id: string } }
 ) {
-    const apiUrl = `${WEB_API_URL}/api/posts/${params.id}`;
-
     try {
-        const response = await fetch(apiUrl, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-                ...(request.headers.get('cookie') ? { cookie: request.headers.get('cookie')! } : {}),
+        const session = await getServerSession(authOptions);
+        
+        if (!session) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+
+        const post = await prisma.post.findUnique({
+            where: { id: params.id },
+            include: {
+                author: {
+                    select: { name: true, email: true },
+                },
             },
         });
 
-        const data = await response.json();
-        return NextResponse.json(data, { status: response.status });
+        if (!post) {
+            return NextResponse.json({ error: 'Post not found' }, { status: 404 });
+        }
+
+        return NextResponse.json(post);
     } catch (error) {
+        console.error('GET /api/posts/[id] error:', error);
         return NextResponse.json({ error: 'Failed to fetch post' }, { status: 500 });
     }
 }
 
+// PATCH /api/posts/[id]
 export async function PATCH(
     request: NextRequest,
     { params }: { params: { id: string } }
 ) {
     try {
-        const body = await request.json();
-        const apiUrl = `${WEB_API_URL}/api/posts/${params.id}`;
+        const session = await getServerSession(authOptions);
+        
+        if (!session) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
 
-        const response = await fetch(apiUrl, {
-            method: 'PATCH',
-            headers: {
-                'Content-Type': 'application/json',
-                ...(request.headers.get('cookie') ? { cookie: request.headers.get('cookie')! } : {}),
+        const body = await request.json();
+        const { title, slug, excerpt, content, metaTitle, metaDescription, status, tags } = body;
+
+        const post = await prisma.post.update({
+            where: { id: params.id },
+            data: {
+                ...(title && { title }),
+                ...(slug && { slug }),
+                ...(excerpt && { excerpt }),
+                ...(content && { bodyHtml: content }),
+                ...(metaTitle !== undefined && { metaTitle }),
+                ...(metaDescription !== undefined && { metaDescription }),
+                ...(status && { status, publishedAt: status === 'PUBLISHED' ? new Date() : null }),
+                ...(tags && { tags }),
             },
-            body: JSON.stringify(body),
+            include: {
+                author: {
+                    select: { name: true, email: true },
+                },
+            },
         });
 
-        const data = await response.json();
-        return NextResponse.json(data, { status: response.status });
+        return NextResponse.json(post);
     } catch (error) {
+        console.error('PATCH /api/posts/[id] error:', error);
         return NextResponse.json({ error: 'Failed to update post' }, { status: 500 });
     }
 }
 
+// DELETE /api/posts/[id]
 export async function DELETE(
     request: NextRequest,
     { params }: { params: { id: string } }
 ) {
-    const apiUrl = `${WEB_API_URL}/api/posts/${params.id}`;
-
     try {
-        const response = await fetch(apiUrl, {
-            method: 'DELETE',
-            headers: {
-                ...(request.headers.get('cookie') ? { cookie: request.headers.get('cookie')! } : {}),
-            },
+        const session = await getServerSession(authOptions);
+        
+        if (!session) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+
+        await prisma.post.delete({
+            where: { id: params.id },
         });
 
-        const data = await response.json();
-        return NextResponse.json(data, { status: response.status });
+        return NextResponse.json({ success: true });
     } catch (error) {
+        console.error('DELETE /api/posts/[id] error:', error);
         return NextResponse.json({ error: 'Failed to delete post' }, { status: 500 });
     }
 }

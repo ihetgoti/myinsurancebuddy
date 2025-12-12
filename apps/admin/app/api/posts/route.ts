@@ -1,48 +1,80 @@
-// Proxy API requests to the main web app
-// This allows the admin app to use the same API endpoints
-
 import { NextRequest, NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
+import { PrismaClient } from '@myinsurancebuddy/db';
 
-const WEB_API_URL = process.env.WEB_API_URL || 'http://localhost:3000';
+const prisma = new PrismaClient();
 
+// GET /api/posts - List all posts
 export async function GET(request: NextRequest) {
-    const url = new URL(request.url);
-    const apiUrl = `${WEB_API_URL}/api/posts${url.search}`;
-
     try {
-        const response = await fetch(apiUrl, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-                // Forward auth headers
-                ...(request.headers.get('cookie') ? { cookie: request.headers.get('cookie')! } : {}),
+        const session = await getServerSession(authOptions);
+        
+        if (!session) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+
+        const posts = await prisma.post.findMany({
+            include: {
+                author: {
+                    select: {
+                        name: true,
+                        email: true,
+                    },
+                },
             },
+            orderBy: { createdAt: 'desc' },
         });
 
-        const data = await response.json();
-        return NextResponse.json(data, { status: response.status });
+        return NextResponse.json(posts);
     } catch (error) {
+        console.error('GET /api/posts error:', error);
         return NextResponse.json({ error: 'Failed to fetch posts' }, { status: 500 });
     }
 }
 
+// POST /api/posts - Create new post
 export async function POST(request: NextRequest) {
     try {
-        const body = await request.json();
-        const apiUrl = `${WEB_API_URL}/api/posts`;
+        const session = await getServerSession(authOptions);
+        
+        if (!session) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
 
-        const response = await fetch(apiUrl, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                ...(request.headers.get('cookie') ? { cookie: request.headers.get('cookie')! } : {}),
+        const body = await request.json();
+        const { title, slug, excerpt, content, metaTitle, metaDescription, status, tags } = body;
+
+        if (!title || !slug || !excerpt || !content) {
+            return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+        }
+
+        const post = await prisma.post.create({
+            data: {
+                title,
+                slug,
+                excerpt,
+                bodyHtml: content,
+                metaTitle,
+                metaDescription,
+                status: status || 'DRAFT',
+                tags: tags || [],
+                authorId: session.user.id,
+                publishedAt: status === 'PUBLISHED' ? new Date() : null,
             },
-            body: JSON.stringify(body),
+            include: {
+                author: {
+                    select: {
+                        name: true,
+                        email: true,
+                    },
+                },
+            },
         });
 
-        const data = await response.json();
-        return NextResponse.json(data, { status: response.status });
+        return NextResponse.json(post, { status: 201 });
     } catch (error) {
+        console.error('POST /api/posts error:', error);
         return NextResponse.json({ error: 'Failed to create post' }, { status: 500 });
     }
 }
