@@ -6,16 +6,8 @@ import { format } from "date-fns";
 
 const prisma = new PrismaClient();
 
-export async function generateStaticParams() {
-    const posts = await prisma.post.findMany({
-        where: { status: "PUBLISHED" },
-        select: { slug: true },
-    });
-
-    return posts.map((post) => ({
-        slug: post.slug,
-    }));
-}
+// Use dynamic rendering - no static params needed
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata({
     params,
