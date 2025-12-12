@@ -5,16 +5,8 @@ import Link from "next/link";
 
 const prisma = new PrismaClient();
 
-export async function generateStaticParams() {
-    const cities = await prisma.region.findMany({
-        where: { type: "CITY" },
-        select: { slug: true },
-    });
-
-    return cities.map((city) => ({
-        slug: city.slug,
-    }));
-}
+// Use dynamic rendering - no static params needed in CI
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata({
     params,
