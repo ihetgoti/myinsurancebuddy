@@ -2,6 +2,7 @@
     "name": "myinsurancebuddy-monorepo",
     "version": "0.0.1",
     "private": true,
+    "packageManager": "pnpm@10.25.0",
     "workspaces": [
         "apps/*",
         "packages/*"
