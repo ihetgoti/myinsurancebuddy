@@ -10,7 +10,9 @@
         "build": "turbo run build",
         "dev": "turbo run dev",
         "lint": "turbo run lint",
-        "format": "prettier --write \"**/*.{ts,tsx,md}\""
+        "format": "prettier --write \"**/*.{ts,tsx,md}\"",
+        "start:web": "cd apps/web && pnpm start",
+        "start:admin": "cd apps/admin && pnpm start"
     },
     "devDependencies": {
         "turbo": "latest",
