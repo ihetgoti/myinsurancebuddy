@@ -18,11 +18,12 @@ model User {
   updatedAt    DateTime @updatedAt
   posts        Post[]
   templates    ProgrammaticTemplate[]
+  auditLogs    AuditLog[]
 }
 
 enum UserRole {
   SUPER_ADMIN
-  BLOG_ADMIN
+  ADMIN
   EDITOR
 }
 
@@ -46,8 +47,8 @@ model Post {
 
 enum PostStatus {
   DRAFT
-  SCHEDULED
   PUBLISHED
+  ARCHIVED
 }
 
 model Region {
@@ -113,12 +114,12 @@ model Media {
 }
 
 model AuditLog {
-  id          String   @id @default(uuid())
-  userId      String?
-  action      String
-  objectType  String
-  objectId    String?
-  beforeState Json?
-  afterState  Json?
-  createdAt   DateTime @default(now())
+  id         String   @id @default(uuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id])
+  action     String
+  entityType String
+  entityId   String
+  changes    Json?
+  createdAt  DateTime @default(now())
 }
