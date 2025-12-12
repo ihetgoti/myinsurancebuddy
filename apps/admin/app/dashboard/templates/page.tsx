@@ -11,7 +11,7 @@ interface Template {
     templateType: string;
     isActive: boolean;
     createdAt: string;
-    _count: {
+    _count?: {
         pages: number;
     };
 }
@@ -103,7 +103,6 @@ export default function TemplatesList() {
                                 <tr>
                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Pages</th>
                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Created</th>
                                     <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
@@ -124,9 +123,6 @@ export default function TemplatesList() {
                                             <span className="px-2 py-1 bg-purple-100 text-purple-800 rounded text-xs">
                                                 {template.templateType}
                                             </span>
-                                        </td>
-                                        <td className="px-6 py-4 text-sm text-gray-600">
-                                            {template._count.pages} pages
                                         </td>
                                         <td className="px-6 py-4">
                                             <button
@@ -149,12 +145,6 @@ export default function TemplatesList() {
                                                 className="text-blue-600 hover:text-blue-900"
                                             >
                                                 Edit
-                                            </Link>
-                                            <Link
-                                                href={`/dashboard/templates/${template.id}/generate`}
-                                                className="text-green-600 hover:text-green-900"
-                                            >
-                                                Generate
                                             </Link>
                                             <button
                                                 onClick={() => handleDelete(template.id)}
