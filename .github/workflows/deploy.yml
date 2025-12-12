@@ -75,14 +75,8 @@ jobs:
           key: ${{ secrets.VPS_SSH_KEY }}
           port: ${{ secrets.VPS_PORT || 22 }}
           script: |
-            # Find and navigate to project directory
-            PROJECT_DIR=$(find /root /home /var/www -name 'myinsurancebuddy' -type d 2>/dev/null | head -1)
-            if [ -z "$PROJECT_DIR" ]; then
-              echo "Error: myinsurancebuddy directory not found"
-              exit 1
-            fi
-            cd "$PROJECT_DIR"
-            echo "Deploying from: $PROJECT_DIR"
+            cd /var/www/myinsurancebuddies.com
+            echo "Deploying from: $(pwd)"
             
             # Clean up conflicting files and pull
             rm -f apps/admin/next-env.d.ts apps/web/next-env.d.ts
