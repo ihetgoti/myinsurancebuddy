@@ -1,4 +1,4 @@
-ALTER SCHEMA public OWNER TO myuser;#!/bin/bash
+#!/bin/bash
 set -e
 
 # Load environment variables
@@ -11,29 +11,48 @@ echo "🚀 Starting deployment..."
 # Install dependencies
 echo "📦 Installing dependencies..."
 npm install -g pnpm
-pnpm install
+pnpm install --no-frozen-lockfile
 
-# Generate Prisma Client
+# Generate Prisma Client FIRST - critical for workspace
 echo "🗄️ Generating Prisma Client..."
-pnpm --filter @myinsurancebuddy/db generate
+cd packages/db
+pnpm generate
+cd ../..
+
+# Verify Prisma Client exists
+if [ ! -d "node_modules/.pnpm/@prisma+client@5.22.0_prisma@5.22.0" ]; then
+  echo "⚠️  Prisma Client not found in expected location"
+  echo "Installing dependencies again..."
+  pnpm install --force
+fi
 
 # Run Migrations
 echo "🔄 Running Database Migrations..."
-pnpm --filter @myinsurancebuddy/db db:push
+cd packages/db
+pnpm db:push
+cd ../..
 
 # Seed Database (Idempotent)
 echo "🌱 Seeding Database..."
-pnpm --filter @myinsurancebuddy/db seed
+cd packages/db
+pnpm seed
+cd ../..
 
 echo "📝 Seeding Templates..."
-pnpm --filter @myinsurancebuddy/db exec ts-node prisma/seed-templates.ts
+cd packages/db
+pnpm exec ts-node prisma/seed-templates.ts
+cd ../..
 
 # Build Applications
 echo "🏗️ Building Web App..."
-pnpm --filter web build
+cd apps/web
+pnpm build
+cd ../..
 
 echo "🏗️ Building Admin App..."
-pnpm --filter admin build
+cd apps/admin
+pnpm build
+cd ../..
 
 # Generate Sitemaps
 echo "🗺️ Generating Sitemaps..."
