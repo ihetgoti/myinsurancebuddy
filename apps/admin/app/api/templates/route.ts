@@ -15,11 +15,6 @@ export async function GET(request: NextRequest) {
         }
 
         const templates = await prisma.programmaticTemplate.findMany({
-            include: {
-                _count: {
-                    select: { pages: true },
-                },
-            },
             orderBy: { createdAt: 'desc' },
         });
 
@@ -27,11 +22,11 @@ export async function GET(request: NextRequest) {
         const formattedTemplates = templates.map(t => ({
             id: t.id,
             name: t.name,
-            description: null, // Add description field to schema if needed
-            templateType: 'CUSTOM', // Map from actual type if exists
-            isActive: true, // Add isActive field to schema if needed
+            description: null,
+            templateType: 'CUSTOM',
+            isActive: true,
             createdAt: t.createdAt.toISOString(),
-            _count: { pages: 0 }, // Update when pages relation is fixed
+            _count: { pages: 0 },
         }));
 
         return NextResponse.json(formattedTemplates);

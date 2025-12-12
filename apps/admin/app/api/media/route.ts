@@ -15,14 +15,6 @@ export async function GET(request: NextRequest) {
         }
 
         const media = await prisma.media.findMany({
-            include: {
-                uploadedBy: {
-                    select: {
-                        name: true,
-                        email: true,
-                    },
-                },
-            },
             orderBy: { createdAt: 'desc' },
         });
 

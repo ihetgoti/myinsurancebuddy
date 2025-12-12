@@ -125,10 +125,9 @@ export async function generateProgrammaticPage(
             data: {
                 userId,
                 action: "REGENERATE_PAGE",
-                objectType: "ProgrammaticPage",
-                objectId: updated.id,
-                beforeState: existingPage,
-                afterState: updated,
+                entityType: "ProgrammaticPage",
+                entityId: updated.id,
+                changes: { before: existingPage, after: updated },
             },
         });
 
@@ -153,9 +152,9 @@ export async function generateProgrammaticPage(
             data: {
                 userId,
                 action: "CREATE_PAGE",
-                objectType: "ProgrammaticPage",
-                objectId: created.id,
-                afterState: created,
+                entityType: "ProgrammaticPage",
+                entityId: created.id,
+                changes: { after: created },
             },
         });
 

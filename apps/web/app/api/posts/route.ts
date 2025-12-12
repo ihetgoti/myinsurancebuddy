@@ -11,7 +11,7 @@ const postSchema = z.object({
     slug: z.string().min(1).max(200),
     excerpt: z.string().optional(),
     bodyHtml: z.string(),
-    status: z.enum(["DRAFT", "SCHEDULED", "PUBLISHED"]),
+    status: z.enum(["DRAFT", "PUBLISHED", "ARCHIVED"]),
     publishedAt: z.string().optional(),
     tags: z.array(z.string()).default([]),
     metaTitle: z.string().optional(),
