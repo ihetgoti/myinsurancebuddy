@@ -18,27 +18,18 @@ if [ -f "index.html" ]; then
     rm -f index.html
 fi
 
-# 2. Update Nginx Configuration
+# 2. Remove the default Nginx site (this is often the cause of showing wrong websites)
+echo "Removing default Nginx site..."
+sudo rm -f /etc/nginx/sites-enabled/default
+
+# 3. Update Nginx Configuration
 echo "Updating Nginx config file..."
 sudo cp nginx.conf $NGINX_AVAILABLE
 
-# 3. Check for SSL Certificates and enable SSL if present
-if [ -d "/etc/letsencrypt/live/$DOMAIN" ]; then
-    echo "SSL certificates found. Enabling SSL..."
-    # Add SSL configuration to the file
-    sudo sed -i '/server_name/a \
-    listen 443 ssl; \
-    ssl_certificate /etc/letsencrypt/live/'$DOMAIN'/fullchain.pem; \
-    ssl_certificate_key /etc/letsencrypt/live/'$DOMAIN'/privkey.pem; \
-    include /etc/letsencrypt/options-ssl-nginx.conf; \
-    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;' $NGINX_AVAILABLE
-fi
-
-# 4. Enable the site
-if [ ! -L "$NGINX_ENABLED" ]; then
-    echo "Enabling site..."
-    sudo ln -sf $NGINX_AVAILABLE $NGINX_ENABLED
-fi
+# 4. Enable the site (remove old symlink first to avoid issues)
+echo "Enabling site..."
+sudo rm -f $NGINX_ENABLED
+sudo ln -sf $NGINX_AVAILABLE $NGINX_ENABLED
 
 # 5. Test and Reload Nginx
 echo "Testing Nginx configuration..."
