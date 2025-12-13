@@ -97,11 +97,10 @@ jobs:
             pnpm build --filter=web
             pnpm build --filter=admin
             
-            # Update Nginx configuration
-            echo "Updating Nginx configuration..."
-            sudo cp nginx.conf /etc/nginx/sites-available/myinsurancebuddies.com
-            sudo ln -sf /etc/nginx/sites-available/myinsurancebuddies.com /etc/nginx/sites-enabled/
-            sudo nginx -t && sudo systemctl reload nginx
+            # Run fix-nginx script
+            echo "Running Nginx fix script..."
+            chmod +x scripts/fix-nginx.sh
+            ./scripts/fix-nginx.sh
             
             # Restart with PM2
             pm2 restart myinsurancebuddy-web || pm2 start npm --name myinsurancebuddy-web -- run start:web
