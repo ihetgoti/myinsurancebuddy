@@ -2,24 +2,25 @@ module.exports = {
     apps: [
         {
             name: 'web',
-            script: 'npm',
-            args: 'start',
+            script: 'node',
+            args: '.next/standalone/apps/web/server.js',
             cwd: './apps/web',
             env: {
                 PORT: 3000,
-                NODE_ENV: 'production'
+                NODE_ENV: 'production',
+                HOSTNAME: '0.0.0.0'
             }
         },
         {
             name: 'admin',
-            script: 'npm',
-            args: 'start',
+            script: 'node',
+            args: '.next/standalone/apps/admin/server.js',
             cwd: './apps/admin',
             env: {
                 PORT: 3001,
-                NODE_ENV: 'production'
+                NODE_ENV: 'production',
+                HOSTNAME: '0.0.0.0'
             }
         }
     ]
 };
-
