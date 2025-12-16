@@ -1,54 +1,59 @@
-'use client';
+"use client";
 
-import AdminLayout from '@/components/AdminLayout';
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import AdminLayout from "@/components/AdminLayout";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 
 export default function NewTemplate() {
     const router = useRouter();
     const [loading, setLoading] = useState(false);
-    const [error, setError] = useState('');
+    const [error, setError] = useState("");
 
     const [formData, setFormData] = useState({
-        name: '',
-        description: '',
-        templateType: 'STATE',
-        content: '',
-        variables: '',
-        defaultVariables: '',
-        isActive: true,
+        name: "",
+        slug: "",
+        templateHtml: "",
+        placeholders: "",
     });
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-        const { name, value, type } = e.target;
-        setFormData(prev => ({
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+        const { name, value } = e.target;
+        setFormData((prev) => ({
             ...prev,
-            [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : value,
+            [name]: value,
+            ...(name === "name" && !prev.slug
+                ? { slug: value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "") }
+                : {}),
         }));
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        setError('');
+        setError("");
         setLoading(true);
 
         try {
-            const res = await fetch('/api/templates', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+            const placeholders = formData.placeholders
+                ? formData.placeholders.split(",").map((p) => p.trim()).filter(Boolean)
+                : [];
+
+            const res = await fetch("/api/templates", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
-                    ...formData,
-                    variables: formData.variables ? JSON.parse(formData.variables) : undefined,
-                    defaultVariables: formData.defaultVariables ? JSON.parse(formData.defaultVariables) : undefined,
+                    name: formData.name,
+                    slug: formData.slug,
+                    templateHtml: formData.templateHtml,
+                    placeholders,
                 }),
             });
 
             if (!res.ok) {
                 const data = await res.json();
-                throw new Error(data.error || 'Failed to create template');
+                throw new Error(data.error || "Failed to create template");
             }
 
-            router.push('/dashboard/templates');
+            router.push("/dashboard/templates");
         } catch (err: any) {
             setError(err.message);
         } finally {
@@ -56,27 +61,18 @@ export default function NewTemplate() {
         }
     };
 
-    const exampleTemplate = `<!DOCTYPE html>
-<html>
-<head>
-    <title>{{state}} Insurance Guide - MyInsuranceBuddies</title>
-</head>
-<body>
-    <h1>{{state}} Insurance Guide</h1>
-    <p>Population: {{population}}</p>
-    <p>Capital: {{capital}}</p>
-</body>
-</html>`;
-
-    const exampleVariables = `["state", "population", "capital"]`;
-    const exampleDefaults = `{"population": "N/A", "capital": "N/A"}`;
+    const exampleTemplate = `<main>
+  <h1>{{region_name}} Insurance Guide</h1>
+  <p>{{seo_summary}}</p>
+  <p>Median income: {{formatCurrency median_income}}</p>
+</main>`;
 
     return (
         <AdminLayout>
             <div className="max-w-4xl">
                 <div className="mb-6">
                     <h1 className="text-3xl font-bold text-gray-900">Create New Template</h1>
-                    <p className="text-gray-600 mt-1">Design a template for programmatic pages</p>
+                    <p className="text-gray-600 mt-1">Design the HTML that powers your programmatic pages.</p>
                 </div>
 
                 {error && (
@@ -88,9 +84,7 @@ export default function NewTemplate() {
                 <form onSubmit={handleSubmit} className="space-y-6">
                     <div className="bg-white rounded-lg shadow p-6 space-y-4">
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                                Template Name *
-                            </label>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Template Name *</label>
                             <input
                                 type="text"
                                 name="name"
@@ -98,51 +92,22 @@ export default function NewTemplate() {
                                 onChange={handleChange}
                                 required
                                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                placeholder="e.g., State Insurance Guide Template"
+                                placeholder="e.g., State Insurance Guide"
                             />
                         </div>
 
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                                Description
-                            </label>
-                            <textarea
-                                name="description"
-                                value={formData.description}
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Slug *</label>
+                            <input
+                                type="text"
+                                name="slug"
+                                value={formData.slug}
                                 onChange={handleChange}
-                                rows={2}
+                                required
                                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                placeholder="Brief description of this template"
+                                placeholder="state-insurance-guide"
                             />
-                        </div>
-
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                                Template Type *
-                            </label>
-                            <select
-                                name="templateType"
-                                value={formData.templateType}
-                                onChange={handleChange}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            >
-                                <option value="STATE">State Page</option>
-                                <option value="CITY">City Page</option>
-                                <option value="CUSTOM">Custom</option>
-                            </select>
-                        </div>
-
-                        <div>
-                            <label className="flex items-center gap-2">
-                                <input
-                                    type="checkbox"
-                                    name="isActive"
-                                    checked={formData.isActive}
-                                    onChange={handleChange}
-                                    className="rounded"
-                                />
-                                <span className="text-sm font-medium text-gray-700">Active</span>
-                            </label>
+                            <p className="text-xs text-gray-500 mt-1">Used to identify the template internally.</p>
                         </div>
                     </div>
 
@@ -151,60 +116,41 @@ export default function NewTemplate() {
 
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">
-                                HTML Template * (Use Handlebars syntax)
+                                HTML Template * (Handlebars syntax)
                             </label>
                             <textarea
-                                name="content"
-                                value={formData.content}
+                                name="templateHtml"
+                                value={formData.templateHtml}
                                 onChange={handleChange}
                                 required
                                 rows={15}
                                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm"
                                 placeholder={exampleTemplate}
                             />
-                            <p className="text-xs text-gray-500 mt-1">
-                                Use {'{{variable}}'} for dynamic content
-                            </p>
+                            <p className="text-xs text-gray-500 mt-1">Variables come from region metadata and helpers.</p>
                         </div>
 
-                        <div className="grid grid-cols-2 gap-4">
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    Variables (JSON array)
-                                </label>
-                                <textarea
-                                    name="variables"
-                                    value={formData.variables}
-                                    onChange={handleChange}
-                                    rows={3}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-xs"
-                                    placeholder={exampleVariables}
-                                />
-                            </div>
-
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    Default Values (JSON object)
-                                </label>
-                                <textarea
-                                    name="defaultVariables"
-                                    value={formData.defaultVariables}
-                                    onChange={handleChange}
-                                    rows={3}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-xs"
-                                    placeholder={exampleDefaults}
-                                />
-                            </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Placeholders (comma separated)
+                            </label>
+                            <input
+                                name="placeholders"
+                                value={formData.placeholders}
+                                onChange={handleChange}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                placeholder="region_name, seo_summary, median_income"
+                            />
+                            <p className="text-xs text-gray-500 mt-1">Used to document expected dynamic values.</p>
                         </div>
                     </div>
 
                     <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                        <h4 className="font-semibold text-blue-900 mb-2">💡 Template Tips</h4>
+                        <h4 className="font-semibold text-blue-900 mb-2">Template Tips</h4>
                         <ul className="text-sm text-blue-800 space-y-1">
-                            <li>• Use {'{{variable}}'} for simple substitution</li>
-                            <li>• Use {'{{#if condition}}...{{/if}}'} for conditionals</li>
-                            <li>• Use {'{{#each items}}...{{/each}}'} for loops</li>
-                            <li>• All templates use Handlebars syntax</li>
+                            <li>Use {'{{variable}}'} for dynamic values (e.g., {'{{region_name}}'}).</li>
+                            <li>Helpers available: formatNumber, formatCurrency, lowercase, uppercase, capitalize.</li>
+                            <li>Keep markup semantic and include H1/H2 headings for SEO.</li>
                         </ul>
                     </div>
 
@@ -214,7 +160,7 @@ export default function NewTemplate() {
                             disabled={loading}
                             className="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 transition disabled:opacity-50"
                         >
-                            {loading ? 'Creating...' : 'Create Template'}
+                            {loading ? "Creating..." : "Create Template"}
                         </button>
                         <button
                             type="button"

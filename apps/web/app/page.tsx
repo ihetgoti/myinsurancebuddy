@@ -41,9 +41,9 @@ export default function Home() {
                         <Link href="/blog" className="text-gray-600 hover:text-blue-600 transition">Blog</Link>
                         <a href="#states" className="text-gray-600 hover:text-blue-600 transition">States</a>
                         <a href="#insurance-types" className="text-gray-600 hover:text-blue-600 transition">Coverage</a>
-                        <Link href="/admin" className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">
+                        <a href="https://admin.myinsurancebuddies.com" target="_blank" rel="noopener noreferrer" className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">
                             Admin
-                        </Link>
+                        </a>
                     </div>
                 </div>
             </nav>

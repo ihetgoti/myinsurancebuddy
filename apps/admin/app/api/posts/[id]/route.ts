@@ -52,6 +52,25 @@ export async function PATCH(
         const body = await request.json();
         const { title, slug, excerpt, content, metaTitle, metaDescription, status, tags } = body;
 
+        // Get existing post for audit log
+        const existingPost = await prisma.post.findUnique({
+            where: { id: params.id },
+        });
+
+        if (!existingPost) {
+            return NextResponse.json({ error: 'Post not found' }, { status: 404 });
+        }
+
+        // Check if slug is being changed and already exists
+        if (slug && slug !== existingPost.slug) {
+            const slugExists = await prisma.post.findUnique({
+                where: { slug },
+            });
+            if (slugExists) {
+                return NextResponse.json({ error: 'Slug already exists' }, { status: 400 });
+            }
+        }
+
         const post = await prisma.post.update({
             where: { id: params.id },
             data: {
@@ -71,10 +90,30 @@ export async function PATCH(
             },
         });
 
+        // Create audit log
+        try {
+            await prisma.auditLog.create({
+                data: {
+                    userId: session.user.id,
+                    action: 'UPDATE_POST',
+                    entityType: 'Post',
+                    entityId: post.id,
+                    changes: { before: existingPost, after: post },
+                },
+            });
+        } catch (auditError) {
+            console.error('Failed to create audit log:', auditError);
+        }
+
         return NextResponse.json(post);
-    } catch (error) {
+    } catch (error: any) {
         console.error('PATCH /api/posts/[id] error:', error);
-        return NextResponse.json({ error: 'Failed to update post' }, { status: 500 });
+        if (error.code === 'P2002') {
+            return NextResponse.json({ error: 'Slug already exists' }, { status: 400 });
+        }
+        return NextResponse.json({ 
+            error: error.message || 'Failed to update post' 
+        }, { status: 500 });
     }
 }
 
@@ -90,13 +129,38 @@ export async function DELETE(
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
+        const post = await prisma.post.findUnique({
+            where: { id: params.id },
+        });
+
+        if (!post) {
+            return NextResponse.json({ error: 'Post not found' }, { status: 404 });
+        }
+
         await prisma.post.delete({
             where: { id: params.id },
         });
 
+        // Create audit log
+        try {
+            await prisma.auditLog.create({
+                data: {
+                    userId: session.user.id,
+                    action: 'DELETE_POST',
+                    entityType: 'Post',
+                    entityId: params.id,
+                    changes: { before: post },
+                },
+            });
+        } catch (auditError) {
+            console.error('Failed to create audit log:', auditError);
+        }
+
         return NextResponse.json({ success: true });
-    } catch (error) {
+    } catch (error: any) {
         console.error('DELETE /api/posts/[id] error:', error);
-        return NextResponse.json({ error: 'Failed to delete post' }, { status: 500 });
+        return NextResponse.json({ 
+            error: error.message || 'Failed to delete post' 
+        }, { status: 500 });
     }
 }

@@ -95,6 +95,7 @@ model ProgrammaticPage {
   generatedHtml   String
   metaTitle       String?
   metaDescription String?
+  insuranceType   String?  // e.g., "health-insurance", "car-insurance", "home-insurance"
   isPublished     Boolean  @default(false)
   lastGeneratedAt DateTime?
   createdAt       DateTime @default(now())

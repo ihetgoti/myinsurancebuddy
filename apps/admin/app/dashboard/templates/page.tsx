@@ -1,43 +1,40 @@
-'use client';
+"use client";
 
-import AdminLayout from '@/components/AdminLayout';
-import { useEffect, useState } from 'react';
-import Link from 'next/link';
+import AdminLayout from "@/components/AdminLayout";
+import Link from "next/link";
+import { useEffect, useState } from "react";
 
 interface Template {
     id: string;
     name: string;
-    description: string | null;
-    templateType: string;
-    isActive: boolean;
+    slug: string;
+    placeholders: string[];
     createdAt: string;
-    _count?: {
-        pages: number;
-    };
+    updatedAt: string;
 }
 
 export default function TemplatesList() {
     const [templates, setTemplates] = useState<Template[]>([]);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState("");
 
     useEffect(() => {
         fetchTemplates();
     }, []);
 
     const fetchTemplates = async () => {
+        setError("");
         try {
-            const res = await fetch('/api/templates');
-            const data = await res.json();
-            
-            // Check if data is an array, otherwise set empty array
-            if (Array.isArray(data)) {
-                setTemplates(data);
-            } else {
-                console.error('API returned non-array data:', data);
-                setTemplates([]);
+            const res = await fetch("/api/templates");
+            if (!res.ok) {
+                const data = await res.json();
+                throw new Error(data.error || "Failed to load templates");
             }
-        } catch (error) {
-            console.error('Failed to fetch templates:', error);
+            const data = await res.json();
+            setTemplates(Array.isArray(data) ? data : []);
+        } catch (err: any) {
+            console.error("Failed to fetch templates:", err);
+            setError(err.message);
             setTemplates([]);
         } finally {
             setLoading(false);
@@ -45,32 +42,18 @@ export default function TemplatesList() {
     };
 
     const handleDelete = async (id: string) => {
-        if (!confirm('Are you sure? This will affect all pages using this template.')) return;
+        if (!confirm("Delete this template? This cannot be undone.")) return;
 
         try {
-            const res = await fetch(`/api/templates/${id}`, { method: 'DELETE' });
-            if (res.ok) {
-                setTemplates(templates.filter(t => t.id !== id));
+            const res = await fetch(`/api/templates/${id}`, { method: "DELETE" });
+            if (!res.ok) {
+                const data = await res.json();
+                throw new Error(data.error || "Failed to delete template");
             }
-        } catch (error) {
-            console.error('Failed to delete template:', error);
-        }
-    };
-
-    const toggleActive = async (id: string, currentStatus: boolean) => {
-        try {
-            const res = await fetch(`/api/templates/${id}`, {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ isActive: !currentStatus }),
-            });
-            if (res.ok) {
-                setTemplates(templates.map(t => 
-                    t.id === id ? { ...t, isActive: !currentStatus } : t
-                ));
-            }
-        } catch (error) {
-            console.error('Failed to update template:', error);
+            setTemplates((prev) => prev.filter((t) => t.id !== id));
+        } catch (err: any) {
+            console.error("Failed to delete template:", err);
+            alert(err.message || "Delete failed");
         }
     };
 
@@ -79,8 +62,8 @@ export default function TemplatesList() {
             <div>
                 <div className="flex justify-between items-center mb-6">
                     <div>
-                        <h1 className="text-3xl font-bold text-gray-900">Page Templates</h1>
-                        <p className="text-gray-600 mt-1">Manage programmatic page templates</p>
+                        <h1 className="text-3xl font-bold text-gray-900">Programmatic Templates</h1>
+                        <p className="text-gray-600 mt-1">Manage the HTML used to generate programmatic pages.</p>
                     </div>
                     <Link
                         href="/dashboard/templates/new"
@@ -90,21 +73,30 @@ export default function TemplatesList() {
                     </Link>
                 </div>
 
+                {error && (
+                    <div className="mb-4 rounded border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+                        {error}
+                    </div>
+                )}
+
                 <div className="bg-white rounded-lg shadow overflow-hidden">
                     {loading ? (
                         <div className="p-8 text-center text-gray-600">Loading templates...</div>
                     ) : templates.length === 0 ? (
                         <div className="p-8 text-center text-gray-600">
-                            No templates found. <Link href="/dashboard/templates/new" className="text-blue-600 hover:underline">Create your first template</Link>
+                            No templates found.{" "}
+                            <Link href="/dashboard/templates/new" className="text-blue-600 hover:underline">
+                                Create your first template
+                            </Link>
                         </div>
                     ) : (
                         <table className="w-full">
                             <thead className="bg-gray-50 border-b">
                                 <tr>
                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Created</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Slug</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Placeholders</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Updated</th>
                                     <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
                                 </tr>
                             </thead>
@@ -112,32 +104,16 @@ export default function TemplatesList() {
                                 {templates.map((template) => (
                                     <tr key={template.id} className="hover:bg-gray-50">
                                         <td className="px-6 py-4">
-                                            <div>
-                                                <p className="font-medium text-gray-900">{template.name}</p>
-                                                {template.description && (
-                                                    <p className="text-sm text-gray-500">{template.description}</p>
-                                                )}
-                                            </div>
+                                            <p className="font-medium text-gray-900">{template.name}</p>
                                         </td>
                                         <td className="px-6 py-4 text-sm text-gray-600">
-                                            <span className="px-2 py-1 bg-purple-100 text-purple-800 rounded text-xs">
-                                                {template.templateType}
-                                            </span>
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            <button
-                                                onClick={() => toggleActive(template.id, template.isActive)}
-                                                className={`px-2 py-1 text-xs rounded-full ${
-                                                    template.isActive
-                                                        ? 'bg-green-100 text-green-800'
-                                                        : 'bg-gray-100 text-gray-800'
-                                                }`}
-                                            >
-                                                {template.isActive ? 'Active' : 'Inactive'}
-                                            </button>
+                                            <code className="bg-gray-100 px-2 py-1 rounded text-xs">{template.slug}</code>
                                         </td>
                                         <td className="px-6 py-4 text-sm text-gray-600">
-                                            {new Date(template.createdAt).toLocaleDateString()}
+                                            {template.placeholders?.length ? template.placeholders.join(", ") : "—"}
+                                        </td>
+                                        <td className="px-6 py-4 text-sm text-gray-600">
+                                            {new Date(template.updatedAt).toLocaleDateString()}
                                         </td>
                                         <td className="px-6 py-4 text-right text-sm space-x-3">
                                             <Link

@@ -20,17 +20,23 @@ export async function generateMetadata({
 
     if (!post || post.status !== "PUBLISHED") return {};
 
+    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://myinsurancebuddies.com";
     const title = post.metaTitle || post.title;
     const description = post.metaDescription || post.excerpt || "";
+    const canonical = post.canonicalUrl || `${baseUrl}/blog/${post.slug}`;
 
     return {
         title,
         description,
+        alternates: {
+            canonical,
+        },
         openGraph: {
             title,
             description,
             type: "article",
             publishedTime: post.publishedAt?.toISOString(),
+            url: canonical,
         },
         twitter: {
             card: "summary_large_image",

@@ -29,13 +29,17 @@ export default function PostsList() {
     const fetchPosts = async () => {
         try {
             const res = await fetch('/api/posts');
+            if (!res.ok) {
+                throw new Error(`Failed to load posts (${res.status})`);
+            }
             const data = await res.json();
 
-            // Check if data is an array, otherwise set empty array
-            if (Array.isArray(data)) {
-                setPosts(data);
+            // Support both paginated and legacy responses
+            const normalized = Array.isArray(data) ? data : data.posts;
+            if (Array.isArray(normalized)) {
+                setPosts(normalized);
             } else {
-                console.error('API returned non-array data:', data);
+                console.error('Unexpected posts payload:', data);
                 setPosts([]);
             }
         } catch (error) {

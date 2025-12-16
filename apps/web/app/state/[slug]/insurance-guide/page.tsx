@@ -26,17 +26,23 @@ export async function generateMetadata({
         },
     });
 
+    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://myinsurancebuddies.com";
     const title = page?.metaTitle || `Best Insurance in ${state.name} - Tips & Deals`;
     const description = page?.metaDescription ||
         `Find the best and cheapest insurance in ${state.name}. Compare auto, health, home, and life insurance rates. Expert tips & deals.`;
+    const canonical = `${baseUrl}/state/${state.slug}/insurance-guide`;
 
     return {
         title,
         description,
+        alternates: {
+            canonical,
+        },
         openGraph: {
             title,
             description,
             type: "website",
+            url: canonical,
         },
         twitter: {
             card: "summary_large_image",

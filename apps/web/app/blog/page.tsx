@@ -5,9 +5,14 @@ import { Metadata } from "next";
 
 const prisma = new PrismaClient();
 
+const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://myinsurancebuddies.com";
+
 export const metadata: Metadata = {
     title: "Insurance Blog | MyInsuranceBuddies",
     description: "Expert insurance guides, tips, and insights to help you make informed decisions about your coverage.",
+    alternates: {
+        canonical: `${baseUrl}/blog`,
+    },
 };
 
 export const dynamic = "force-dynamic";

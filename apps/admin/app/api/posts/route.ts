@@ -49,6 +49,15 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
         }
 
+        // Check if slug already exists
+        const existingPost = await prisma.post.findUnique({
+            where: { slug },
+        });
+
+        if (existingPost) {
+            return NextResponse.json({ error: 'Slug already exists' }, { status: 400 });
+        }
+
         const post = await prisma.post.create({
             data: {
                 title,
@@ -72,9 +81,30 @@ export async function POST(request: NextRequest) {
             },
         });
 
+        // Create audit log
+        try {
+            await prisma.auditLog.create({
+                data: {
+                    userId: session.user.id,
+                    action: 'CREATE_POST',
+                    entityType: 'Post',
+                    entityId: post.id,
+                    changes: { after: post },
+                },
+            });
+        } catch (auditError) {
+            console.error('Failed to create audit log:', auditError);
+            // Don't fail the request if audit logging fails
+        }
+
         return NextResponse.json(post, { status: 201 });
-    } catch (error) {
+    } catch (error: any) {
         console.error('POST /api/posts error:', error);
-        return NextResponse.json({ error: 'Failed to create post' }, { status: 500 });
+        if (error.code === 'P2002') {
+            return NextResponse.json({ error: 'Slug already exists' }, { status: 400 });
+        }
+        return NextResponse.json({ 
+            error: error.message || 'Failed to create post' 
+        }, { status: 500 });
     }
 }

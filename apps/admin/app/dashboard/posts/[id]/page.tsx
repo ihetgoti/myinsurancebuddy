@@ -10,12 +10,10 @@ interface Post {
     slug: string;
     bodyHtml: string;
     excerpt: string | null;
-    featuredImage: string | null;
     status: 'DRAFT' | 'PUBLISHED' | 'ARCHIVED';
     publishedAt: string | null;
     metaTitle: string | null;
     metaDescription: string | null;
-    categories: string[];
     tags: string[];
 }
 
@@ -55,11 +53,6 @@ export default function EditPost() {
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
         setFormData(prev => prev ? { ...prev, [name]: value } : null);
-    };
-
-    const handleCategoriesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const categories = e.target.value.split(',').map(c => c.trim()).filter(Boolean);
-        setFormData(prev => prev ? { ...prev, categories } : null);
     };
 
     const handleTagsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -295,54 +288,19 @@ export default function EditPost() {
                                 </div>
                             </div>
 
-                            {/* Featured Image */}
+                            {/* Tags */}
                             <div className="bg-white rounded-lg shadow p-6">
-                                <h2 className="text-lg font-semibold mb-4">Featured Image</h2>
+                                <h2 className="text-lg font-semibold mb-4">Tags</h2>
                                 <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Tags</label>
                                     <input
                                         type="text"
-                                        name="featuredImage"
-                                        value={formData.featuredImage || ''}
-                                        onChange={handleChange}
-                                        placeholder="Image URL"
+                                        value={(formData.tags || []).join(', ')}
+                                        onChange={handleTagsChange}
+                                        placeholder="tips, guide, review"
                                         className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                                     />
-                                    {formData.featuredImage && (
-                                        <img
-                                            src={formData.featuredImage}
-                                            alt="Preview"
-                                            className="mt-4 w-full h-32 object-cover rounded-md"
-                                        />
-                                    )}
-                                </div>
-                            </div>
-
-                            {/* Categories & Tags */}
-                            <div className="bg-white rounded-lg shadow p-6">
-                                <h2 className="text-lg font-semibold mb-4">Organization</h2>
-                                <div className="space-y-4">
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">Categories</label>
-                                        <input
-                                            type="text"
-                                            value={(formData.categories || []).join(', ')}
-                                            onChange={handleCategoriesChange}
-                                            placeholder="health, life, auto"
-                                            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                        />
-                                        <p className="text-xs text-gray-500 mt-1">Separate with commas</p>
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">Tags</label>
-                                        <input
-                                            type="text"
-                                            value={(formData.tags || []).join(', ')}
-                                            onChange={handleTagsChange}
-                                            placeholder="tips, guide, review"
-                                            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                        />
-                                        <p className="text-xs text-gray-500 mt-1">Separate with commas</p>
-                                    </div>
+                                    <p className="text-xs text-gray-500 mt-1">Separate with commas</p>
                                 </div>
                             </div>
                         </div>
