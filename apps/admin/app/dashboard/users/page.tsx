@@ -4,6 +4,7 @@ import AdminLayout from '@/components/AdminLayout';
 import { useSession } from 'next-auth/react';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { getApiUrl } from '@/lib/api';
 
 interface User {
     id: string;
@@ -31,7 +32,7 @@ export default function UsersManagement() {
 
     const fetchUsers = async () => {
         try {
-            const res = await fetch('/api/users');
+            const res = await fetch(getApiUrl('/api/users'));
             const data = await res.json();
             setUsers(data);
         } catch (error) {
@@ -43,7 +44,7 @@ export default function UsersManagement() {
 
     const toggleUserStatus = async (userId: string, currentStatus: boolean) => {
         try {
-            const res = await fetch(`/api/users/${userId}`, {
+            const res = await fetch(getApiUrl(`/api/users/${userId}`), {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ isActive: !currentStatus }),
@@ -62,7 +63,7 @@ export default function UsersManagement() {
         if (!confirm('Are you sure you want to delete this user?')) return;
 
         try {
-            const res = await fetch(`/api/users/${userId}`, { method: 'DELETE' });
+            const res = await fetch(getApiUrl(`/api/users/${userId}`), { method: 'DELETE' });
             if (res.ok) {
                 setUsers(users.filter(u => u.id !== userId));
             }
@@ -116,8 +117,8 @@ export default function UsersManagement() {
                                         </td>
                                         <td className="px-6 py-4">
                                             <span className={`px-2 py-1 text-xs rounded-full ${user.role === 'SUPER_ADMIN' ? 'bg-purple-100 text-purple-800' :
-                                                    user.role === 'ADMIN' ? 'bg-blue-100 text-blue-800' :
-                                                        'bg-gray-100 text-gray-800'
+                                                user.role === 'ADMIN' ? 'bg-blue-100 text-blue-800' :
+                                                    'bg-gray-100 text-gray-800'
                                                 }`}>
                                                 {user.role}
                                             </span>
@@ -127,8 +128,8 @@ export default function UsersManagement() {
                                                 onClick={() => toggleUserStatus(user.id, user.isActive)}
                                                 disabled={user.id === session.user.id}
                                                 className={`px-2 py-1 text-xs rounded-full ${user.isActive
-                                                        ? 'bg-green-100 text-green-800'
-                                                        : 'bg-red-100 text-red-800'
+                                                    ? 'bg-green-100 text-green-800'
+                                                    : 'bg-red-100 text-red-800'
                                                     } disabled:opacity-50`}
                                             >
                                                 {user.isActive ? 'Active' : 'Inactive'}
@@ -183,7 +184,7 @@ function NewUserModal({ onClose, onSuccess }: { onClose: () => void; onSuccess: 
         setLoading(true);
 
         try {
-            const res = await fetch('/api/users', {
+            const res = await fetch(getApiUrl('/api/users'), {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(formData),

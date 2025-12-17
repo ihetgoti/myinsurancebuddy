@@ -3,6 +3,7 @@
 import AdminLayout from '@/components/AdminLayout';
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import { getApiUrl } from '@/lib/api';
 
 interface Post {
     id: string;
@@ -37,7 +38,7 @@ export default function EditPost() {
 
     const fetchPost = async () => {
         try {
-            const res = await fetch(`/api/posts/${postId}`);
+            const res = await fetch(getApiUrl(`/api/posts/${postId}`));
             if (!res.ok) {
                 throw new Error('Post not found');
             }
@@ -69,7 +70,7 @@ export default function EditPost() {
         setSaving(true);
 
         try {
-            const res = await fetch(`/api/posts/${postId}`, {
+            const res = await fetch(getApiUrl(`/api/posts/${postId}`), {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -96,7 +97,7 @@ export default function EditPost() {
         if (!confirm('Are you sure you want to delete this post?')) return;
 
         try {
-            const res = await fetch(`/api/posts/${postId}`, { method: 'DELETE' });
+            const res = await fetch(getApiUrl(`/api/posts/${postId}`), { method: 'DELETE' });
             if (!res.ok) throw new Error('Failed to delete post');
             router.push('/dashboard/posts');
         } catch (err: any) {

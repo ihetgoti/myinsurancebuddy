@@ -3,6 +3,7 @@
 import AdminLayout from '@/components/AdminLayout';
 import { useSession } from 'next-auth/react';
 import { useEffect, useState } from 'react';
+import { getApiUrl } from '@/lib/api';
 
 interface Stats {
     posts: number;
@@ -24,10 +25,10 @@ export default function Dashboard() {
         try {
             // Fetch stats from APIs
             const [postsRes, templatesRes, regionsRes, mediaRes] = await Promise.all([
-                fetch('/api/posts'),
-                fetch('/api/templates'),
-                fetch('/api/regions'),
-                fetch('/api/media'),
+                fetch(getApiUrl('/api/posts')),
+                fetch(getApiUrl('/api/templates')),
+                fetch(getApiUrl('/api/regions')),
+                fetch(getApiUrl('/api/media')),
             ]);
 
             const [posts, templates, regions, media] = await Promise.all([

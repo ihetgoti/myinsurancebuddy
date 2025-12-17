@@ -2,6 +2,7 @@
 
 import AdminLayout from '@/components/AdminLayout';
 import { useEffect, useState } from 'react';
+import { getApiUrl } from '@/lib/api';
 
 interface MediaFile {
     id: string;
@@ -27,7 +28,7 @@ export default function MediaLibrary() {
 
     const fetchMedia = async () => {
         try {
-            const res = await fetch('/api/media');
+            const res = await fetch(getApiUrl('/api/media'));
             const data = await res.json();
             if (Array.isArray(data)) {
                 setMedia(data);
@@ -51,7 +52,7 @@ export default function MediaLibrary() {
             const formData = new FormData();
             formData.append('file', selectedFile);
 
-            const res = await fetch('/api/media/upload', {
+            const res = await fetch(getApiUrl('/api/media/upload'), {
                 method: 'POST',
                 body: formData,
             });
@@ -71,7 +72,7 @@ export default function MediaLibrary() {
         if (!confirm('Are you sure you want to delete this file?')) return;
 
         try {
-            const res = await fetch(`/api/media/${id}`, { method: 'DELETE' });
+            const res = await fetch(getApiUrl(`/api/media/${id}`), { method: 'DELETE' });
             if (res.ok) {
                 setMedia(media.filter(m => m.id !== id));
             }

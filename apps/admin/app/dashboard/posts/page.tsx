@@ -3,6 +3,7 @@
 import AdminLayout from '@/components/AdminLayout';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { getApiUrl } from '@/lib/api';
 
 interface Post {
     id: string;
@@ -28,7 +29,7 @@ export default function PostsList() {
 
     const fetchPosts = async () => {
         try {
-            const res = await fetch('/api/posts');
+            const res = await fetch(getApiUrl('/api/posts'));
             if (!res.ok) {
                 throw new Error(`Failed to load posts (${res.status})`);
             }
@@ -54,7 +55,7 @@ export default function PostsList() {
         if (!confirm('Are you sure you want to delete this post?')) return;
 
         try {
-            const res = await fetch(`/api/posts/${id}`, { method: 'DELETE' });
+            const res = await fetch(getApiUrl(`/api/posts/${id}`), { method: 'DELETE' });
             if (res.ok) {
                 setPosts(posts.filter(p => p.id !== id));
             }

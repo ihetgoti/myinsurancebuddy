@@ -4,6 +4,7 @@ import AdminLayout from '@/components/AdminLayout';
 import { useSession } from 'next-auth/react';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { getApiUrl } from '@/lib/api';
 
 interface AuditLog {
     id: string;
@@ -35,7 +36,7 @@ export default function AuditLogs() {
 
     const fetchLogs = async () => {
         try {
-            const res = await fetch('/api/audit');
+            const res = await fetch(getApiUrl('/api/audit'));
             const data = await res.json();
             setLogs(data);
         } catch (error) {
@@ -68,8 +69,8 @@ export default function AuditLogs() {
                                 key={type}
                                 onClick={() => setFilter(type)}
                                 className={`px-4 py-2 rounded-md transition capitalize ${filter === type
-                                        ? 'bg-blue-600 text-white'
-                                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                    ? 'bg-blue-600 text-white'
+                                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                                     }`}
                             >
                                 {type}
@@ -106,9 +107,9 @@ export default function AuditLogs() {
                                             </td>
                                             <td className="px-6 py-4">
                                                 <span className={`px-2 py-1 text-xs rounded-full ${log.action === 'CREATE' ? 'bg-green-100 text-green-800' :
-                                                        log.action === 'UPDATE' ? 'bg-blue-100 text-blue-800' :
-                                                            log.action === 'DELETE' ? 'bg-red-100 text-red-800' :
-                                                                'bg-gray-100 text-gray-800'
+                                                    log.action === 'UPDATE' ? 'bg-blue-100 text-blue-800' :
+                                                        log.action === 'DELETE' ? 'bg-red-100 text-red-800' :
+                                                            'bg-gray-100 text-gray-800'
                                                     }`}>
                                                     {log.action}
                                                 </span>

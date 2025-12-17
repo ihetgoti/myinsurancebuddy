@@ -2,6 +2,7 @@
 
 import AdminLayout from '@/components/AdminLayout';
 import { useEffect, useState } from 'react';
+import { getApiUrl } from '@/lib/api';
 
 interface Region {
     id: string;
@@ -33,7 +34,7 @@ export default function RegionsManagement() {
 
     const fetchRegions = async () => {
         try {
-            const res = await fetch('/api/regions');
+            const res = await fetch(getApiUrl('/api/regions'));
             const data = await res.json();
             if (Array.isArray(data)) {
                 setRegions(data);
@@ -250,7 +251,7 @@ function RegionModal({ region, onClose, onSuccess }: {
         setLoading(true);
 
         try {
-            const url = region ? `/api/regions/${region.id}` : '/api/regions';
+            const url = region ? getApiUrl(`/api/regions/${region.id}`) : getApiUrl('/api/regions');
             const method = region ? 'PATCH' : 'POST';
 
             const res = await fetch(url, {

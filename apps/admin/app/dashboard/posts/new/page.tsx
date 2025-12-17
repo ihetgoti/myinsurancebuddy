@@ -3,6 +3,7 @@
 import AdminLayout from '@/components/AdminLayout';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { getApiUrl } from '@/lib/api';
 
 export default function NewPost() {
     const router = useRouter();
@@ -38,7 +39,7 @@ export default function NewPost() {
         setLoading(true);
 
         try {
-            const res = await fetch('/api/posts', {
+            const res = await fetch(getApiUrl('/api/posts'), {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
