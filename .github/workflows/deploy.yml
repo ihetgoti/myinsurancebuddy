@@ -41,9 +41,12 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Generate Prisma Client
-        run: pnpm --filter=@myinsurancebuddy/db prisma generate
+        run: |
+          cd packages/db
+          npx prisma generate
+          cd ../..
 
-      - name: Build
+      - name: Build packages
         run: pnpm build
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
@@ -71,8 +74,8 @@ jobs:
             
             # Generate Prisma client and run migrations
             cd packages/db
-            pnpm prisma generate
-            pnpm prisma migrate deploy
+            npx prisma generate
+            npx prisma migrate deploy
             cd ../..
             
             # Build apps
