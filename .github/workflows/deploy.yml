@@ -62,8 +62,20 @@ jobs:
           port: ${{ secrets.VPS_PORT }}
           script: |
             set -e
-            cd /var/www/myinsurancebuddies.com
+            PROJECT_DIR="/var/www/myinsurancebuddies.com"
+            
             echo "📦 Deploying MyInsuranceBuddies..."
+            
+            # Create directory if it doesn't exist
+            if [ ! -d "$PROJECT_DIR" ]; then
+              echo "Creating project directory..."
+              sudo mkdir -p $PROJECT_DIR
+              sudo chown $USER:$USER $PROJECT_DIR
+              cd $PROJECT_DIR
+              git clone https://github.com/ihetgoti/myinsurancebuddy.git .
+            else
+              cd $PROJECT_DIR
+            fi
             
             # Pull latest code
             git fetch origin main
