@@ -1,4 +1,4 @@
-name: CI/CD Pipeline
+name: Deploy to Production
 
 on:
   push:
@@ -41,27 +41,10 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Generate Prisma Client
-        run: |
-          cd packages/db
-          pnpm prisma generate
+        run: pnpm --filter=@myinsurancebuddy/db prisma generate
 
-      - name: Build packages
-        run: pnpm build --filter=@myinsurancebuddy/db
-
-      - name: Lint check
-        run: |
-          pnpm --filter=web lint || true
-          pnpm --filter=admin lint || true
-
-      - name: Build web app
-        run: pnpm build --filter=web
-        env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
-          NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}
-          NEXTAUTH_URL: ${{ secrets.NEXTAUTH_URL }}
-
-      - name: Build admin app
-        run: pnpm build --filter=admin
+      - name: Build
+        run: pnpm build
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}
@@ -73,15 +56,15 @@ jobs:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USERNAME }}
           key: ${{ secrets.VPS_SSH_KEY }}
-          port: ${{ secrets.VPS_PORT || 22 }}
+          port: ${{ secrets.VPS_PORT }}
           script: |
+            set -e
             cd /var/www/myinsurancebuddies.com
-            echo "Deploying from: $(pwd)"
+            echo "📦 Deploying MyInsuranceBuddies..."
             
-            # Clean up conflicting files and pull
-            rm -f apps/admin/next-env.d.ts apps/web/next-env.d.ts
-            git stash || true
-            git pull origin main
+            # Pull latest code
+            git fetch origin main
+            git reset --hard origin/main
             
             # Install dependencies
             pnpm install --frozen-lockfile
@@ -92,19 +75,18 @@ jobs:
             pnpm prisma migrate deploy
             cd ../..
             
-            # Build all apps
-            pnpm build --filter=@myinsurancebuddy/db
-            pnpm build --filter=web
-            pnpm build --filter=admin
+            # Build apps
+            pnpm build
             
-            # Run fix-nginx script
-            echo "Running Nginx fix script..."
-            chmod +x scripts/fix-nginx.sh
-            ./scripts/fix-nginx.sh
+            # Update nginx config
+            sudo cp nginx.conf /etc/nginx/sites-available/myinsurancebuddies.com
+            sudo rm -f /etc/nginx/sites-enabled/default
+            sudo ln -sf /etc/nginx/sites-available/myinsurancebuddies.com /etc/nginx/sites-enabled/
+            sudo nginx -t && sudo systemctl reload nginx
             
-            # Restart with PM2
-            pm2 restart myinsurancebuddy-web || pm2 start npm --name myinsurancebuddy-web -- run start:web
-            pm2 restart myinsurancebuddy-admin || pm2 start npm --name myinsurancebuddy-admin -- run start:admin
+            # Restart apps with PM2
+            pm2 delete all || true
+            pm2 start ecosystem.config.js
             pm2 save
             
-            echo "✅ Deployment completed successfully!"
+            echo "✅ Deployment completed!"

@@ -1,7 +1,3 @@
-import { PrismaClient } from "@myinsurancebuddy/db";
-
-const prisma = new PrismaClient();
-
 export const dynamic = "force-dynamic";
 
 export async function GET() {
@@ -9,7 +5,6 @@ export async function GET() {
 
     const mainUrls = [
         { loc: `${baseUrl}/`, priority: "1.0", changefreq: "daily" },
-        { loc: `${baseUrl}/blog`, priority: "0.9", changefreq: "daily" },
     ];
 
     const sitemap = `<?xml version="1.0" encoding="UTF-8"?>

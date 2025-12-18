@@ -1,26 +1,32 @@
 module.exports = {
     apps: [
         {
-            name: 'web',
-            script: 'node',
-            args: '.next/standalone/apps/web/server.js',
-            cwd: './apps/web',
+            name: 'myinsurancebuddy-web',
+            script: 'node_modules/.bin/next',
+            args: 'start -p 3000',
+            cwd: '/var/www/myinsurancebuddies.com/apps/web',
             env: {
-                PORT: 3000,
                 NODE_ENV: 'production',
-                HOSTNAME: '0.0.0.0'
-            }
+                PORT: 3000
+            },
+            instances: 1,
+            autorestart: true,
+            watch: false,
+            max_memory_restart: '500M'
         },
         {
-            name: 'admin',
-            script: 'node',
-            args: '.next/standalone/apps/admin/server.js',
-            cwd: './apps/admin',
+            name: 'myinsurancebuddy-admin',
+            script: 'node_modules/.bin/next',
+            args: 'start -p 3001',
+            cwd: '/var/www/myinsurancebuddies.com/apps/admin',
             env: {
-                PORT: 3001,
                 NODE_ENV: 'production',
-                HOSTNAME: '0.0.0.0'
-            }
+                PORT: 3001
+            },
+            instances: 1,
+            autorestart: true,
+            watch: false,
+            max_memory_restart: '500M'
         }
     ]
 };

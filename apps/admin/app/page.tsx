@@ -119,7 +119,7 @@ export default function AdminHome() {
                                     </div>
                                     <div className="flex items-center justify-between bg-slate-900/50 rounded-lg px-3 py-2">
                                         <span className="text-xs text-slate-400">Password</span>
-                                        <code className="text-xs text-purple-300">changeme123</code>
+                                        <code className="text-xs text-purple-300">admin123</code>
                                     </div>
                                 </div>
                                 <div className="mt-3 flex items-center gap-2 text-xs text-amber-400">

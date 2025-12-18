@@ -36,20 +36,31 @@ export default function SignIn() {
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-600 to-purple-700">
-            <div className="bg-white rounded-lg shadow-2xl p-8 w-full max-w-md mx-4">
-                <h1 className="text-3xl font-bold text-center mb-2 text-gray-900">Admin Sign In</h1>
-                <p className="text-gray-600 text-center mb-8">MyInsuranceBuddies</p>
+        <div className="min-h-screen flex items-center justify-center bg-slate-900 relative overflow-hidden">
+            {/* Grid Background */}
+            <div className="absolute inset-0 opacity-20" style={{
+                backgroundImage: 'radial-gradient(#ffffff 1px, transparent 1px)',
+                backgroundSize: '24px 24px'
+            }}></div>
+
+            <div className="bg-white rounded-xl shadow-2xl p-8 w-full max-w-md mx-4 relative z-10 border border-slate-800/10">
+                <div className="text-center mb-8">
+                    <div className="w-12 h-12 bg-slate-900 text-white rounded-lg flex items-center justify-center mx-auto mb-4">
+                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
+                    </div>
+                    <h1 className="text-2xl font-bold text-slate-900">Admin Sign In</h1>
+                    <p className="text-slate-500">MyInsuranceBuddies</p>
+                </div>
 
                 {error && (
-                    <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4">
+                    <div className="bg-red-50 border border-red-100 text-red-600 px-4 py-3 rounded-lg mb-6 text-sm">
                         {error}
                     </div>
                 )}
 
-                <form onSubmit={handleSubmit} className="space-y-4">
+                <form onSubmit={handleSubmit} className="space-y-5">
                     <div>
-                        <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+                        <label htmlFor="email" className="block text-sm font-medium text-slate-700 mb-1">
                             Email
                         </label>
                         <input
@@ -58,13 +69,13 @@ export default function SignIn() {
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                             required
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent transition-all"
                             placeholder="admin@myinsurancebuddies.com"
                         />
                     </div>
 
                     <div>
-                        <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+                        <label htmlFor="password" className="block text-sm font-medium text-slate-700 mb-1">
                             Password
                         </label>
                         <input
@@ -73,7 +84,7 @@ export default function SignIn() {
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                             required
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent transition-all"
                             placeholder="••••••••"
                         />
                     </div>
@@ -81,16 +92,24 @@ export default function SignIn() {
                     <button
                         type="submit"
                         disabled={loading}
-                        className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="w-full bg-slate-900 text-white py-2.5 px-4 rounded-lg font-medium hover:bg-slate-800 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-slate-900/10"
                     >
                         {loading ? 'Signing in...' : 'Sign In'}
                     </button>
                 </form>
 
-                <div className="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
-                    <p className="text-sm text-blue-900 font-semibold mb-2">Default Credentials:</p>
-                    <p className="text-xs font-mono text-blue-800">admin@myinsurancebuddies.com</p>
-                    <p className="text-xs font-mono text-blue-800">changeme123</p>
+                <div className="mt-8 bg-slate-50 border border-slate-100 rounded-lg p-4">
+                    <p className="text-xs text-slate-500 font-semibold mb-2 uppercase tracking-wide">Demo Credentials</p>
+                    <div className="space-y-1">
+                        <div className="flex justify-between text-xs">
+                            <span className="text-slate-400">Email:</span>
+                            <span className="font-mono text-slate-700">admin@myinsurancebuddies.com</span>
+                        </div>
+                        <div className="flex justify-between text-xs">
+                            <span className="text-slate-400">Password:</span>
+                            <span className="font-mono text-slate-700">admin123</span>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

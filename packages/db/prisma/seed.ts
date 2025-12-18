@@ -1,139 +1,146 @@
-import { PrismaClient, RegionType, UserRole } from '@prisma/client';
-import bcrypt from 'bcryptjs';
+import { PrismaClient } from '@prisma/client';
+import * as bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
 
-const states = [
-    { name: 'Alabama', slug: 'alabama', stateCode: 'AL' },
-    { name: 'Alaska', slug: 'alaska', stateCode: 'AK' },
-    { name: 'Arizona', slug: 'arizona', stateCode: 'AZ' },
-    { name: 'Arkansas', slug: 'arkansas', stateCode: 'AR' },
-    { name: 'California', slug: 'california', stateCode: 'CA' },
-    { name: 'Colorado', slug: 'colorado', stateCode: 'CO' },
-    { name: 'Connecticut', slug: 'connecticut', stateCode: 'CT' },
-    { name: 'Delaware', slug: 'delaware', stateCode: 'DE' },
-    { name: 'Florida', slug: 'florida', stateCode: 'FL' },
-    { name: 'Georgia', slug: 'georgia', stateCode: 'GA' },
-    { name: 'Hawaii', slug: 'hawaii', stateCode: 'HI' },
-    { name: 'Idaho', slug: 'idaho', stateCode: 'ID' },
-    { name: 'Illinois', slug: 'illinois', stateCode: 'IL' },
-    { name: 'Indiana', slug: 'indiana', stateCode: 'IN' },
-    { name: 'Iowa', slug: 'iowa', stateCode: 'IA' },
-    { name: 'Kansas', slug: 'kansas', stateCode: 'KS' },
-    { name: 'Kentucky', slug: 'kentucky', stateCode: 'KY' },
-    { name: 'Louisiana', slug: 'louisiana', stateCode: 'LA' },
-    { name: 'Maine', slug: 'maine', stateCode: 'ME' },
-    { name: 'Maryland', slug: 'maryland', stateCode: 'MD' },
-    { name: 'Massachusetts', slug: 'massachusetts', stateCode: 'MA' },
-    { name: 'Michigan', slug: 'michigan', stateCode: 'MI' },
-    { name: 'Minnesota', slug: 'minnesota', stateCode: 'MN' },
-    { name: 'Mississippi', slug: 'mississippi', stateCode: 'MS' },
-    { name: 'Missouri', slug: 'missouri', stateCode: 'MO' },
-    { name: 'Montana', slug: 'montana', stateCode: 'MT' },
-    { name: 'Nebraska', slug: 'nebraska', stateCode: 'NE' },
-    { name: 'Nevada', slug: 'nevada', stateCode: 'NV' },
-    { name: 'New Hampshire', slug: 'new-hampshire', stateCode: 'NH' },
-    { name: 'New Jersey', slug: 'new-jersey', stateCode: 'NJ' },
-    { name: 'New Mexico', slug: 'new-mexico', stateCode: 'NM' },
-    { name: 'New York', slug: 'new-york', stateCode: 'NY' },
-    { name: 'North Carolina', slug: 'north-carolina', stateCode: 'NC' },
-    { name: 'North Dakota', slug: 'north-dakota', stateCode: 'ND' },
-    { name: 'Ohio', slug: 'ohio', stateCode: 'OH' },
-    { name: 'Oklahoma', slug: 'oklahoma', stateCode: 'OK' },
-    { name: 'Oregon', slug: 'oregon', stateCode: 'OR' },
-    { name: 'Pennsylvania', slug: 'pennsylvania', stateCode: 'PA' },
-    { name: 'Rhode Island', slug: 'rhode-island', stateCode: 'RI' },
-    { name: 'South Carolina', slug: 'south-carolina', stateCode: 'SC' },
-    { name: 'South Dakota', slug: 'south-dakota', stateCode: 'SD' },
-    { name: 'Tennessee', slug: 'tennessee', stateCode: 'TN' },
-    { name: 'Texas', slug: 'texas', stateCode: 'TX' },
-    { name: 'Utah', slug: 'utah', stateCode: 'UT' },
-    { name: 'Vermont', slug: 'vermont', stateCode: 'VT' },
-    { name: 'Virginia', slug: 'virginia', stateCode: 'VA' },
-    { name: 'Washington', slug: 'washington', stateCode: 'WA' },
-    { name: 'West Virginia', slug: 'west-virginia', stateCode: 'WV' },
-    { name: 'Wisconsin', slug: 'wisconsin', stateCode: 'WI' },
-    { name: 'Wyoming', slug: 'wyoming', stateCode: 'WY' }
-];
-
-const cities = [
-    { name: 'New York City', slug: 'new-york-city', stateCode: 'NY' },
-    { name: 'Los Angeles', slug: 'los-angeles', stateCode: 'CA' },
-    { name: 'Chicago', slug: 'chicago', stateCode: 'IL' },
-    { name: 'Houston', slug: 'houston', stateCode: 'TX' },
-    { name: 'Phoenix', slug: 'phoenix', stateCode: 'AZ' },
-    { name: 'Philadelphia', slug: 'philadelphia', stateCode: 'PA' },
-    { name: 'San Antonio', slug: 'san-antonio', stateCode: 'TX' },
-    { name: 'San Diego', slug: 'san-diego', stateCode: 'CA' },
-    { name: 'Dallas', slug: 'dallas', stateCode: 'TX' },
-    { name: 'San Jose', slug: 'san-jose', stateCode: 'CA' },
-    { name: 'Austin', slug: 'austin', stateCode: 'TX' },
-    { name: 'Jacksonville', slug: 'jacksonville', stateCode: 'FL' },
-    { name: 'Fort Worth', slug: 'fort-worth', stateCode: 'TX' },
-    { name: 'Columbus', slug: 'columbus', stateCode: 'OH' },
-    { name: 'Charlotte', slug: 'charlotte', stateCode: 'NC' },
-    { name: 'San Francisco', slug: 'san-francisco', stateCode: 'CA' },
-    { name: 'Indianapolis', slug: 'indianapolis', stateCode: 'IN' },
-    { name: 'Seattle', slug: 'seattle', stateCode: 'WA' },
-    { name: 'Denver', slug: 'denver', stateCode: 'CO' },
-    { name: 'Washington D.C.', slug: 'washington-dc', stateCode: 'DC' }
-];
-
 async function main() {
-    // Create Super Admin with bcrypt password
-    const email = 'admin@myinsurancebuddies.com';
-    const existingUser = await prisma.user.findUnique({ where: { email } });
+    console.log('🌱 Seeding database...');
 
-    if (!existingUser) {
-        const passwordHash = await bcrypt.hash('changeme123', 10);
-        await prisma.user.create({
-            data: {
-                email,
-                name: 'Super Admin',
-                passwordHash,
-                role: UserRole.SUPER_ADMIN,
-            },
+    // Create admin user
+    const adminPassword = await bcrypt.hash('admin123', 10);
+    const admin = await prisma.user.upsert({
+        where: { email: 'admin@myinsurancebuddies.com' },
+        update: {},
+        create: {
+            email: 'admin@myinsurancebuddies.com',
+            name: 'Admin User',
+            passwordHash: adminPassword,
+            role: 'SUPER_ADMIN',
+            isActive: true,
+        },
+    });
+    console.log('✅ Created admin user:', admin.email);
+
+    // Create insurance types
+    const insuranceTypes = [
+        { name: 'Car Insurance', slug: 'car-insurance', icon: '🚗', description: 'Protect your vehicle and drive with confidence', sortOrder: 1 },
+        { name: 'Home Insurance', slug: 'home-insurance', icon: '🏠', description: 'Secure your home and belongings', sortOrder: 2 },
+        { name: 'Health Insurance', slug: 'health-insurance', icon: '🏥', description: 'Coverage for medical expenses and wellness', sortOrder: 3 },
+        { name: 'Life Insurance', slug: 'life-insurance', icon: '💚', description: 'Financial security for your loved ones', sortOrder: 4 },
+        { name: 'Business Insurance', slug: 'business-insurance', icon: '💼', description: 'Protect your business from unexpected risks', sortOrder: 5 },
+        { name: 'Travel Insurance', slug: 'travel-insurance', icon: '✈️', description: 'Peace of mind on your adventures', sortOrder: 6 },
+    ];
+
+    for (const type of insuranceTypes) {
+        await prisma.insuranceType.upsert({
+            where: { slug: type.slug },
+            update: type,
+            create: type,
         });
-        console.log('Super Admin created');
     }
+    console.log('✅ Created', insuranceTypes.length, 'insurance types');
 
-    // Seed States
+    // Create US country
+    const us = await prisma.country.upsert({
+        where: { code: 'us' },
+        update: {},
+        create: {
+            code: 'us',
+            name: 'United States',
+            isActive: true,
+        },
+    });
+    console.log('✅ Created country: United States');
+
+    // Create sample US states
+    const states = [
+        { name: 'California', slug: 'california', code: 'CA' },
+        { name: 'Texas', slug: 'texas', code: 'TX' },
+        { name: 'Florida', slug: 'florida', code: 'FL' },
+        { name: 'New York', slug: 'new-york', code: 'NY' },
+        { name: 'Illinois', slug: 'illinois', code: 'IL' },
+        { name: 'Pennsylvania', slug: 'pennsylvania', code: 'PA' },
+        { name: 'Ohio', slug: 'ohio', code: 'OH' },
+        { name: 'Georgia', slug: 'georgia', code: 'GA' },
+        { name: 'North Carolina', slug: 'north-carolina', code: 'NC' },
+        { name: 'Michigan', slug: 'michigan', code: 'MI' },
+    ];
+
+    const stateRecords: Record<string, any> = {};
     for (const state of states) {
-        await prisma.region.upsert({
-            where: { slug: state.slug },
-            update: {},
+        const record = await prisma.state.upsert({
+            where: { countryId_slug: { countryId: us.id, slug: state.slug } },
+            update: state,
             create: {
-                name: state.name,
-                slug: state.slug,
-                type: RegionType.STATE,
-                stateCode: state.stateCode,
-                seoSummary: `Find the best insurance in ${state.name}.`,
-                legalNotes: `Insurance regulations in ${state.name} are governed by the state department of insurance.`,
+                ...state,
+                countryId: us.id,
+                isActive: true,
             },
         });
+        stateRecords[state.slug] = record;
     }
-    console.log('States seeded');
+    console.log('✅ Created', states.length, 'US states');
 
-    // Seed Cities
-    for (const city of cities) {
-        await prisma.region.upsert({
-            where: { slug: city.slug },
-            update: {},
+    // Create sample cities for California
+    const californiaCities = [
+        { name: 'Los Angeles', slug: 'los-angeles', population: 3900000 },
+        { name: 'San Francisco', slug: 'san-francisco', population: 870000 },
+        { name: 'San Diego', slug: 'san-diego', population: 1400000 },
+        { name: 'San Jose', slug: 'san-jose', population: 1000000 },
+        { name: 'Sacramento', slug: 'sacramento', population: 500000 },
+        { name: 'Fresno', slug: 'fresno', population: 530000 },
+        { name: 'Long Beach', slug: 'long-beach', population: 470000 },
+        { name: 'Oakland', slug: 'oakland', population: 430000 },
+        { name: 'Bakersfield', slug: 'bakersfield', population: 380000 },
+        { name: 'Anaheim', slug: 'anaheim', population: 350000 },
+    ];
+
+    const california = stateRecords['california'];
+    for (const city of californiaCities) {
+        await prisma.city.upsert({
+            where: { stateId_slug: { stateId: california.id, slug: city.slug } },
+            update: city,
             create: {
-                name: city.name,
-                slug: city.slug,
-                type: RegionType.CITY,
-                stateCode: city.stateCode,
-                seoSummary: `Compare insurance rates in ${city.name}.`,
+                ...city,
+                stateId: california.id,
+                isActive: true,
             },
         });
     }
-    console.log('Cities seeded');
+    console.log('✅ Created', californiaCities.length, 'California cities');
+
+    // Create sample cities for Texas
+    const texasCities = [
+        { name: 'Houston', slug: 'houston', population: 2300000 },
+        { name: 'San Antonio', slug: 'san-antonio', population: 1500000 },
+        { name: 'Dallas', slug: 'dallas', population: 1300000 },
+        { name: 'Austin', slug: 'austin', population: 1000000 },
+        { name: 'Fort Worth', slug: 'fort-worth', population: 920000 },
+    ];
+
+    const texas = stateRecords['texas'];
+    for (const city of texasCities) {
+        await prisma.city.upsert({
+            where: { stateId_slug: { stateId: texas.id, slug: city.slug } },
+            update: city,
+            create: {
+                ...city,
+                stateId: texas.id,
+                isActive: true,
+            },
+        });
+    }
+    console.log('✅ Created', texasCities.length, 'Texas cities');
+
+    console.log('\n🎉 Database seeding completed!');
+    console.log('\nAdmin login:');
+    console.log('  Email: admin@myinsurancebuddies.com');
+    console.log('  Password: admin123');
 }
 
 main()
     .catch((e) => {
-        console.error(e);
+        console.error('❌ Seeding failed:', e);
         process.exit(1);
     })
     .finally(async () => {

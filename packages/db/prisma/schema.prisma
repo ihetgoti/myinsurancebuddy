@@ -7,17 +7,19 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// ============================================
+// USER & AUTH
+// ============================================
+
 model User {
-  id           String   @id @default(uuid())
-  email        String   @unique
+  id           String     @id @default(uuid())
+  email        String     @unique
   name         String?
   passwordHash String
-  role         UserRole @default(EDITOR)
-  isActive     Boolean  @default(true)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-  posts        Post[]
-  templates    ProgrammaticTemplate[]
+  role         UserRole   @default(EDITOR)
+  isActive     Boolean    @default(true)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
   auditLogs    AuditLog[]
 }
 
@@ -27,80 +29,196 @@ enum UserRole {
   EDITOR
 }
 
-model Post {
-  id              String   @id @default(uuid())
-  title           String
-  slug            String   @unique
-  excerpt         String?
-  bodyHtml        String
-  status          PostStatus @default(DRAFT)
-  publishedAt     DateTime?
-  authorId        String
-  author          User     @relation(fields: [authorId], references: [id])
-  tags            String[]
+// ============================================
+// INSURANCE TYPES (NICHES)
+// ============================================
+
+model InsuranceType {
+  id          String    @id @default(uuid())
+  name        String    // "Car Insurance", "Health Insurance"
+  slug        String    @unique // "car-insurance"
+  icon        String?   // Emoji or icon
+  description String?
+  metaTitle   String?
+  metaDesc    String?
+  isActive    Boolean   @default(true)
+  sortOrder   Int       @default(0)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  pages       Page[]
+  bulkJobs    BulkJob[]
+}
+
+// ============================================
+// GEO HIERARCHY
+// ============================================
+
+model Country {
+  id        String   @id @default(uuid())
+  code      String   @unique // "us", "in", "uk"
+  name      String   // "United States"
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  states    State[]
+  pages     Page[]
+}
+
+model State {
+  id        String   @id @default(uuid())
+  countryId String
+  country   Country  @relation(fields: [countryId], references: [id], onDelete: Cascade)
+  name      String   // "California"
+  slug      String   // "california"
+  code      String?  // "CA"
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  cities    City[]
+  pages     Page[]
+
+  @@unique([countryId, slug])
+  @@index([countryId])
+}
+
+model City {
+  id         String   @id @default(uuid())
+  stateId    String
+  state      State    @relation(fields: [stateId], references: [id], onDelete: Cascade)
+  name       String   // "Los Angeles"
+  slug       String   // "los-angeles"
+  population Int?
+  isActive   Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  pages      Page[]
+
+  @@unique([stateId, slug])
+  @@index([stateId])
+}
+
+// ============================================
+// PAGES
+// ============================================
+
+enum GeoLevel {
+  NICHE   // /car-insurance (niche homepage)
+  COUNTRY // /car-insurance/us
+  STATE   // /car-insurance/us/california
+  CITY    // /car-insurance/us/california/los-angeles
+}
+
+model Page {
+  id              String        @id @default(uuid())
+  insuranceTypeId String
+  insuranceType   InsuranceType @relation(fields: [insuranceTypeId], references: [id], onDelete: Cascade)
+  geoLevel        GeoLevel
+  countryId       String?
+  country         Country?      @relation(fields: [countryId], references: [id])
+  stateId         String?
+  state           State?        @relation(fields: [stateId], references: [id])
+  cityId          String?
+  city            City?         @relation(fields: [cityId], references: [id])
+
+  // Template reference
+  templateId      String?
+  template        Template?     @relation(fields: [templateId], references: [id])
+
+  // Page content
+  heroTitle    String?
+  heroSubtitle String?
+  sections     Json    @default("[]") // Page builder sections
+
+  // SEO
   metaTitle       String?
   metaDescription String?
-  canonicalUrl    String?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+
+  // Status
+  isPublished Boolean   @default(false)
+  publishedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@unique([insuranceTypeId, geoLevel, countryId, stateId, cityId])
+  @@index([insuranceTypeId])
+  @@index([geoLevel])
+  @@index([isPublished])
+  @@index([countryId])
+  @@index([stateId])
+  @@index([cityId])
+  @@index([templateId])
 }
 
-enum PostStatus {
-  DRAFT
-  PUBLISHED
-  ARCHIVED
+// ============================================
+// TEMPLATES
+// ============================================
+
+model Template {
+  id              String    @id @default(uuid())
+  name            String    // "City Page Template"
+  slug            String    @unique
+  description     String?
+  thumbnail       String?   // Preview image URL
+  sections        Json      @default("[]") // Section definitions
+  variables       Json?     // Built-in placeholder definitions
+  customVariables Json?     // Custom variables: [{name, label, type, required, defaultValue}]
+  isActive        Boolean   @default(true)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  pages           Page[]
+  bulkJobs        BulkJob[]
 }
 
-model Region {
-  id           String   @id @default(uuid())
-  type         RegionType
-  name         String
-  slug         String   @unique
-  stateCode    String?
-  population   Int?
-  medianIncome Int?
-  timezone     String?
-  lat          Float?
-  lng          Float?
-  seoSummary   String?
-  legalNotes   String?
-  metadata     Json?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+// ============================================
+// BULK GENERATION
+// ============================================
+
+enum JobStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
 }
 
-enum RegionType {
-  STATE
-  CITY
-}
-
-model ProgrammaticTemplate {
-  id           String   @id @default(uuid())
-  name         String
-  slug         String   @unique
-  templateHtml String
-  placeholders String[]
-  createdById  String
-  createdBy    User     @relation(fields: [createdById], references: [id])
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-}
-
-model ProgrammaticPage {
-  id              String   @id @default(uuid())
+model BulkJob {
+  id              String        @id @default(uuid())
+  name            String        // "Car Insurance - All US States"
   templateId      String
-  regionId        String
-  slug            String   @unique
-  title           String
-  generatedHtml   String
-  metaTitle       String?
-  metaDescription String?
-  insuranceType   String?  // e.g., "health-insurance", "car-insurance", "home-insurance"
-  isPublished     Boolean  @default(false)
-  lastGeneratedAt DateTime?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  template        Template      @relation(fields: [templateId], references: [id])
+  insuranceTypeId String
+  insuranceType   InsuranceType @relation(fields: [insuranceTypeId], references: [id])
+  
+  // Geo targeting
+  geoLevel        GeoLevel      // STATE, CITY, etc.
+  countryId       String?       // Filter: Only this country
+  stateId         String?       // Filter: Only this state (for city-level)
+  
+  // CSV data
+  csvData         Json?         // Uploaded CSV as JSON array
+  variableMapping Json?         // {csvColumn: templateVariable}
+  
+  // Progress
+  status          JobStatus     @default(PENDING)
+  totalPages      Int           @default(0)
+  createdPages    Int           @default(0)
+  skippedPages    Int           @default(0) // Already existed
+  errorMessage    String?
+  
+  // Options
+  publishOnCreate Boolean       @default(false)
+  skipExisting    Boolean       @default(true)
+  
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@index([status])
+  @@index([templateId])
+  @@index([insuranceTypeId])
 }
+
+// ============================================
+// MEDIA & AUDIT
+// ============================================
 
 model Media {
   id         String   @id @default(uuid())
@@ -124,3 +242,4 @@ model AuditLog {
   changes    Json?
   createdAt  DateTime @default(now())
 }
+

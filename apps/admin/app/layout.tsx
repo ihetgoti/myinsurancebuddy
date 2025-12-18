@@ -2,6 +2,9 @@
 
 import './globals.css'
 import { SessionProvider } from 'next-auth/react';
+import { Inter } from 'next/font/google';
+
+const inter = Inter({ subsets: ['latin'] });
 
 export default function RootLayout({
     children,
@@ -10,8 +13,8 @@ export default function RootLayout({
 }) {
     return (
         <html lang="en">
-            <body>
-                <SessionProvider basePath="/admin/api/auth">
+            <body className={`${inter.className} bg-slate-50 text-slate-900`}>
+                <SessionProvider>
                     {children}
                 </SessionProvider>
             </body>
