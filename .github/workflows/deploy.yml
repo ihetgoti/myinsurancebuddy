@@ -103,6 +103,9 @@ jobs:
             cd packages/db
             npx prisma generate
             npx prisma db push --accept-data-loss
+            
+            # Seed database (creates insurance types, states, admin user)
+            npx ts-node --transpile-only prisma/seed.ts || echo "Seed skipped (may already exist)"
             cd ../..
             
             # Build apps
