@@ -2,8 +2,8 @@ module.exports = {
     apps: [
         {
             name: 'myinsurancebuddy-web',
-            script: 'node_modules/.bin/next',
-            args: 'start -p 3000',
+            script: 'npm',
+            args: 'run start',
             cwd: '/var/www/myinsurancebuddies.com/apps/web',
             env: {
                 NODE_ENV: 'production',
@@ -16,8 +16,8 @@ module.exports = {
         },
         {
             name: 'myinsurancebuddy-admin',
-            script: 'node_modules/.bin/next',
-            args: 'start -p 3001',
+            script: 'npm',
+            args: 'run start',
             cwd: '/var/www/myinsurancebuddies.com/apps/admin',
             env: {
                 NODE_ENV: 'production',
