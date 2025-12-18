@@ -55,11 +55,17 @@ jobs:
 
       - name: Deploy to VPS
         uses: appleboy/ssh-action@v1.0.3
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}
+          NEXTAUTH_URL: ${{ secrets.NEXTAUTH_URL }}
+          NEXTAUTH_URL_ADMIN: ${{ secrets.NEXTAUTH_URL_ADMIN }}
         with:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USERNAME }}
           key: ${{ secrets.VPS_SSH_KEY }}
           port: ${{ secrets.VPS_PORT }}
+          envs: DATABASE_URL,NEXTAUTH_SECRET,NEXTAUTH_URL,NEXTAUTH_URL_ADMIN
           script: |
             set -e
             PROJECT_DIR="/var/www/myinsurancebuddies.com"
@@ -76,6 +82,15 @@ jobs:
             else
               cd $PROJECT_DIR
             fi
+            
+            # Create .env file
+            echo "Creating .env file..."
+            cat > .env << EOF
+            DATABASE_URL=${DATABASE_URL}
+            NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
+            NEXTAUTH_URL=${NEXTAUTH_URL}
+            NEXTAUTH_URL_ADMIN=${NEXTAUTH_URL_ADMIN}
+            EOF
             
             # Pull latest code
             git fetch origin main
