@@ -1,13 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { PrismaClient } from "@myinsurancebuddy/db";
+import { prisma } from "@/lib/prisma";
 import { writeFile, mkdir } from "fs/promises";
 import { join } from "path";
 import sharp from "sharp";
 import { v4 as uuidv4 } from "uuid";
-
-const prisma = new PrismaClient();
 
 const UPLOAD_DIR = process.env.UPLOAD_DIR || "/var/www/myinsurancebuddies.com/uploads";
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB

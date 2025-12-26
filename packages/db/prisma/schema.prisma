@@ -18,35 +18,259 @@ model User {
   passwordHash String
   role         UserRole   @default(EDITOR)
   isActive     Boolean    @default(true)
+  avatar       String?
+  preferences  Json?      // UI preferences, dashboard layout
+  lastLoginAt  DateTime?
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
-  auditLogs    AuditLog[]
+  
+  auditLogs       AuditLog[]
+  createdPages    Page[]           @relation("PageCreator")
+  updatedPages    Page[]           @relation("PageUpdater")
+  createdTemplates Template[]      @relation("TemplateCreator")
+  bulkJobs        BulkJob[]
+  comments        PageComment[]
+  apiKeys         ApiKey[]
 }
 
 enum UserRole {
   SUPER_ADMIN
   ADMIN
   EDITOR
+  VIEWER
+  API_USER
+}
+
+model ApiKey {
+  id          String    @id @default(uuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name        String
+  keyHash     String    @unique
+  permissions Json      // ["read", "write", "delete", "bulk"]
+  lastUsedAt  DateTime?
+  expiresAt   DateTime?
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  
+  @@index([userId])
+  @@index([keyHash])
 }
 
 // ============================================
-// INSURANCE TYPES (NICHES)
+// SITE SETTINGS & GLOBAL SEO
+// ============================================
+
+model SiteSettings {
+  id                    String   @id @default(uuid())
+  siteName              String   @default("MyInsuranceBuddies")
+  siteUrl               String   @default("https://myinsurancebuddies.com")
+  siteDescription       String?
+  siteLogo              String?
+  siteFavicon           String?
+  
+  // Global SEO
+  defaultMetaTitle      String?
+  defaultMetaDesc       String?
+  defaultOgImage        String?
+  googleAnalyticsId     String?
+  googleTagManagerId    String?
+  googleSearchConsoleId String?
+  bingWebmasterToolsId  String?
+  facebookPixelId       String?
+  
+  // Schema.org defaults
+  organizationName      String?
+  organizationLogo      String?
+  organizationPhone     String?
+  organizationEmail     String?
+  organizationAddress   Json?    // {street, city, state, zip, country}
+  socialProfiles        Json?    // [{platform, url}]
+  
+  // Sitemap settings
+  sitemapEnabled        Boolean  @default(true)
+  sitemapChangeFreq     String   @default("weekly") // daily, weekly, monthly
+  sitemapPriority       Float    @default(0.8)
+  sitemapMaxUrls        Int      @default(50000)
+  sitemapAutoGenerate   Boolean  @default(true)
+  sitemapLastGenerated  DateTime?
+  
+  // Robots.txt
+  robotsTxtContent      String?
+  
+  // Custom code injection
+  headScripts           String?  // Scripts to inject in <head>
+  bodyStartScripts      String?  // Scripts after <body>
+  bodyEndScripts        String?  // Scripts before </body>
+  customCss             String?
+  
+  // Feature flags
+  enableComments        Boolean  @default(false)
+  enableRatings         Boolean  @default(false)
+  enableSearch          Boolean  @default(true)
+  enableBreadcrumbs     Boolean  @default(true)
+  enableTableOfContents Boolean  @default(true)
+  enableRelatedPages    Boolean  @default(true)
+  enableSocialShare     Boolean  @default(true)
+  
+  // Maintenance
+  maintenanceMode       Boolean  @default(false)
+  maintenanceMessage    String?
+  
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+}
+
+// ============================================
+// INSURANCE TYPES (NICHES/VERTICALS)
 // ============================================
 
 model InsuranceType {
-  id          String    @id @default(uuid())
-  name        String    // "Car Insurance", "Health Insurance"
-  slug        String    @unique // "car-insurance"
-  icon        String?   // Emoji or icon
-  description String?
-  metaTitle   String?
-  metaDesc    String?
-  isActive    Boolean   @default(true)
-  sortOrder   Int       @default(0)
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  pages       Page[]
-  bulkJobs    BulkJob[]
+  id              String    @id @default(uuid())
+  name            String    // "Car Insurance", "Health Insurance"
+  slug            String    @unique // "car-insurance"
+  pluralName      String?   // "Car Insurances" for listings
+  shortName       String?   // "Auto" for compact displays
+  icon            String?   // Emoji or icon class
+  iconSvg         String?   // Custom SVG icon
+  color           String?   // Brand color hex
+  description     String?   @db.Text
+  longDescription String?   @db.Text
+  
+  // SEO
+  metaTitle       String?
+  metaDesc        String?   @db.Text
+  ogImage         String?
+  keywords        String[]  // SEO keywords array
+  
+  // Schema.org
+  schemaType      String?   // "InsuranceAgency", "FinancialService"
+  
+  // Content
+  heroTitle       String?
+  heroSubtitle    String?
+  heroImage       String?
+  heroCta         String?
+  heroCtaUrl      String?
+  
+  // Statistics (for display)
+  avgSavings      String?   // "$500/year"
+  totalProviders  Int?
+  totalReviews    Int?
+  avgRating       Float?
+  
+  // Display settings
+  isActive        Boolean   @default(true)
+  isFeatured      Boolean   @default(false)
+  showInNav       Boolean   @default(true)
+  showInFooter    Boolean   @default(true)
+  sortOrder       Int       @default(0)
+  
+  // Relations
+  parentId        String?
+  parent          InsuranceType?  @relation("SubTypes", fields: [parentId], references: [id])
+  subTypes        InsuranceType[] @relation("SubTypes")
+  
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  pages           Page[]
+  bulkJobs        BulkJob[]
+  carriers        Carrier[]
+  faqs            FAQ[]
+  
+  @@index([isActive])
+  @@index([sortOrder])
+  @@index([parentId])
+}
+
+// ============================================
+// CARRIERS (INSURANCE COMPANIES)
+// ============================================
+
+model Carrier {
+  id              String    @id @default(uuid())
+  name            String    // "GEICO", "State Farm"
+  slug            String    @unique
+  logo            String?
+  logoLight       String?   // For dark backgrounds
+  logoDark        String?   // For light backgrounds
+  website         String?
+  phone           String?
+  
+  // Company info
+  description     String?   @db.Text
+  foundedYear     Int?
+  headquarters    String?
+  amBestRating    String?   // "A+", "A", etc.
+  jdPowerRating   Float?
+  bbbbRating      String?   // "A+", "A", etc.
+  
+  // Ratings & Reviews
+  avgRating       Float?
+  totalReviews    Int       @default(0)
+  
+  // Features
+  features        Json?     // [{name, available: boolean}]
+  pros            String[]
+  cons            String[]
+  
+  // Pricing
+  avgMonthlyRate  Float?
+  minMonthlyRate  Float?
+  maxMonthlyRate  Float?
+  
+  // Availability
+  availableStates String[]  // State codes where available
+  
+  // SEO
+  metaTitle       String?
+  metaDesc        String?   @db.Text
+  
+  // Display
+  isActive        Boolean   @default(true)
+  isFeatured      Boolean   @default(false)
+  isPartner       Boolean   @default(false)  // Affiliate partner
+  partnerUrl      String?   // Affiliate link
+  sortOrder       Int       @default(0)
+  
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  insuranceTypes  InsuranceType[]
+  reviews         CarrierReview[]
+  
+  @@index([isActive])
+  @@index([slug])
+}
+
+model CarrierReview {
+  id          String   @id @default(uuid())
+  carrierId   String
+  carrier     Carrier  @relation(fields: [carrierId], references: [id], onDelete: Cascade)
+  
+  authorName  String
+  authorEmail String?
+  authorState String?  // State code
+  
+  rating      Int      // 1-5
+  title       String?
+  content     String   @db.Text
+  pros        String?  @db.Text
+  cons        String?  @db.Text
+  
+  isVerified  Boolean  @default(false)
+  isApproved  Boolean  @default(false)
+  isFeatured  Boolean  @default(false)
+  
+  helpfulCount Int     @default(0)
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@index([carrierId])
+  @@index([isApproved])
+  @@index([rating])
 }
 
 // ============================================
@@ -54,99 +278,153 @@ model InsuranceType {
 // ============================================
 
 model Country {
-  id        String   @id @default(uuid())
-  code      String   @unique // "us", "in", "uk"
-  name      String   // "United States"
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  states    State[]
-  pages     Page[]
+  id           String   @id @default(uuid())
+  code         String   @unique // "us", "ca", "uk"
+  code3        String?  // "USA", "CAN", "GBR"
+  name         String   // "United States"
+  nativeName   String?  // Native language name
+  flag         String?  // Emoji flag or URL
+  currency     String?  // "USD"
+  phoneCode    String?  // "+1"
+  
+  // SEO
+  metaTitle    String?
+  metaDesc     String?  @db.Text
+  
+  isActive     Boolean  @default(true)
+  sortOrder    Int      @default(0)
+  
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  
+  states       State[]
+  pages        Page[]
+  
+  @@index([isActive])
+  @@index([code])
 }
 
 model State {
-  id        String   @id @default(uuid())
-  countryId String
-  country   Country  @relation(fields: [countryId], references: [id], onDelete: Cascade)
-  name      String   // "California"
-  slug      String   // "california"
-  code      String?  // "CA"
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  cities    City[]
-  pages     Page[]
-
+  id           String   @id @default(uuid())
+  countryId    String
+  country      Country  @relation(fields: [countryId], references: [id], onDelete: Cascade)
+  
+  name         String   // "California"
+  slug         String   // "california"
+  code         String?  // "CA"
+  
+  // Additional data
+  capital      String?
+  largestCity  String?
+  population   Int?
+  area         Float?   // Square miles
+  timezone     String?
+  
+  // Insurance specific
+  minCoverage  Json?    // {liability: "25/50/25", etc.}
+  avgPremium   Float?
+  
+  // SEO
+  metaTitle    String?
+  metaDesc     String?  @db.Text
+  
+  isActive     Boolean  @default(true)
+  sortOrder    Int      @default(0)
+  
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  
+  cities       City[]
+  pages        Page[]
+  
   @@unique([countryId, slug])
+  @@unique([countryId, code])
   @@index([countryId])
+  @@index([isActive])
 }
 
 model City {
-  id         String   @id @default(uuid())
-  stateId    String
-  state      State    @relation(fields: [stateId], references: [id], onDelete: Cascade)
-  name       String   // "Los Angeles"
-  slug       String   // "los-angeles"
-  population Int?
-  isActive   Boolean  @default(true)
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-  pages      Page[]
-
+  id           String   @id @default(uuid())
+  stateId      String
+  state        State    @relation(fields: [stateId], references: [id], onDelete: Cascade)
+  
+  name         String   // "Los Angeles"
+  slug         String   // "los-angeles"
+  
+  // Additional data
+  population   Int?
+  area         Float?
+  latitude     Float?
+  longitude    Float?
+  timezone     String?
+  zipCodes     String[] // Array of ZIP codes
+  
+  // Insurance specific
+  avgPremium   Float?
+  crimeRate    Float?
+  trafficScore Float?
+  
+  // SEO
+  metaTitle    String?
+  metaDesc     String?  @db.Text
+  
+  isActive     Boolean  @default(true)
+  isMajorCity  Boolean  @default(false)
+  sortOrder    Int      @default(0)
+  
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  
+  pages        Page[]
+  
   @@unique([stateId, slug])
   @@index([stateId])
+  @@index([isActive])
+  @@index([isMajorCity])
 }
 
 // ============================================
-// PAGES
+// COMPONENT LIBRARY
 // ============================================
 
-enum GeoLevel {
-  NICHE   // /car-insurance (niche homepage)
-  COUNTRY // /car-insurance/us
-  STATE   // /car-insurance/us/california
-  CITY    // /car-insurance/us/california/los-angeles
-}
-
-model Page {
-  id              String        @id @default(uuid())
-  insuranceTypeId String
-  insuranceType   InsuranceType @relation(fields: [insuranceTypeId], references: [id], onDelete: Cascade)
-  geoLevel        GeoLevel
-  countryId       String?
-  country         Country?      @relation(fields: [countryId], references: [id])
-  stateId         String?
-  state           State?        @relation(fields: [stateId], references: [id])
-  cityId          String?
-  city            City?         @relation(fields: [cityId], references: [id])
-
-  // Template reference
-  templateId      String?
-  template        Template?     @relation(fields: [templateId], references: [id])
-
-  // Page content
-  heroTitle    String?
-  heroSubtitle String?
-  sections     Json    @default("[]") // Page builder sections
-
-  // SEO
-  metaTitle       String?
-  metaDescription String?
-
-  // Status
-  isPublished Boolean   @default(false)
-  publishedAt DateTime?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-
-  @@unique([insuranceTypeId, geoLevel, countryId, stateId, cityId])
-  @@index([insuranceTypeId])
-  @@index([geoLevel])
-  @@index([isPublished])
-  @@index([countryId])
-  @@index([stateId])
-  @@index([cityId])
-  @@index([templateId])
+model ComponentDefinition {
+  id              String   @id @default(uuid())
+  name            String   // "Hero Section", "FAQ Accordion"
+  slug            String   @unique
+  category        String   // "hero", "content", "cta", "form", "social"
+  description     String?
+  thumbnail       String?  // Preview image
+  
+  // Component schema
+  schema          Json     // JSON Schema for props
+  defaultProps    Json?    // Default property values
+  
+  // Rendering
+  renderType      String   @default("react") // "react", "html", "markdown"
+  componentCode   String?  @db.Text // For custom components
+  
+  // Styling
+  defaultStyles   Json?    // Default Tailwind classes or CSS
+  styleVariants   Json?    // [{name, styles}]
+  
+  // Settings
+  isCore          Boolean  @default(false) // System component
+  isActive        Boolean  @default(true)
+  allowCustomCss  Boolean  @default(true)
+  allowCustomJs   Boolean  @default(false)
+  
+  // Responsive
+  mobileHidden    Boolean  @default(false)
+  tabletHidden    Boolean  @default(false)
+  desktopHidden   Boolean  @default(false)
+  
+  sortOrder       Int      @default(0)
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  @@index([category])
+  @@index([isActive])
 }
 
 // ============================================
@@ -157,89 +435,679 @@ model Template {
   id              String    @id @default(uuid())
   name            String    // "City Page Template"
   slug            String    @unique
-  description     String?
+  description     String?   @db.Text
   thumbnail       String?   // Preview image URL
-  sections        Json      @default("[]") // Section definitions
-  variables       Json?     // Built-in placeholder definitions
-  customVariables Json?     // Custom variables: [{name, label, type, required, defaultValue}]
+  
+  // Template type
+  type            TemplateType @default(PAGE)
+  category        String?   // "insurance", "location", "carrier", "guide"
+  
+  // Structure
+  sections        Json      @default("[]") // Array of section configs
+  headerConfig    Json?     // Header overrides
+  footerConfig    Json?     // Footer overrides
+  sidebarConfig   Json?     // Sidebar settings
+  
+  // Variables (placeholders)
+  variables       Json?     // System variables available
+  customVariables Json?     // [{name, label, type, required, defaultValue, options}]
+  
+  // SEO Template
+  seoTitleTemplate    String?  // "{{insurance_type}} in {{city}}, {{state}} | Best Rates"
+  seoDescTemplate     String?  // Template with variables
+  seoKeywordsTemplate String?
+  ogTitleTemplate     String?
+  ogDescTemplate      String?
+  
+  // Schema.org template
+  schemaTemplate  Json?     // JSON-LD template with variables
+  
+  // Styling
+  customCss       String?   @db.Text
+  customJs        String?   @db.Text
+  colorScheme     Json?     // {primary, secondary, accent, background}
+  fontConfig      Json?     // {heading, body}
+  
+  // Layout
+  layout          String    @default("default") // "default", "sidebar-left", "sidebar-right", "full-width"
+  maxWidth        String?   // "1200px", "full"
+  
+  // Settings
   isActive        Boolean   @default(true)
+  isDefault       Boolean   @default(false) // Default for new pages
+  isLocked        Boolean   @default(false) // Cannot be deleted
+  
+  // Creator
+  createdById     String?
+  createdBy       User?     @relation("TemplateCreator", fields: [createdById], references: [id])
+  
+  // Versioning
+  version         Int       @default(1)
+  parentId        String?   // For version history
+  
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
+  
   pages           Page[]
   bulkJobs        BulkJob[]
+  
+  @@index([type])
+  @@index([isActive])
+  @@index([category])
+}
+
+enum TemplateType {
+  PAGE          // Regular page
+  LANDING       // Landing page
+  BLOG          // Blog post
+  CATEGORY      // Category listing
+  CARRIER       // Carrier review page
+  COMPARISON    // Comparison page
+  CALCULATOR    // Calculator tool
+  GUIDE         // How-to guide
+  FAQ           // FAQ page
+  GLOSSARY      // Glossary term
+  CUSTOM        // Custom type
+}
+
+// ============================================
+// PAGES (THE CORE)
+// ============================================
+
+model Page {
+  id              String        @id @default(uuid())
+  
+  // URL & Routing
+  slug            String        // Full URL path: "car-insurance/california/los-angeles"
+  canonicalUrl    String?       // Override canonical
+  redirectTo      String?       // 301 redirect if set
+  
+  // Hierarchy
+  insuranceTypeId String?
+  insuranceType   InsuranceType? @relation(fields: [insuranceTypeId], references: [id])
+  geoLevel        GeoLevel?
+  countryId       String?
+  country         Country?      @relation(fields: [countryId], references: [id])
+  stateId         String?
+  state           State?        @relation(fields: [stateId], references: [id])
+  cityId          String?
+  city            City?         @relation(fields: [cityId], references: [id])
+  
+  // Template
+  templateId      String?
+  template        Template?     @relation(fields: [templateId], references: [id])
+  
+  // Content
+  title           String?       // Page title (H1)
+  subtitle        String?
+  excerpt         String?       @db.Text // Short description
+  content         Json          @default("[]") // Page builder sections
+  
+  // Custom data (for CSV imports)
+  customData      Json?         // Any additional data from CSV
+  
+  // SEO - Basic
+  metaTitle       String?
+  metaDescription String?       @db.Text
+  metaKeywords    String[]
+  
+  // SEO - Open Graph
+  ogTitle         String?
+  ogDescription   String?       @db.Text
+  ogImage         String?
+  ogType          String        @default("website")
+  
+  // SEO - Twitter Card
+  twitterCard     String        @default("summary_large_image")
+  twitterTitle    String?
+  twitterDesc     String?
+  twitterImage    String?
+  
+  // SEO - Advanced
+  robots          String?       // "index,follow" or "noindex,nofollow"
+  canonicalTag    String?
+  hreflangTags    Json?         // [{lang: "en-us", url: "..."}]
+  
+  // Schema.org
+  schemaMarkup    Json?         // JSON-LD structured data
+  breadcrumbs     Json?         // Custom breadcrumb override
+  
+  // Performance
+  preloadImages   String[]      // URLs to preload
+  prefetchPages   String[]      // URLs to prefetch
+  
+  // Styling overrides
+  customCss       String?       @db.Text
+  customJs        String?       @db.Text
+  bodyClasses     String?       // Additional body classes
+  
+  // Status
+  status          PageStatus    @default(DRAFT)
+  isPublished     Boolean       @default(false)
+  publishedAt     DateTime?
+  unpublishedAt   DateTime?     // Auto-unpublish date
+  
+  // Scheduling
+  scheduledAt     DateTime?     // Auto-publish date
+  
+  // Visibility
+  isPasswordProtected Boolean   @default(false)
+  password        String?
+  isHidden        Boolean       @default(false) // Hidden from sitemap/search
+  
+  // Analytics
+  viewCount       Int           @default(0)
+  uniqueViews     Int           @default(0)
+  avgTimeOnPage   Int?          // Seconds
+  bounceRate      Float?
+  
+  // Engagement
+  rating          Float?
+  ratingCount     Int           @default(0)
+  shareCount      Int           @default(0)
+  
+  // Audit
+  createdById     String?
+  createdBy       User?         @relation("PageCreator", fields: [createdById], references: [id])
+  updatedById     String?
+  updatedBy       User?         @relation("PageUpdater", fields: [updatedById], references: [id])
+  
+  // Versioning
+  version         Int           @default(1)
+  
+  // Internal notes
+  internalNotes   String?       @db.Text
+  
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  
+  // Relations
+  comments        PageComment[]
+  versions        PageVersion[]
+  abTests         ABTest[]
+  
+  @@unique([slug])
+  @@index([insuranceTypeId])
+  @@index([geoLevel])
+  @@index([countryId])
+  @@index([stateId])
+  @@index([cityId])
+  @@index([templateId])
+  @@index([status])
+  @@index([isPublished])
+  @@index([publishedAt])
+  @@index([scheduledAt])
+}
+
+enum GeoLevel {
+  NONE      // No geo targeting
+  NICHE     // /car-insurance (niche homepage)
+  COUNTRY   // /car-insurance/us
+  STATE     // /car-insurance/us/california
+  CITY      // /car-insurance/us/california/los-angeles
+}
+
+enum PageStatus {
+  DRAFT
+  PENDING_REVIEW
+  SCHEDULED
+  PUBLISHED
+  UNPUBLISHED
+  ARCHIVED
+  DELETED
+}
+
+model PageVersion {
+  id          String   @id @default(uuid())
+  pageId      String
+  page        Page     @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  
+  version     Int
+  content     Json     // Full page content snapshot
+  metadata    Json?    // SEO and settings snapshot
+  
+  changeNote  String?
+  changedById String?
+  
+  createdAt   DateTime @default(now())
+  
+  @@unique([pageId, version])
+  @@index([pageId])
+}
+
+model PageComment {
+  id          String   @id @default(uuid())
+  pageId      String
+  page        Page     @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  
+  content     String   @db.Text
+  isResolved  Boolean  @default(false)
+  
+  parentId    String?
+  parent      PageComment?  @relation("CommentReplies", fields: [parentId], references: [id])
+  replies     PageComment[] @relation("CommentReplies")
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@index([pageId])
+  @@index([userId])
+}
+
+// ============================================
+// A/B TESTING
+// ============================================
+
+model ABTest {
+  id              String   @id @default(uuid())
+  pageId          String
+  page            Page     @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  
+  name            String
+  description     String?
+  
+  // Variants
+  variants        Json     // [{id, name, content, weight}]
+  
+  // Metrics
+  primaryMetric   String   // "conversion", "time_on_page", "bounce_rate"
+  
+  // Status
+  status          ABTestStatus @default(DRAFT)
+  startDate       DateTime?
+  endDate         DateTime?
+  
+  // Results
+  results         Json?    // Calculated results
+  winnerId        String?  // Winning variant ID
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  @@index([pageId])
+  @@index([status])
+}
+
+enum ABTestStatus {
+  DRAFT
+  RUNNING
+  PAUSED
+  COMPLETED
+  ARCHIVED
 }
 
 // ============================================
 // BULK GENERATION
 // ============================================
 
-enum JobStatus {
-  PENDING
-  PROCESSING
-  COMPLETED
-  FAILED
-}
-
 model BulkJob {
   id              String        @id @default(uuid())
-  name            String        // "Car Insurance - All US States"
+  name            String        // "Car Insurance - All US Cities"
+  description     String?
+  
+  // Source
   templateId      String
   template        Template      @relation(fields: [templateId], references: [id])
-  insuranceTypeId String
-  insuranceType   InsuranceType @relation(fields: [insuranceTypeId], references: [id])
+  insuranceTypeId String?
+  insuranceType   InsuranceType? @relation(fields: [insuranceTypeId], references: [id])
   
   // Geo targeting
-  geoLevel        GeoLevel      // STATE, CITY, etc.
-  countryId       String?       // Filter: Only this country
-  stateId         String?       // Filter: Only this state (for city-level)
+  geoLevel        GeoLevel?
+  countryId       String?
+  stateId         String?
   
-  // CSV data
+  // Data source
+  dataSource      DataSource    @default(CSV)
   csvData         Json?         // Uploaded CSV as JSON array
-  variableMapping Json?         // {csvColumn: templateVariable}
+  csvFileName     String?       // Original filename
+  apiEndpoint     String?       // External API to fetch data
   
-  // Progress
+  // Variable mapping
+  variableMapping Json?         // {csvColumn: templateVariable}
+  defaultValues   Json?         // Default values for missing data
+  
+  // URL generation
+  slugPattern     String?       // "{{insurance_type}}/{{state}}/{{city}}"
+  slugTransform   String?       // "lowercase", "kebab-case"
+  
+  // Processing
   status          JobStatus     @default(PENDING)
-  totalPages      Int           @default(0)
+  totalRows       Int           @default(0)
+  processedRows   Int           @default(0)
   createdPages    Int           @default(0)
-  skippedPages    Int           @default(0) // Already existed
+  updatedPages    Int           @default(0)
+  skippedPages    Int           @default(0)
+  failedPages     Int           @default(0)
+  
+  // Error handling
+  errorLog        Json?         // [{row, error}]
   errorMessage    String?
   
   // Options
   publishOnCreate Boolean       @default(false)
+  updateExisting  Boolean       @default(false)
   skipExisting    Boolean       @default(true)
+  validateData    Boolean       @default(true)
+  dryRun          Boolean       @default(false)
+  
+  // Scheduling
+  scheduledAt     DateTime?
+  startedAt       DateTime?
+  completedAt     DateTime?
+  
+  // Creator
+  createdById     String?
+  createdBy       User?         @relation(fields: [createdById], references: [id])
   
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
-
+  
   @@index([status])
   @@index([templateId])
   @@index([insuranceTypeId])
+  @@index([createdById])
+}
+
+enum DataSource {
+  CSV
+  API
+  DATABASE
+  MANUAL
+}
+
+enum JobStatus {
+  PENDING
+  QUEUED
+  PROCESSING
+  PAUSED
+  COMPLETED
+  FAILED
+  CANCELLED
 }
 
 // ============================================
-// MEDIA & AUDIT
+// SITEMAPS
+// ============================================
+
+model Sitemap {
+  id              String   @id @default(uuid())
+  name            String   // "sitemap-car-insurance.xml"
+  slug            String   @unique
+  
+  // Type
+  type            SitemapType @default(PAGES)
+  
+  // Filters
+  insuranceTypeId String?
+  geoLevel        GeoLevel?
+  
+  // Settings
+  changeFreq      String   @default("weekly")
+  priority        Float    @default(0.8)
+  maxUrls         Int      @default(50000)
+  
+  // Generated content
+  content         String?  @db.Text // XML content
+  urlCount        Int      @default(0)
+  
+  // Status
+  isActive        Boolean  @default(true)
+  lastGenerated   DateTime?
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  @@index([type])
+  @@index([isActive])
+}
+
+enum SitemapType {
+  INDEX     // sitemap-index.xml
+  PAGES     // Regular pages
+  LOCATIONS // State/City pages
+  CARRIERS  // Carrier pages
+  BLOG      // Blog posts
+  CUSTOM    // Custom sitemap
+}
+
+// ============================================
+// FAQ & GLOSSARY
+// ============================================
+
+model FAQ {
+  id              String   @id @default(uuid())
+  question        String
+  answer          String   @db.Text
+  
+  // Categorization
+  insuranceTypeId String?
+  insuranceType   InsuranceType? @relation(fields: [insuranceTypeId], references: [id])
+  category        String?
+  tags            String[]
+  
+  // Display
+  isActive        Boolean  @default(true)
+  isFeatured      Boolean  @default(false)
+  sortOrder       Int      @default(0)
+  
+  // Schema.org
+  includeInSchema Boolean  @default(true)
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  @@index([insuranceTypeId])
+  @@index([isActive])
+  @@index([category])
+}
+
+model GlossaryTerm {
+  id              String   @id @default(uuid())
+  term            String
+  slug            String   @unique
+  definition      String   @db.Text
+  
+  // Extended content
+  extendedContent String?  @db.Text
+  relatedTerms    String[] // Slugs of related terms
+  
+  // Categorization
+  category        String?
+  tags            String[]
+  
+  // Display
+  isActive        Boolean  @default(true)
+  sortOrder       Int      @default(0)
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  @@index([isActive])
+  @@index([category])
+}
+
+// ============================================
+// REDIRECTS
+// ============================================
+
+model Redirect {
+  id          String   @id @default(uuid())
+  fromPath    String   @unique
+  toPath      String
+  type        Int      @default(301) // 301, 302, 307, 308
+  
+  isActive    Boolean  @default(true)
+  isRegex     Boolean  @default(false)
+  
+  hitCount    Int      @default(0)
+  lastHitAt   DateTime?
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@index([fromPath])
+  @@index([isActive])
+}
+
+// ============================================
+// MEDIA & ASSETS
 // ============================================
 
 model Media {
-  id         String   @id @default(uuid())
-  filename   String
-  path       String
-  width      Int?
-  height     Int?
-  sizeBytes  Int?
-  altText    String?
-  uploadedBy String?
-  createdAt  DateTime @default(now())
+  id          String   @id @default(uuid())
+  filename    String
+  originalName String
+  path        String
+  url         String
+  
+  // Metadata
+  mimeType    String?
+  width       Int?
+  height      Int?
+  sizeBytes   Int?
+  
+  // SEO
+  altText     String?
+  title       String?
+  caption     String?
+  
+  // Organization
+  folder      String?
+  tags        String[]
+  
+  // Variants (thumbnails, etc.)
+  variants    Json?    // [{size, url, width, height}]
+  
+  // Audit
+  uploadedBy  String?
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@index([folder])
+  @@index([mimeType])
 }
+
+// ============================================
+// AUDIT LOG
+// ============================================
 
 model AuditLog {
-  id         String   @id @default(uuid())
-  userId     String
-  user       User     @relation(fields: [userId], references: [id])
-  action     String
-  entityType String
-  entityId   String
-  changes    Json?
-  createdAt  DateTime @default(now())
+  id          String   @id @default(uuid())
+  userId      String?
+  user        User?    @relation(fields: [userId], references: [id])
+  
+  action      String   // "create", "update", "delete", "publish", "bulk_generate"
+  entityType  String   // "Page", "Template", "BulkJob"
+  entityId    String
+  entityName  String?  // Human readable name
+  
+  // Changes
+  changes     Json?    // {field: {old, new}}
+  metadata    Json?    // Additional context
+  
+  // Request info
+  ipAddress   String?
+  userAgent   String?
+  
+  createdAt   DateTime @default(now())
+  
+  @@index([userId])
+  @@index([entityType])
+  @@index([entityId])
+  @@index([action])
+  @@index([createdAt])
 }
 
+// ============================================
+// SCHEDULED TASKS
+// ============================================
+
+model ScheduledTask {
+  id          String   @id @default(uuid())
+  name        String
+  type        String   // "sitemap_generate", "page_publish", "bulk_job"
+  
+  // Schedule
+  cronExpression String?  // "0 0 * * *" for daily
+  nextRunAt   DateTime?
+  lastRunAt   DateTime?
+  
+  // Target
+  targetType  String?
+  targetId    String?
+  
+  // Config
+  config      Json?
+  
+  // Status
+  isActive    Boolean  @default(true)
+  lastStatus  String?  // "success", "failed"
+  lastError   String?
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@index([isActive])
+  @@index([nextRunAt])
+}
+
+// ============================================
+// WEBHOOKS
+// ============================================
+
+model Webhook {
+  id          String   @id @default(uuid())
+  name        String
+  url         String
+  
+  // Events
+  events      String[] // ["page.created", "page.published", "bulk_job.completed"]
+  
+  // Security
+  secret      String?
+  
+  // Status
+  isActive    Boolean  @default(true)
+  
+  // Stats
+  lastTriggeredAt DateTime?
+  successCount    Int     @default(0)
+  failureCount    Int     @default(0)
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@index([isActive])
+}
+
+// ============================================
+// ANALYTICS SNAPSHOTS
+// ============================================
+
+model AnalyticsSnapshot {
+  id          String   @id @default(uuid())
+  date        DateTime @db.Date
+  
+  // Counts
+  totalPages      Int
+  publishedPages  Int
+  draftPages      Int
+  
+  totalViews      Int
+  uniqueVisitors  Int
+  
+  // By type
+  pagesByType     Json?  // {insuranceTypeId: count}
+  viewsByType     Json?  // {insuranceTypeId: views}
+  
+  // Top pages
+  topPages        Json?  // [{pageId, views}]
+  
+  createdAt   DateTime @default(now())
+  
+  @@unique([date])
+  @@index([date])
+}

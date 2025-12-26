@@ -3,662 +3,922 @@
 import AdminLayout from '@/components/AdminLayout';
 import { useEffect, useState, useRef } from 'react';
 import { getApiUrl } from '@/lib/api';
-import Link from 'next/link';
+import { systemVariables } from '@/lib/component-definitions';
 
 interface Template {
     id: string;
     name: string;
     slug: string;
-    sections: any[];
-    customVariables?: any[];
+    customVariables: any[];
 }
 
 interface InsuranceType {
     id: string;
     name: string;
     slug: string;
-    icon: string | null;
 }
 
-interface Country {
-    id: string;
-    code: string;
-    name: string;
-}
-
-interface State {
+interface BulkJob {
     id: string;
     name: string;
-    slug: string;
+    status: string;
+    totalRows: number;
+    processedRows: number;
+    createdPages: number;
+    updatedPages: number;
+    skippedPages: number;
+    failedPages: number;
+    createdAt: string;
+    template: { name: string };
+    insuranceType?: { name: string };
 }
 
-interface PreviewPage {
-    title: string;
-    url: string;
-    variables: Record<string, string>;
-    sampleContent: string;
-}
-
-type GeoLevel = 'NICHE' | 'COUNTRY' | 'STATE' | 'CITY';
-
-const STEPS = ['Select Template', 'Geo Scope', 'CSV Data', 'Preview', 'Generate'];
+type Step = 'source' | 'template' | 'mapping' | 'options' | 'preview' | 'execute';
 
 export default function BulkGeneratePage() {
-    const [step, setStep] = useState(0);
+    const [step, setStep] = useState<Step>('source');
     const [templates, setTemplates] = useState<Template[]>([]);
     const [insuranceTypes, setInsuranceTypes] = useState<InsuranceType[]>([]);
-    const [countries, setCountries] = useState<Country[]>([]);
-    const [states, setStates] = useState<State[]>([]);
+    const [jobs, setJobs] = useState<BulkJob[]>([]);
     const [loading, setLoading] = useState(true);
 
     // Form state
+    const [dataSource, setDataSource] = useState<'csv' | 'geo' | 'api'>('csv');
+    const [csvData, setCsvData] = useState<any[]>([]);
+    const [csvHeaders, setCsvHeaders] = useState<string[]>([]);
+    const [csvFileName, setCsvFileName] = useState('');
     const [selectedTemplate, setSelectedTemplate] = useState<string>('');
     const [selectedInsuranceType, setSelectedInsuranceType] = useState<string>('');
-    const [geoLevel, setGeoLevel] = useState<GeoLevel>('STATE');
+    const [geoLevel, setGeoLevel] = useState<'STATE' | 'CITY'>('STATE');
     const [selectedCountry, setSelectedCountry] = useState<string>('');
     const [selectedState, setSelectedState] = useState<string>('');
-    const [csvData, setCsvData] = useState<any[]>([]);
-    const [csvColumns, setCsvColumns] = useState<string[]>([]);
     const [variableMapping, setVariableMapping] = useState<Record<string, string>>({});
-    const [publishOnCreate, setPublishOnCreate] = useState(false);
-    const [skipExisting, setSkipExisting] = useState(true);
-
-    // Preview state
-    const [previewData, setPreviewData] = useState<{
-        totalPages: number;
-        previewPages: PreviewPage[];
-        template: any;
-    } | null>(null);
-    const [previewLoading, setPreviewLoading] = useState(false);
-
-    // Execution state
+    const [slugPattern, setSlugPattern] = useState('{{insurance_type_slug}}/{{state_slug}}/{{city_slug}}');
+    const [options, setOptions] = useState({
+        publishOnCreate: false,
+        updateExisting: false,
+        skipExisting: true,
+        validateData: true,
+        dryRun: false,
+    });
+    const [jobName, setJobName] = useState('');
+    const [previewData, setPreviewData] = useState<any[]>([]);
     const [executing, setExecuting] = useState(false);
-    const [jobResult, setJobResult] = useState<{
-        success: boolean;
-        createdPages: number;
-        skippedPages: number;
-    } | null>(null);
-    const [error, setError] = useState('');
-
+    const [currentJob, setCurrentJob] = useState<BulkJob | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
-        fetchInitialData();
+        fetchData();
     }, []);
 
-    useEffect(() => {
-        if (selectedCountry) {
-            fetchStates(selectedCountry);
-        }
-    }, [selectedCountry]);
-
-    const fetchInitialData = async () => {
+    const fetchData = async () => {
         try {
-            const [templatesRes, typesRes, countriesRes] = await Promise.all([
+            const [templatesRes, typesRes, jobsRes] = await Promise.all([
                 fetch(getApiUrl('/api/templates')),
                 fetch(getApiUrl('/api/insurance-types')),
-                fetch(getApiUrl('/api/countries')),
+                fetch(getApiUrl('/api/bulk-generate')),
             ]);
 
-            const [templatesData, typesData, countriesData] = await Promise.all([
+            const [templatesData, typesData, jobsData] = await Promise.all([
                 templatesRes.json(),
                 typesRes.json(),
-                countriesRes.json(),
+                jobsRes.json(),
             ]);
 
             setTemplates(Array.isArray(templatesData) ? templatesData : []);
             setInsuranceTypes(Array.isArray(typesData) ? typesData : []);
-            setCountries(Array.isArray(countriesData) ? countriesData : []);
-        } catch (err) {
-            console.error('Failed to fetch data:', err);
+            setJobs(Array.isArray(jobsData) ? jobsData : []);
+        } catch (error) {
+            console.error('Failed to fetch data:', error);
         } finally {
             setLoading(false);
         }
     };
 
-    const fetchStates = async (countryId: string) => {
-        try {
-            const res = await fetch(getApiUrl(`/api/states?countryId=${countryId}`));
-            const data = await res.json();
-            setStates(Array.isArray(data) ? data : []);
-        } catch (err) {
-            console.error('Failed to fetch states:', err);
-        }
-    };
-
-    const handleCSVUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
+
+        setCsvFileName(file.name);
+        setJobName(file.name.replace(/\.[^/.]+$/, ''));
 
         const reader = new FileReader();
         reader.onload = (event) => {
             const text = event.target?.result as string;
-            const lines = text.split('\n').filter(line => line.trim());
-            if (lines.length < 2) {
-                setError('CSV must have header row and at least one data row');
-                return;
-            }
-
-            const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
-            const rows = lines.slice(1).map(line => {
-                const values = line.split(',').map(v => v.trim());
-                const row: Record<string, string> = {};
-                headers.forEach((header, i) => {
-                    row[header] = values[i] || '';
-                });
-                return row;
-            });
-
-            setCsvColumns(headers);
-            setCsvData(rows);
-
-            // Auto-map common columns
-            const autoMapping: Record<string, string> = {};
-            headers.forEach(col => {
-                if (['state', 'city', 'country'].includes(col)) {
-                    autoMapping[col] = col;
-                }
-            });
-            setVariableMapping(autoMapping);
+            parseCSV(text);
         };
         reader.readAsText(file);
     };
 
-    const handlePreview = async () => {
-        setPreviewLoading(true);
-        setError('');
+    const parseCSV = (text: string) => {
+        const lines = text.split('\n').filter(line => line.trim());
+        if (lines.length === 0) return;
+
+        // Parse headers
+        const headers = parseCSVLine(lines[0]);
+        setCsvHeaders(headers);
+
+        // Parse data rows
+        const data = lines.slice(1).map(line => {
+            const values = parseCSVLine(line);
+            const row: Record<string, string> = {};
+            headers.forEach((header, index) => {
+                row[header] = values[index] || '';
+            });
+            return row;
+        });
+
+        setCsvData(data);
+
+        // Auto-map common columns
+        const autoMapping: Record<string, string> = {};
+        headers.forEach(header => {
+            const normalized = header.toLowerCase().replace(/[^a-z0-9]/g, '_');
+            if (normalized.includes('title') || normalized === 'name') {
+                autoMapping.page_title = header;
+            } else if (normalized.includes('description') || normalized.includes('desc')) {
+                autoMapping.page_subtitle = header;
+            } else if (normalized.includes('state') && !normalized.includes('code')) {
+                autoMapping.state = header;
+            } else if (normalized.includes('city')) {
+                autoMapping.city = header;
+            } else if (normalized.includes('slug') || normalized.includes('url')) {
+                autoMapping.slug = header;
+            }
+        });
+        setVariableMapping(autoMapping);
+    };
+
+    const parseCSVLine = (line: string): string[] => {
+        const result: string[] = [];
+        let current = '';
+        let inQuotes = false;
+
+        for (let i = 0; i < line.length; i++) {
+            const char = line[i];
+            if (char === '"') {
+                inQuotes = !inQuotes;
+            } else if (char === ',' && !inQuotes) {
+                result.push(current.trim());
+                current = '';
+            } else {
+                current += char;
+            }
+        }
+        result.push(current.trim());
+        return result;
+    };
+
+    const getAvailableVariables = () => {
+        const template = templates.find(t => t.id === selectedTemplate);
+        const customVars = template?.customVariables || [];
+
+        return [
+            ...systemVariables.map(v => ({ name: v.name, label: v.label, type: 'system' })),
+            ...customVars.map((v: any) => ({ name: v.name, label: v.label, type: 'custom' })),
+        ];
+    };
+
+    const generatePreview = async () => {
+        if (dataSource === 'csv' && csvData.length === 0) return;
 
         try {
             const res = await fetch(getApiUrl('/api/bulk-generate/preview'), {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
+                    dataSource,
+                    csvData: csvData.slice(0, 10), // Preview first 10
                     templateId: selectedTemplate,
                     insuranceTypeId: selectedInsuranceType,
                     geoLevel,
-                    countryId: selectedCountry || null,
-                    stateId: selectedState || null,
-                    csvData,
                     variableMapping,
+                    slugPattern,
+                }),
+            });
+
+            const data = await res.json();
+            setPreviewData(data.preview || []);
+        } catch (error) {
+            console.error('Failed to generate preview:', error);
+        }
+    };
+
+    const executeJob = async () => {
+        setExecuting(true);
+
+        try {
+            const res = await fetch(getApiUrl('/api/bulk-generate'), {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    name: jobName || `Bulk Job - ${new Date().toLocaleString()}`,
+                    dataSource,
+                    csvData,
+                    csvFileName,
+                    templateId: selectedTemplate,
+                    insuranceTypeId: selectedInsuranceType,
+                    geoLevel,
+                    variableMapping,
+                    slugPattern,
+                    ...options,
                 }),
             });
 
             if (!res.ok) {
                 const data = await res.json();
-                throw new Error(data.error || 'Preview failed');
-            }
-
-            const data = await res.json();
-            setPreviewData(data);
-            setStep(3);
-        } catch (err: any) {
-            setError(err.message);
-        } finally {
-            setPreviewLoading(false);
-        }
-    };
-
-    const handleExecute = async () => {
-        setExecuting(true);
-        setError('');
-
-        try {
-            // First create the job
-            const createRes = await fetch(getApiUrl('/api/bulk-generate'), {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    templateId: selectedTemplate,
-                    insuranceTypeId: selectedInsuranceType,
-                    geoLevel,
-                    countryId: selectedCountry || null,
-                    stateId: selectedState || null,
-                    csvData: csvData.length > 0 ? csvData : null,
-                    variableMapping: Object.keys(variableMapping).length > 0 ? variableMapping : null,
-                    publishOnCreate,
-                    skipExisting,
-                }),
-            });
-
-            if (!createRes.ok) {
-                const data = await createRes.json();
                 throw new Error(data.error || 'Failed to create job');
             }
 
-            const job = await createRes.json();
+            const job = await res.json();
+            setCurrentJob(job);
 
-            // Then execute it
+            // Start execution
             const execRes = await fetch(getApiUrl(`/api/bulk-generate/${job.id}/execute`), {
                 method: 'POST',
             });
 
             if (!execRes.ok) {
-                const data = await execRes.json();
-                throw new Error(data.error || 'Execution failed');
+                throw new Error('Failed to execute job');
             }
 
-            const result = await execRes.json();
-            setJobResult(result);
-            setStep(4);
-        } catch (err: any) {
-            setError(err.message);
-        } finally {
+            // Poll for status
+            pollJobStatus(job.id);
+        } catch (error: any) {
+            alert(error.message);
             setExecuting(false);
         }
     };
 
-    const canProceed = () => {
-        if (step === 0) return selectedTemplate && selectedInsuranceType;
-        if (step === 1) return geoLevel && (geoLevel === 'NICHE' || selectedCountry);
-        if (step === 2) return true; // CSV is optional
-        if (step === 3) return previewData && previewData.totalPages > 0;
-        return false;
+    const pollJobStatus = async (jobId: string) => {
+        const poll = async () => {
+            try {
+                const res = await fetch(getApiUrl(`/api/bulk-generate/${jobId}`));
+                const job = await res.json();
+                setCurrentJob(job);
+
+                if (job.status === 'PROCESSING' || job.status === 'QUEUED') {
+                    setTimeout(poll, 1000);
+                } else {
+                    setExecuting(false);
+                    fetchData();
+                }
+            } catch (error) {
+                setExecuting(false);
+            }
+        };
+
+        poll();
     };
 
-    const selectedTemplateData = templates.find(t => t.id === selectedTemplate);
-    const selectedTypeData = insuranceTypes.find(t => t.id === selectedInsuranceType);
+    const renderStepIndicator = () => (
+        <div className="flex items-center justify-center mb-8">
+            {(['source', 'template', 'mapping', 'options', 'preview', 'execute'] as Step[]).map((s, i) => (
+                <div key={s} className="flex items-center">
+                    <button
+                        onClick={() => setStep(s)}
+                        disabled={getStepNumber(s) > getStepNumber(step) + 1}
+                        className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold transition ${step === s
+                                ? 'bg-blue-600 text-white'
+                                : getStepNumber(s) < getStepNumber(step)
+                                    ? 'bg-green-500 text-white'
+                                    : 'bg-gray-200 text-gray-500'
+                            }`}
+                    >
+                        {getStepNumber(s) < getStepNumber(step) ? '✓' : i + 1}
+                    </button>
+                    {i < 5 && (
+                        <div className={`w-16 h-1 ${getStepNumber(s) < getStepNumber(step) ? 'bg-green-500' : 'bg-gray-200'
+                            }`} />
+                    )}
+                </div>
+            ))}
+        </div>
+    );
+
+    const getStepNumber = (s: Step) => {
+        const steps: Step[] = ['source', 'template', 'mapping', 'options', 'preview', 'execute'];
+        return steps.indexOf(s);
+    };
+
+    const canProceed = () => {
+        switch (step) {
+            case 'source':
+                return (dataSource === 'csv' && csvData.length > 0) || dataSource === 'geo';
+            case 'template':
+                return selectedTemplate && selectedInsuranceType;
+            case 'mapping':
+                return Object.keys(variableMapping).length > 0 || dataSource === 'geo';
+            case 'options':
+                return true;
+            case 'preview':
+                return previewData.length > 0 || dataSource === 'geo';
+            default:
+                return true;
+        }
+    };
+
+    if (loading) {
+        return (
+            <AdminLayout>
+                <div className="flex items-center justify-center h-96">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+                </div>
+            </AdminLayout>
+        );
+    }
 
     return (
         <AdminLayout>
-            <div className="max-w-4xl mx-auto">
+            <div className="max-w-5xl mx-auto">
                 <div className="mb-8">
                     <h1 className="text-3xl font-bold text-gray-900">Bulk Page Generation</h1>
-                    <p className="text-gray-600 mt-1">Generate multiple pages at once using templates</p>
+                    <p className="text-gray-600 mt-1">Generate thousands of pages from CSV data or geo database</p>
                 </div>
 
-                {/* Progress Steps */}
-                <div className="flex items-center justify-between mb-8">
-                    {STEPS.map((s, i) => (
-                        <div key={i} className="flex items-center">
-                            <div className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold ${i < step ? 'bg-green-500 text-white' :
-                                    i === step ? 'bg-blue-600 text-white' :
-                                        'bg-gray-200 text-gray-500'
-                                }`}>
-                                {i < step ? '✓' : i + 1}
-                            </div>
-                            <span className={`ml-2 text-sm ${i === step ? 'font-medium text-gray-900' : 'text-gray-500'}`}>
-                                {s}
-                            </span>
-                            {i < STEPS.length - 1 && (
-                                <div className={`w-16 h-1 mx-4 ${i < step ? 'bg-green-500' : 'bg-gray-200'}`} />
-                            )}
-                        </div>
-                    ))}
-                </div>
-
-                {error && (
-                    <div className="bg-red-50 text-red-700 px-4 py-3 rounded-lg mb-6">
-                        {error}
-                    </div>
-                )}
+                {/* Step Indicator */}
+                {renderStepIndicator()}
 
                 {/* Step Content */}
-                <div className="bg-white rounded-xl border p-6 mb-6">
-                    {/* Step 0: Select Template & Insurance Type */}
-                    {step === 0 && (
-                        <div className="space-y-6">
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Select Template *
-                                </label>
-                                <div className="grid md:grid-cols-2 gap-4">
-                                    {templates.length === 0 ? (
-                                        <div className="col-span-2 text-center py-8 bg-gray-50 rounded-lg">
-                                            <p className="text-gray-500 mb-2">No templates found</p>
-                                            <Link href="/dashboard/templates" className="text-blue-600 hover:text-blue-700">
-                                                Create a template first →
-                                            </Link>
-                                        </div>
-                                    ) : (
-                                        templates.map(template => (
-                                            <button
-                                                key={template.id}
-                                                onClick={() => setSelectedTemplate(template.id)}
-                                                className={`p-4 border rounded-lg text-left transition ${selectedTemplate === template.id
-                                                        ? 'border-blue-500 bg-blue-50'
-                                                        : 'border-gray-200 hover:border-gray-300'
-                                                    }`}
-                                            >
-                                                <div className="font-medium">{template.name}</div>
-                                                <div className="text-sm text-gray-500">
-                                                    {template.sections?.length || 0} sections
-                                                </div>
-                                            </button>
-                                        ))
-                                    )}
-                                </div>
+                <div className="bg-white rounded-xl shadow-sm p-8">
+                    {/* Step 1: Data Source */}
+                    {step === 'source' && (
+                        <div>
+                            <h2 className="text-xl font-semibold mb-6">Step 1: Choose Data Source</h2>
+
+                            <div className="grid grid-cols-3 gap-4 mb-8">
+                                {[
+                                    { id: 'csv', icon: '📄', title: 'CSV Upload', desc: 'Upload a CSV file with page data' },
+                                    { id: 'geo', icon: '🌍', title: 'Geo Database', desc: 'Generate from states/cities' },
+                                    { id: 'api', icon: '🔗', title: 'External API', desc: 'Fetch data from API endpoint' },
+                                ].map((source) => (
+                                    <button
+                                        key={source.id}
+                                        onClick={() => setDataSource(source.id as any)}
+                                        className={`p-6 rounded-xl border-2 text-left transition ${dataSource === source.id
+                                                ? 'border-blue-500 bg-blue-50'
+                                                : 'border-gray-200 hover:border-gray-300'
+                                            }`}
+                                    >
+                                        <div className="text-3xl mb-3">{source.icon}</div>
+                                        <h3 className="font-semibold mb-1">{source.title}</h3>
+                                        <p className="text-sm text-gray-500">{source.desc}</p>
+                                    </button>
+                                ))}
                             </div>
 
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Select Insurance Type *
-                                </label>
-                                <div className="grid md:grid-cols-3 gap-3">
-                                    {insuranceTypes.map(type => (
-                                        <button
-                                            key={type.id}
-                                            onClick={() => setSelectedInsuranceType(type.id)}
-                                            className={`p-3 border rounded-lg text-left transition flex items-center gap-2 ${selectedInsuranceType === type.id
-                                                    ? 'border-blue-500 bg-blue-50'
-                                                    : 'border-gray-200 hover:border-gray-300'
-                                                }`}
+                            {dataSource === 'csv' && (
+                                <div>
+                                    <input
+                                        ref={fileInputRef}
+                                        type="file"
+                                        accept=".csv"
+                                        onChange={handleFileUpload}
+                                        className="hidden"
+                                    />
+
+                                    {csvData.length === 0 ? (
+                                        <div
+                                            onClick={() => fileInputRef.current?.click()}
+                                            className="border-2 border-dashed border-gray-300 rounded-xl p-12 text-center cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition"
                                         >
-                                            <span className="text-xl">{type.icon || '📋'}</span>
-                                            <span className="font-medium text-sm">{type.name}</span>
-                                        </button>
-                                    ))}
+                                            <div className="text-5xl mb-4">📁</div>
+                                            <p className="text-lg font-medium mb-2">Drop CSV file here or click to upload</p>
+                                            <p className="text-sm text-gray-500">Supports .csv files up to 50MB</p>
+                                        </div>
+                                    ) : (
+                                        <div>
+                                            <div className="flex items-center justify-between mb-4">
+                                                <div className="flex items-center gap-3">
+                                                    <span className="text-2xl">📄</span>
+                                                    <div>
+                                                        <p className="font-medium">{csvFileName}</p>
+                                                        <p className="text-sm text-gray-500">
+                                                            {csvData.length} rows, {csvHeaders.length} columns
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                                <button
+                                                    onClick={() => {
+                                                        setCsvData([]);
+                                                        setCsvHeaders([]);
+                                                        setCsvFileName('');
+                                                        setVariableMapping({});
+                                                    }}
+                                                    className="text-red-500 hover:text-red-700"
+                                                >
+                                                    Remove
+                                                </button>
+                                            </div>
+
+                                            {/* Preview Table */}
+                                            <div className="border rounded-lg overflow-hidden">
+                                                <div className="overflow-x-auto">
+                                                    <table className="w-full text-sm">
+                                                        <thead className="bg-gray-50">
+                                                            <tr>
+                                                                <th className="px-4 py-2 text-left font-medium text-gray-500">#</th>
+                                                                {csvHeaders.map((header) => (
+                                                                    <th key={header} className="px-4 py-2 text-left font-medium text-gray-500">
+                                                                        {header}
+                                                                    </th>
+                                                                ))}
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody className="divide-y">
+                                                            {csvData.slice(0, 5).map((row, i) => (
+                                                                <tr key={i}>
+                                                                    <td className="px-4 py-2 text-gray-400">{i + 1}</td>
+                                                                    {csvHeaders.map((header) => (
+                                                                        <td key={header} className="px-4 py-2 truncate max-w-[200px]">
+                                                                            {row[header]}
+                                                                        </td>
+                                                                    ))}
+                                                                </tr>
+                                                            ))}
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                                {csvData.length > 5 && (
+                                                    <div className="bg-gray-50 px-4 py-2 text-sm text-gray-500 text-center">
+                                                        ... and {csvData.length - 5} more rows
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
-                            </div>
+                            )}
+
+                            {dataSource === 'geo' && (
+                                <div className="space-y-4">
+                                    <div>
+                                        <label className="block text-sm font-medium mb-2">Geo Level</label>
+                                        <select
+                                            value={geoLevel}
+                                            onChange={(e) => setGeoLevel(e.target.value as any)}
+                                            className="w-full px-4 py-2 border rounded-lg"
+                                        >
+                                            <option value="STATE">All States</option>
+                                            <option value="CITY">All Cities</option>
+                                        </select>
+                                    </div>
+
+                                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                                        <p className="text-sm text-blue-800">
+                                            <strong>Note:</strong> This will generate pages for all {geoLevel === 'STATE' ? 'states' : 'cities'} in the database.
+                                            {geoLevel === 'CITY' && ' This could be thousands of pages.'}
+                                        </p>
+                                    </div>
+                                </div>
+                            )}
+
+                            {dataSource === 'api' && (
+                                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                                    <p className="text-yellow-800">API data source coming soon. Please use CSV upload for now.</p>
+                                </div>
+                            )}
                         </div>
                     )}
 
-                    {/* Step 1: Geo Scope */}
-                    {step === 1 && (
-                        <div className="space-y-6">
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Generate Pages For *
-                                </label>
-                                <div className="grid md:grid-cols-4 gap-3">
-                                    {(['COUNTRY', 'STATE', 'CITY'] as GeoLevel[]).map(level => (
-                                        <button
-                                            key={level}
-                                            onClick={() => setGeoLevel(level)}
-                                            className={`p-4 border rounded-lg text-center transition ${geoLevel === level
-                                                    ? 'border-blue-500 bg-blue-50'
-                                                    : 'border-gray-200 hover:border-gray-300'
-                                                }`}
-                                        >
-                                            <div className="text-2xl mb-1">
-                                                {level === 'COUNTRY' ? '🌍' : level === 'STATE' ? '🗺️' : '🏙️'}
-                                            </div>
-                                            <div className="font-medium">{level}</div>
-                                            <div className="text-xs text-gray-500">
-                                                {level === 'COUNTRY' ? 'All countries' :
-                                                    level === 'STATE' ? 'All states' : 'All cities'}
-                                            </div>
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
+                    {/* Step 2: Template Selection */}
+                    {step === 'template' && (
+                        <div>
+                            <h2 className="text-xl font-semibold mb-6">Step 2: Select Template & Insurance Type</h2>
 
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Filter by Country {geoLevel !== 'COUNTRY' && '*'}
-                                </label>
-                                <select
-                                    value={selectedCountry}
-                                    onChange={(e) => {
-                                        setSelectedCountry(e.target.value);
-                                        setSelectedState('');
-                                    }}
-                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                                >
-                                    <option value="">All Countries</option>
-                                    {countries.map(country => (
-                                        <option key={country.id} value={country.id}>
-                                            {country.name} ({country.code.toUpperCase()})
-                                        </option>
-                                    ))}
-                                </select>
-                            </div>
-
-                            {geoLevel === 'CITY' && selectedCountry && (
+                            <div className="grid md:grid-cols-2 gap-6">
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        Filter by State (optional)
-                                    </label>
+                                    <label className="block text-sm font-medium mb-2">Template *</label>
                                     <select
-                                        value={selectedState}
-                                        onChange={(e) => setSelectedState(e.target.value)}
-                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                        value={selectedTemplate}
+                                        onChange={(e) => setSelectedTemplate(e.target.value)}
+                                        className="w-full px-4 py-2 border rounded-lg"
                                     >
-                                        <option value="">All States in Country</option>
-                                        {states.map(state => (
-                                            <option key={state.id} value={state.id}>
-                                                {state.name}
-                                            </option>
+                                        <option value="">Select a template...</option>
+                                        {templates.map((t) => (
+                                            <option key={t.id} value={t.id}>{t.name}</option>
+                                        ))}
+                                    </select>
+                                    {templates.length === 0 && (
+                                        <p className="text-sm text-red-500 mt-2">
+                                            No templates found. <a href="/dashboard/templates" className="underline">Create one first</a>.
+                                        </p>
+                                    )}
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-medium mb-2">Insurance Type *</label>
+                                    <select
+                                        value={selectedInsuranceType}
+                                        onChange={(e) => setSelectedInsuranceType(e.target.value)}
+                                        className="w-full px-4 py-2 border rounded-lg"
+                                    >
+                                        <option value="">Select insurance type...</option>
+                                        {insuranceTypes.map((t) => (
+                                            <option key={t.id} value={t.id}>{t.name}</option>
                                         ))}
                                     </select>
                                 </div>
-                            )}
-
-                            <div className="border-t pt-4 space-y-3">
-                                <label className="flex items-center gap-2">
-                                    <input
-                                        type="checkbox"
-                                        checked={skipExisting}
-                                        onChange={(e) => setSkipExisting(e.target.checked)}
-                                        className="w-4 h-4 text-blue-600"
-                                    />
-                                    <span className="text-sm text-gray-700">Skip existing pages (recommended)</span>
-                                </label>
-                                <label className="flex items-center gap-2">
-                                    <input
-                                        type="checkbox"
-                                        checked={publishOnCreate}
-                                        onChange={(e) => setPublishOnCreate(e.target.checked)}
-                                        className="w-4 h-4 text-blue-600"
-                                    />
-                                    <span className="text-sm text-gray-700">Publish pages immediately</span>
-                                </label>
                             </div>
+
+                            {selectedTemplate && (
+                                <div className="mt-6 p-4 bg-gray-50 rounded-lg">
+                                    <h4 className="font-medium mb-2">Template Variables</h4>
+                                    <div className="flex flex-wrap gap-2">
+                                        {getAvailableVariables().map((v) => (
+                                            <span
+                                                key={v.name}
+                                                className={`px-2 py-1 rounded text-xs ${v.type === 'system' ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700'
+                                                    }`}
+                                            >
+                                                {`{{${v.name}}}`}
+                                            </span>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     )}
 
-                    {/* Step 2: CSV Data */}
-                    {step === 2 && (
-                        <div className="space-y-6">
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Upload CSV with Custom Data (Optional)
-                                </label>
-                                <p className="text-sm text-gray-500 mb-4">
-                                    Upload a CSV to fill custom template variables. Include a column for matching
-                                    (city, state, or country name) and columns for custom data.
-                                </p>
+                    {/* Step 3: Variable Mapping */}
+                    {step === 'mapping' && (
+                        <div>
+                            <h2 className="text-xl font-semibold mb-6">Step 3: Map Variables</h2>
 
-                                <input
-                                    ref={fileInputRef}
-                                    type="file"
-                                    accept=".csv"
-                                    onChange={handleCSVUpload}
-                                    className="hidden"
-                                />
-
-                                <button
-                                    onClick={() => fileInputRef.current?.click()}
-                                    className="w-full border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-blue-400 hover:bg-blue-50 transition"
-                                >
-                                    <span className="text-3xl block mb-2">📄</span>
-                                    <span className="text-gray-600">Click to upload CSV file</span>
-                                </button>
-                            </div>
-
-                            {csvData.length > 0 && (
+                            {dataSource === 'csv' && (
                                 <>
-                                    <div className="bg-green-50 text-green-700 px-4 py-3 rounded-lg">
-                                        ✓ Loaded {csvData.length} rows from CSV
-                                    </div>
+                                    <p className="text-gray-600 mb-6">
+                                        Map your CSV columns to template variables. Each row will generate one page.
+                                    </p>
 
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                                            Map CSV Columns to Template Variables
-                                        </label>
-                                        <div className="space-y-2">
-                                            {csvColumns.map(col => (
-                                                <div key={col} className="flex items-center gap-4">
-                                                    <span className="w-32 text-sm font-mono bg-gray-100 px-2 py-1 rounded">
-                                                        {col}
+                                    <div className="space-y-4">
+                                        {getAvailableVariables().map((variable) => (
+                                            <div key={variable.name} className="flex items-center gap-4">
+                                                <div className="w-48">
+                                                    <span className={`px-2 py-1 rounded text-sm ${variable.type === 'system' ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700'
+                                                        }`}>
+                                                        {`{{${variable.name}}}`}
                                                     </span>
-                                                    <span className="text-gray-400">→</span>
-                                                    <input
-                                                        type="text"
-                                                        value={variableMapping[col] || ''}
-                                                        onChange={(e) => setVariableMapping({
-                                                            ...variableMapping,
-                                                            [col]: e.target.value
-                                                        })}
-                                                        placeholder={`e.g., ${col}`}
-                                                        className="flex-1 px-3 py-1 border rounded text-sm"
-                                                    />
                                                 </div>
-                                            ))}
-                                        </div>
+                                                <span className="text-gray-400">←</span>
+                                                <select
+                                                    value={variableMapping[variable.name] || ''}
+                                                    onChange={(e) => setVariableMapping({
+                                                        ...variableMapping,
+                                                        [variable.name]: e.target.value,
+                                                    })}
+                                                    className="flex-1 px-4 py-2 border rounded-lg"
+                                                >
+                                                    <option value="">Not mapped</option>
+                                                    {csvHeaders.map((header) => (
+                                                        <option key={header} value={header}>{header}</option>
+                                                    ))}
+                                                </select>
+                                            </div>
+                                        ))}
                                     </div>
 
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                                            Preview CSV Data
-                                        </label>
-                                        <div className="overflow-x-auto border rounded-lg">
-                                            <table className="w-full text-sm">
-                                                <thead className="bg-gray-50">
-                                                    <tr>
-                                                        {csvColumns.map(col => (
-                                                            <th key={col} className="px-3 py-2 text-left">{col}</th>
-                                                        ))}
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    {csvData.slice(0, 5).map((row, i) => (
-                                                        <tr key={i} className="border-t">
-                                                            {csvColumns.map(col => (
-                                                                <td key={col} className="px-3 py-2">{row[col]}</td>
-                                                            ))}
-                                                        </tr>
-                                                    ))}
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                        {csvData.length > 5 && (
-                                            <p className="text-xs text-gray-500 mt-1">
-                                                Showing 5 of {csvData.length} rows
-                                            </p>
-                                        )}
+                                    <div className="mt-8">
+                                        <label className="block text-sm font-medium mb-2">URL Slug Pattern</label>
+                                        <input
+                                            type="text"
+                                            value={slugPattern}
+                                            onChange={(e) => setSlugPattern(e.target.value)}
+                                            className="w-full px-4 py-2 border rounded-lg font-mono"
+                                            placeholder="{{insurance_type_slug}}/{{state_slug}}/{{city_slug}}"
+                                        />
+                                        <p className="text-sm text-gray-500 mt-1">
+                                            Use variables to create dynamic URLs. Example: car-insurance/california/los-angeles
+                                        </p>
                                     </div>
                                 </>
                             )}
+
+                            {dataSource === 'geo' && (
+                                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                                    <p className="text-blue-800">
+                                        Geo-based generation will automatically map state and city data to template variables.
+                                    </p>
+                                </div>
+                            )}
                         </div>
                     )}
 
-                    {/* Step 3: Preview */}
-                    {step === 3 && previewData && (
-                        <div className="space-y-6">
-                            <div className="bg-blue-50 px-4 py-3 rounded-lg">
-                                <p className="font-medium text-blue-900">
-                                    Ready to generate {previewData.totalPages} pages
-                                </p>
-                                <p className="text-sm text-blue-700">
-                                    Using template: {previewData.template.name}
-                                </p>
-                            </div>
+                    {/* Step 4: Options */}
+                    {step === 'options' && (
+                        <div>
+                            <h2 className="text-xl font-semibold mb-6">Step 4: Generation Options</h2>
 
-                            <div>
-                                <h3 className="font-medium text-gray-900 mb-3">Sample Pages Preview</h3>
-                                <div className="space-y-4">
-                                    {previewData.previewPages.map((page, i) => (
-                                        <div key={i} className="border rounded-lg p-4">
-                                            <div className="flex items-start justify-between mb-2">
-                                                <h4 className="font-medium text-gray-900">{page.title}</h4>
-                                                <code className="text-xs bg-gray-100 px-2 py-1 rounded">
-                                                    {page.url}
-                                                </code>
-                                            </div>
-                                            <p className="text-sm text-gray-600 mb-2">{page.sampleContent}</p>
-                                            <div className="flex flex-wrap gap-2">
-                                                {Object.entries(page.variables).slice(0, 6).map(([key, value]) => (
-                                                    <span key={key} className="text-xs bg-gray-100 px-2 py-1 rounded">
-                                                        <span className="text-gray-500">{key}:</span> {value}
-                                                    </span>
-                                                ))}
-                                            </div>
+                            <div className="space-y-6">
+                                <div>
+                                    <label className="block text-sm font-medium mb-2">Job Name</label>
+                                    <input
+                                        type="text"
+                                        value={jobName}
+                                        onChange={(e) => setJobName(e.target.value)}
+                                        className="w-full px-4 py-2 border rounded-lg"
+                                        placeholder="My Bulk Generation Job"
+                                    />
+                                </div>
+
+                                <div className="grid md:grid-cols-2 gap-4">
+                                    <label className="flex items-start gap-3 p-4 border rounded-lg cursor-pointer hover:bg-gray-50">
+                                        <input
+                                            type="checkbox"
+                                            checked={options.publishOnCreate}
+                                            onChange={(e) => setOptions({ ...options, publishOnCreate: e.target.checked })}
+                                            className="mt-1"
+                                        />
+                                        <div>
+                                            <p className="font-medium">Publish on Create</p>
+                                            <p className="text-sm text-gray-500">Automatically publish pages after creation</p>
                                         </div>
-                                    ))}
+                                    </label>
+
+                                    <label className="flex items-start gap-3 p-4 border rounded-lg cursor-pointer hover:bg-gray-50">
+                                        <input
+                                            type="checkbox"
+                                            checked={options.updateExisting}
+                                            onChange={(e) => setOptions({ ...options, updateExisting: e.target.checked, skipExisting: !e.target.checked })}
+                                            className="mt-1"
+                                        />
+                                        <div>
+                                            <p className="font-medium">Update Existing</p>
+                                            <p className="text-sm text-gray-500">Update pages that already exist</p>
+                                        </div>
+                                    </label>
+
+                                    <label className="flex items-start gap-3 p-4 border rounded-lg cursor-pointer hover:bg-gray-50">
+                                        <input
+                                            type="checkbox"
+                                            checked={options.skipExisting}
+                                            onChange={(e) => setOptions({ ...options, skipExisting: e.target.checked, updateExisting: !e.target.checked })}
+                                            className="mt-1"
+                                        />
+                                        <div>
+                                            <p className="font-medium">Skip Existing</p>
+                                            <p className="text-sm text-gray-500">Skip pages that already exist</p>
+                                        </div>
+                                    </label>
+
+                                    <label className="flex items-start gap-3 p-4 border rounded-lg cursor-pointer hover:bg-gray-50">
+                                        <input
+                                            type="checkbox"
+                                            checked={options.validateData}
+                                            onChange={(e) => setOptions({ ...options, validateData: e.target.checked })}
+                                            className="mt-1"
+                                        />
+                                        <div>
+                                            <p className="font-medium">Validate Data</p>
+                                            <p className="text-sm text-gray-500">Check for missing required fields</p>
+                                        </div>
+                                    </label>
+
+                                    <label className="flex items-start gap-3 p-4 border rounded-lg cursor-pointer hover:bg-gray-50">
+                                        <input
+                                            type="checkbox"
+                                            checked={options.dryRun}
+                                            onChange={(e) => setOptions({ ...options, dryRun: e.target.checked })}
+                                            className="mt-1"
+                                        />
+                                        <div>
+                                            <p className="font-medium">Dry Run</p>
+                                            <p className="text-sm text-gray-500">Simulate without creating pages</p>
+                                        </div>
+                                    </label>
                                 </div>
                             </div>
+                        </div>
+                    )}
 
-                            <div className="bg-amber-50 border border-amber-200 px-4 py-3 rounded-lg">
-                                <p className="text-sm text-amber-800">
-                                    <strong>Note:</strong> {skipExisting ? 'Existing pages will be skipped.' : 'Existing pages will be overwritten.'}
-                                    {publishOnCreate ? ' Pages will be published immediately.' : ' Pages will be saved as drafts.'}
-                                </p>
+                    {/* Step 5: Preview */}
+                    {step === 'preview' && (
+                        <div>
+                            <h2 className="text-xl font-semibold mb-6">Step 5: Preview</h2>
+
+                            <button
+                                onClick={generatePreview}
+                                className="mb-6 bg-gray-100 px-4 py-2 rounded-lg hover:bg-gray-200"
+                            >
+                                🔄 Generate Preview
+                            </button>
+
+                            {previewData.length > 0 ? (
+                                <div className="border rounded-lg overflow-hidden">
+                                    <table className="w-full text-sm">
+                                        <thead className="bg-gray-50">
+                                            <tr>
+                                                <th className="px-4 py-2 text-left">#</th>
+                                                <th className="px-4 py-2 text-left">Slug</th>
+                                                <th className="px-4 py-2 text-left">Title</th>
+                                                <th className="px-4 py-2 text-left">Status</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y">
+                                            {previewData.map((item, i) => (
+                                                <tr key={i}>
+                                                    <td className="px-4 py-2 text-gray-400">{i + 1}</td>
+                                                    <td className="px-4 py-2 font-mono text-sm">{item.slug}</td>
+                                                    <td className="px-4 py-2">{item.title}</td>
+                                                    <td className="px-4 py-2">
+                                                        <span className={`px-2 py-0.5 rounded text-xs ${item.exists
+                                                                ? options.updateExisting
+                                                                    ? 'bg-yellow-100 text-yellow-700'
+                                                                    : 'bg-gray-100 text-gray-600'
+                                                                : 'bg-green-100 text-green-700'
+                                                            }`}>
+                                                            {item.exists
+                                                                ? options.updateExisting ? 'Will Update' : 'Will Skip'
+                                                                : 'Will Create'
+                                                            }
+                                                        </span>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            ) : (
+                                <div className="text-center py-12 text-gray-500">
+                                    Click "Generate Preview" to see what pages will be created
+                                </div>
+                            )}
+
+                            <div className="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
+                                <h4 className="font-medium text-blue-800 mb-2">Summary</h4>
+                                <ul className="text-sm text-blue-700 space-y-1">
+                                    <li>• Total rows: {csvData.length}</li>
+                                    <li>• Template: {templates.find(t => t.id === selectedTemplate)?.name}</li>
+                                    <li>• Insurance Type: {insuranceTypes.find(t => t.id === selectedInsuranceType)?.name}</li>
+                                    <li>• Publish on create: {options.publishOnCreate ? 'Yes' : 'No'}</li>
+                                    <li>• Dry run: {options.dryRun ? 'Yes' : 'No'}</li>
+                                </ul>
                             </div>
                         </div>
                     )}
 
-                    {/* Step 4: Results */}
-                    {step === 4 && jobResult && (
-                        <div className="text-center py-8">
-                            <div className="text-6xl mb-4">🎉</div>
-                            <h2 className="text-2xl font-bold text-gray-900 mb-2">Generation Complete!</h2>
-                            <p className="text-gray-600 mb-6">
-                                Created {jobResult.createdPages} pages
-                                {jobResult.skippedPages > 0 && `, skipped ${jobResult.skippedPages} existing`}
-                            </p>
-                            <div className="flex justify-center gap-4">
-                                <Link
-                                    href="/dashboard/pages"
-                                    className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700"
-                                >
-                                    View Pages
-                                </Link>
-                                <button
-                                    onClick={() => {
-                                        setStep(0);
-                                        setSelectedTemplate('');
-                                        setSelectedInsuranceType('');
-                                        setCsvData([]);
-                                        setCsvColumns([]);
-                                        setVariableMapping({});
-                                        setPreviewData(null);
-                                        setJobResult(null);
-                                    }}
-                                    className="bg-gray-100 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-200"
-                                >
-                                    Generate More
-                                </button>
-                            </div>
+                    {/* Step 6: Execute */}
+                    {step === 'execute' && (
+                        <div>
+                            <h2 className="text-xl font-semibold mb-6">Step 6: Execute</h2>
+
+                            {!executing && !currentJob && (
+                                <div className="text-center py-12">
+                                    <div className="text-6xl mb-4">🚀</div>
+                                    <h3 className="text-xl font-semibold mb-2">Ready to Generate</h3>
+                                    <p className="text-gray-500 mb-6">
+                                        This will create {csvData.length} pages using the selected template.
+                                    </p>
+                                    <button
+                                        onClick={executeJob}
+                                        className="bg-blue-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-blue-700"
+                                    >
+                                        Start Generation
+                                    </button>
+                                </div>
+                            )}
+
+                            {(executing || currentJob) && (
+                                <div className="space-y-6">
+                                    <div className="flex items-center justify-between">
+                                        <h3 className="font-semibold">{currentJob?.name || 'Processing...'}</h3>
+                                        <span className={`px-3 py-1 rounded-full text-sm ${currentJob?.status === 'COMPLETED' ? 'bg-green-100 text-green-700' :
+                                                currentJob?.status === 'FAILED' ? 'bg-red-100 text-red-700' :
+                                                    'bg-blue-100 text-blue-700'
+                                            }`}>
+                                            {currentJob?.status || 'Starting...'}
+                                        </span>
+                                    </div>
+
+                                    {/* Progress Bar */}
+                                    <div>
+                                        <div className="flex justify-between text-sm text-gray-500 mb-2">
+                                            <span>Progress</span>
+                                            <span>{currentJob?.processedRows || 0} / {currentJob?.totalRows || csvData.length}</span>
+                                        </div>
+                                        <div className="h-4 bg-gray-200 rounded-full overflow-hidden">
+                                            <div
+                                                className="h-full bg-blue-600 transition-all duration-500"
+                                                style={{
+                                                    width: `${currentJob ? (currentJob.processedRows / currentJob.totalRows) * 100 : 0}%`
+                                                }}
+                                            />
+                                        </div>
+                                    </div>
+
+                                    {/* Stats */}
+                                    <div className="grid grid-cols-4 gap-4">
+                                        <div className="bg-green-50 p-4 rounded-lg text-center">
+                                            <div className="text-2xl font-bold text-green-600">{currentJob?.createdPages || 0}</div>
+                                            <div className="text-sm text-green-700">Created</div>
+                                        </div>
+                                        <div className="bg-yellow-50 p-4 rounded-lg text-center">
+                                            <div className="text-2xl font-bold text-yellow-600">{currentJob?.updatedPages || 0}</div>
+                                            <div className="text-sm text-yellow-700">Updated</div>
+                                        </div>
+                                        <div className="bg-gray-50 p-4 rounded-lg text-center">
+                                            <div className="text-2xl font-bold text-gray-600">{currentJob?.skippedPages || 0}</div>
+                                            <div className="text-sm text-gray-700">Skipped</div>
+                                        </div>
+                                        <div className="bg-red-50 p-4 rounded-lg text-center">
+                                            <div className="text-2xl font-bold text-red-600">{currentJob?.failedPages || 0}</div>
+                                            <div className="text-sm text-red-700">Failed</div>
+                                        </div>
+                                    </div>
+
+                                    {currentJob?.status === 'COMPLETED' && (
+                                        <div className="bg-green-50 border border-green-200 rounded-lg p-4 text-center">
+                                            <div className="text-2xl mb-2">✅</div>
+                                            <p className="text-green-800 font-medium">Generation Complete!</p>
+                                            <a
+                                                href="/dashboard/pages"
+                                                className="text-green-600 hover:underline text-sm"
+                                            >
+                                                View generated pages →
+                                            </a>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
                         </div>
                     )}
-                </div>
 
-                {/* Navigation Buttons */}
-                {step < 4 && (
-                    <div className="flex justify-between">
+                    {/* Navigation */}
+                    <div className="flex justify-between mt-8 pt-6 border-t">
                         <button
-                            onClick={() => setStep(s => Math.max(0, s - 1))}
-                            disabled={step === 0}
-                            className="px-6 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 disabled:opacity-50"
+                            onClick={() => {
+                                const steps: Step[] = ['source', 'template', 'mapping', 'options', 'preview', 'execute'];
+                                const currentIndex = steps.indexOf(step);
+                                if (currentIndex > 0) setStep(steps[currentIndex - 1]);
+                            }}
+                            disabled={step === 'source'}
+                            className="px-4 py-2 text-gray-600 hover:text-gray-800 disabled:opacity-50"
                         >
                             ← Back
                         </button>
 
-                        {step < 3 ? (
+                        {step !== 'execute' && (
                             <button
                                 onClick={() => {
-                                    if (step === 2) {
-                                        handlePreview();
-                                    } else {
-                                        setStep(s => s + 1);
-                                    }
+                                    const steps: Step[] = ['source', 'template', 'mapping', 'options', 'preview', 'execute'];
+                                    const currentIndex = steps.indexOf(step);
+                                    if (currentIndex < steps.length - 1) setStep(steps[currentIndex + 1]);
                                 }}
-                                disabled={!canProceed() || previewLoading}
-                                className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                                disabled={!canProceed()}
+                                className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
                             >
-                                {previewLoading ? 'Loading...' : step === 2 ? 'Preview →' : 'Next →'}
+                                Continue →
                             </button>
-                        ) : step === 3 ? (
-                            <button
-                                onClick={handleExecute}
-                                disabled={executing}
-                                className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50"
-                            >
-                                {executing ? 'Generating...' : `Generate ${previewData?.totalPages || 0} Pages`}
-                            </button>
-                        ) : null}
+                        )}
                     </div>
-                )}
+                </div>
+
+                {/* Previous Jobs */}
+                <div className="mt-12">
+                    <h2 className="text-xl font-semibold mb-4">Previous Jobs</h2>
+                    {jobs.length === 0 ? (
+                        <div className="bg-white rounded-xl p-8 text-center text-gray-500">
+                            No bulk generation jobs yet
+                        </div>
+                    ) : (
+                        <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+                            <table className="w-full">
+                                <thead className="bg-gray-50">
+                                    <tr>
+                                        <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">Name</th>
+                                        <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">Template</th>
+                                        <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">Status</th>
+                                        <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">Progress</th>
+                                        <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">Created</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y">
+                                    {jobs.map((job) => (
+                                        <tr key={job.id}>
+                                            <td className="px-4 py-3 font-medium">{job.name}</td>
+                                            <td className="px-4 py-3 text-gray-500">{job.template?.name}</td>
+                                            <td className="px-4 py-3">
+                                                <span className={`px-2 py-0.5 rounded text-xs ${job.status === 'COMPLETED' ? 'bg-green-100 text-green-700' :
+                                                        job.status === 'FAILED' ? 'bg-red-100 text-red-700' :
+                                                            job.status === 'PROCESSING' ? 'bg-blue-100 text-blue-700' :
+                                                                'bg-gray-100 text-gray-600'
+                                                    }`}>
+                                                    {job.status}
+                                                </span>
+                                            </td>
+                                            <td className="px-4 py-3 text-sm text-gray-500">
+                                                {job.createdPages} created, {job.skippedPages} skipped
+                                            </td>
+                                            <td className="px-4 py-3 text-sm text-gray-500">
+                                                {new Date(job.createdAt).toLocaleDateString()}
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    )}
+                </div>
             </div>
         </AdminLayout>
     );

@@ -272,7 +272,7 @@ export default function TemplatesPage() {
                                         </span>
                                         <div className="flex gap-2">
                                             <Link
-                                                href={`/dashboard/templates/${template.id}`}
+                                                href={`/dashboard/templates/builder?id=${template.id}`}
                                                 className="text-blue-600 hover:text-blue-800"
                                             >
                                                 Edit

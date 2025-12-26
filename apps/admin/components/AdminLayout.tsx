@@ -99,6 +99,12 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
             ],
         },
         {
+            title: 'SEO',
+            items: [
+                { href: '/dashboard/seo', label: 'SEO Dashboard', icon: <Search size={18} /> },
+            ],
+        },
+        {
             title: 'Site',
             items: [
                 { href: '/dashboard/settings', label: 'Settings', icon: <Settings size={18} /> },

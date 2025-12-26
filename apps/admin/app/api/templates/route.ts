@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@myinsurancebuddy/db';
+import { prisma } from '@/lib/prisma';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 
-const prisma = new PrismaClient();
+
 
 // GET /api/templates - List all templates
 export async function GET(request: NextRequest) {
@@ -36,7 +36,22 @@ export async function POST(request: NextRequest) {
         }
 
         const body = await request.json();
-        const { name, slug, description, thumbnail, sections, variables } = body;
+        const { 
+            name, 
+            slug, 
+            description, 
+            thumbnail, 
+            sections, 
+            variables,
+            customVariables,
+            type,
+            category,
+            seoTitleTemplate,
+            seoDescTemplate,
+            customCss,
+            customJs,
+            layout,
+        } = body;
 
         if (!name || !slug) {
             return NextResponse.json({ error: 'Name and slug are required' }, { status: 400 });
@@ -56,6 +71,14 @@ export async function POST(request: NextRequest) {
                 thumbnail,
                 sections: sections || [],
                 variables: variables || {},
+                customVariables: customVariables || [],
+                type: type || 'PAGE',
+                category,
+                seoTitleTemplate,
+                seoDescTemplate,
+                customCss,
+                customJs,
+                layout: layout || 'default',
             },
         });
 

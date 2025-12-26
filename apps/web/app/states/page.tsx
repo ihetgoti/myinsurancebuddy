@@ -1,11 +1,11 @@
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import Link from 'next/link';
-import { PrismaClient } from '@myinsurancebuddy/db';
+import { prisma } from '@/lib/prisma';
 
 export const dynamic = 'force-dynamic';
 
-const prisma = new PrismaClient();
+
 
 async function getData() {
     const [insuranceTypes, states] = await Promise.all([

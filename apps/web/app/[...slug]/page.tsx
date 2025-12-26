@@ -1,11 +1,31 @@
-import { PrismaClient, GeoLevel } from '@myinsurancebuddy/db';
+import { prisma } from '@/lib/prisma';
+import { GeoLevel } from '@myinsurancebuddy/db';
 import { notFound } from 'next/navigation';
-import Link from 'next/link';
 import { Metadata } from 'next';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import DynamicPageRenderer from '@/components/DynamicPageRenderer';
+import {
+    HeroSection,
+    TrustBadges,
+    FeaturesGrid,
+    ContentSection,
+    StatsBar,
+    WhyChooseUs,
+    CTABanner,
+    FAQAccordion,
+    RelatedPagesGrid,
+    FinalCTA,
+} from '@/components/funnel';
 
-const prisma = new PrismaClient();
+/**
+ * ISR Configuration for optimal performance at scale
+ * - revalidate: Pages regenerate every 3600 seconds (1 hour)
+ * - This allows serving cached pages while updating in background
+ * - For 100k+ pages, this prevents DB overload on high traffic
+ */
+export const revalidate = 3600; // ISR: revalidate every hour
+export const dynamicParams = true; // Allow dynamic routes not in generateStaticParams
 
 interface PageProps {
     params: {
@@ -15,23 +35,86 @@ interface PageProps {
 
 // Generate metadata for SEO
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-    const { insuranceType, country, state, city, page } = await resolveRoute(params.slug);
+    const resolved = await resolveRoute(params.slug);
 
-    if (!page && !insuranceType) {
+    if (!resolved.page && !resolved.insuranceType) {
         return { title: 'Not Found' };
     }
 
-    const defaultTitle = buildTitle(insuranceType, country, state, city);
-    const defaultDesc = buildDescription(insuranceType, country, state, city);
+    const { page, insuranceType, country, state, city } = resolved;
+
+    // Build variables for template replacement
+    const variables = buildVariables(insuranceType, country, state, city, page);
+
+    // If page has template-based SEO, use it
+    if (page?.template?.seoTitleTemplate) {
+        const title = replaceVariables(page.template.seoTitleTemplate, variables);
+        const description = page.template.seoDescTemplate 
+            ? replaceVariables(page.template.seoDescTemplate, variables)
+            : page.metaDescription || buildDescription(insuranceType, country, state, city);
+
+        return {
+            title,
+            description,
+            openGraph: {
+                title: page.ogTitle || title,
+                description: page.ogDescription || description,
+                type: (page.ogType as any) || 'website',
+                images: page.ogImage ? [page.ogImage] : undefined,
+            },
+            twitter: {
+                card: (page.twitterCard as any) || 'summary_large_image',
+                title: page.twitterTitle || title,
+                description: page.twitterDesc || description,
+                images: page.twitterImage ? [page.twitterImage] : undefined,
+            },
+            robots: page.robots || 'index,follow',
+            alternates: page.canonicalTag ? { canonical: page.canonicalTag } : undefined,
+        };
+    }
+
+    // Fallback to default SEO
+    const defaultTitle = page?.metaTitle || buildTitle(insuranceType, country, state, city);
+    const defaultDesc = page?.metaDescription || buildDescription(insuranceType, country, state, city);
 
     return {
-        title: page?.metaTitle || defaultTitle,
-        description: page?.metaDescription || defaultDesc,
+        title: defaultTitle,
+        description: defaultDesc,
+        openGraph: {
+            title: defaultTitle,
+            description: defaultDesc,
+            type: 'website',
+        },
     };
 }
 
 // Resolve URL segments to database entities
 async function resolveRoute(segments: string[]) {
+    // First, try to find a page by exact slug match
+    const fullSlug = segments.join('/');
+    const pageBySlug = await prisma.page.findUnique({
+        where: { slug: fullSlug },
+        include: {
+            template: true,
+            insuranceType: true,
+            country: true,
+            state: true,
+            city: true,
+        },
+    });
+
+    if (pageBySlug && pageBySlug.isPublished) {
+        return {
+            page: pageBySlug,
+            insuranceType: pageBySlug.insuranceType,
+            country: pageBySlug.country,
+            state: pageBySlug.state,
+            city: pageBySlug.city,
+            geoLevel: pageBySlug.geoLevel,
+        };
+    }
+
+    // Fallback to hierarchical resolution
     const [insuranceTypeSlug, countryCode, stateSlug, citySlug] = segments;
 
     // Find insurance type
@@ -91,9 +174,71 @@ async function resolveRoute(segments: string[]) {
             cityId: city?.id || null,
             isPublished: true,
         },
+        include: {
+            template: true,
+        },
     });
 
     return { insuranceType, country, state, city, page, geoLevel };
+}
+
+function buildVariables(insuranceType: any, country: any, state: any, city: any, page: any): Record<string, string> {
+    const currentDate = new Date();
+    
+    return {
+        page_title: page?.title || buildTitle(insuranceType, country, state, city).replace(' | MyInsuranceBuddies', ''),
+        page_subtitle: page?.subtitle || buildDescription(insuranceType, country, state, city),
+        insurance_type: insuranceType?.name || 'Insurance',
+        insurance_type_slug: insuranceType?.slug || 'insurance',
+        country: country?.name || '',
+        country_code: country?.code?.toUpperCase() || '',
+        state: state?.name || '',
+        state_code: state?.code || '',
+        state_slug: state?.slug || '',
+        city: city?.name || '',
+        city_slug: city?.slug || '',
+        location: city?.name || state?.name || country?.name || '',
+        avg_premium: state?.avgPremium ? `$${state.avgPremium}` : '$150',
+        avg_savings: '$500',
+        min_coverage: JSON.stringify(state?.minCoverage || {}),
+        population: city?.population?.toLocaleString() || state?.population?.toLocaleString() || '',
+        current_year: currentDate.getFullYear().toString(),
+        current_month: currentDate.toLocaleString('default', { month: 'long' }),
+        site_name: 'MyInsuranceBuddies',
+        site_url: 'https://myinsurancebuddies.com',
+        // Custom data from page
+        ...((page?.customData as Record<string, string>) || {}),
+    };
+}
+
+/**
+ * Replace template variables with actual values
+ * CRITICAL: Removes unresolved variables to prevent raw tokens from rendering
+ * @param template - String containing {{variable}} placeholders
+ * @param variables - Key-value map of variable replacements
+ * @returns Processed string with variables replaced
+ */
+function replaceVariables(template: string, variables: Record<string, string>): string {
+    if (!template) return '';
+    
+    let result = template;
+    
+    // Replace all known variables
+    Object.entries(variables).forEach(([key, value]) => {
+        // Escape special regex characters in key
+        const escapedKey = key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        result = result.replace(new RegExp(`{{${escapedKey}}}`, 'g'), value || '');
+    });
+    
+    // SECURITY: Remove any remaining unreplaced variables to prevent raw token display
+    // Log warning in development for debugging
+    const unresolvedMatches = result.match(/{{[^}]+}}/g);
+    if (unresolvedMatches && process.env.NODE_ENV === 'development') {
+        console.warn('[Template] Unresolved variables found:', unresolvedMatches);
+    }
+    result = result.replace(/{{[^}]+}}/g, '');
+    
+    return result;
 }
 
 function buildTitle(insuranceType: any, country: any, state: any, city: any): string {
@@ -115,339 +260,6 @@ function buildDescription(insuranceType: any, country: any, state: any, city: an
     return `Comprehensive guide to ${typeName}. Compare options, understand coverage, and make informed decisions.`;
 }
 
-export default async function InsurancePage({ params }: PageProps) {
-    const { insuranceType, country, state, city, page, geoLevel } = await resolveRoute(params.slug);
-
-    // If insurance type not found, show 404
-    if (!insuranceType) {
-        notFound();
-    }
-
-    // Fetch data for header navigation
-    const [allInsuranceTypes, allStates] = await Promise.all([
-        prisma.insuranceType.findMany({
-            where: { isActive: true },
-            orderBy: { sortOrder: 'asc' },
-        }),
-        prisma.state.findMany({
-            where: { isActive: true },
-            include: { country: true },
-            orderBy: { name: 'asc' },
-            take: 10,
-        }),
-    ]);
-
-    // Build breadcrumb data
-    const breadcrumbs = [
-        { label: 'Home', href: '/' },
-        { label: insuranceType.name, href: `/${insuranceType.slug}` },
-    ];
-    if (country) breadcrumbs.push({ label: country.name, href: `/${insuranceType.slug}/${country.code}` });
-    if (state) breadcrumbs.push({ label: state.name, href: `/${insuranceType.slug}/${country!.code}/${state.slug}` });
-    if (city) breadcrumbs.push({ label: city.name, href: `/${insuranceType.slug}/${country!.code}/${state!.slug}/${city.slug}` });
-
-    // Get related links for internal linking
-    const relatedLinks = await getRelatedLinks(insuranceType, country, state, city);
-
-    const heroTitle = page?.heroTitle || buildTitle(insuranceType, country, state, city).replace(' | MyInsuranceBuddies', '');
-    const heroSubtitle = page?.heroSubtitle || buildDescription(insuranceType, country, state, city);
-
-    return (
-        <div className="min-h-screen bg-white">
-            <Header insuranceTypes={allInsuranceTypes} states={allStates} />
-
-            {/* Breadcrumbs */}
-            <div className="bg-gray-50 border-b">
-                <div className="container mx-auto px-4 py-3">
-                    <nav className="flex items-center gap-2 text-sm">
-                        {breadcrumbs.map((crumb, i) => (
-                            <span key={crumb.href} className="flex items-center gap-2">
-                                {i > 0 && <span className="text-gray-400">/</span>}
-                                {i === breadcrumbs.length - 1 ? (
-                                    <span className="text-gray-600 font-medium">{crumb.label}</span>
-                                ) : (
-                                    <Link href={crumb.href} className="text-blue-600 hover:text-blue-700">
-                                        {crumb.label}
-                                    </Link>
-                                )}
-                            </span>
-                        ))}
-                    </nav>
-                </div>
-            </div>
-
-            {/* Hero Section */}
-            <section className="relative py-16 overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50"></div>
-                <div className="container mx-auto px-4 relative">
-                    <div className="max-w-4xl">
-                        <div className="inline-flex items-center gap-2 bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-sm font-medium mb-4">
-                            <span className="text-lg">{insuranceType.icon || '📋'}</span>
-                            {insuranceType.name}
-                        </div>
-                        <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
-                            {heroTitle}
-                        </h1>
-                        <p className="text-xl text-gray-600 max-w-2xl">
-                            {heroSubtitle}
-                        </p>
-                    </div>
-                </div>
-            </section>
-
-            {/* Main Content */}
-            <section className="py-12">
-                <div className="container mx-auto px-4">
-                    <div className="grid lg:grid-cols-3 gap-8">
-                        {/* Main Content Area */}
-                        <div className="lg:col-span-2">
-                            {page ? (
-                                <PageContent page={page} insuranceType={insuranceType} country={country} state={state} city={city} />
-                            ) : (
-                                <DefaultContent insuranceType={insuranceType} country={country} state={state} city={city} geoLevel={geoLevel!} />
-                            )}
-                        </div>
-
-                        {/* Sidebar */}
-                        <aside className="lg:col-span-1">
-                            <InternalLinks
-                                relatedLinks={relatedLinks}
-                                insuranceType={insuranceType}
-                                country={country}
-                                state={state}
-                                city={city}
-                            />
-                        </aside>
-                    </div>
-                </div>
-            </section>
-
-            <Footer insuranceTypes={allInsuranceTypes} />
-        </div>
-    );
-}
-
-// Default content when no custom page exists
-function DefaultContent({ insuranceType, country, state, city, geoLevel }: any) {
-    const location = city?.name || state?.name || country?.name;
-
-    return (
-        <div className="space-y-8">
-            {/* Overview Section */}
-            <section className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100">
-                <h2 className="text-2xl font-bold text-gray-900 mb-4">Overview</h2>
-                <p className="text-gray-600 leading-relaxed">
-                    {location ? (
-                        `Looking for ${insuranceType.name.toLowerCase()} in ${location}? You've come to the right place. 
-                        We provide comprehensive information to help you find the best coverage options tailored to your needs and local requirements.`
-                    ) : (
-                        `Welcome to our comprehensive guide on ${insuranceType.name.toLowerCase()}. 
-                        Here you'll find everything you need to know about coverage options, costs, and how to choose the right policy.`
-                    )}
-                </p>
-            </section>
-
-            {/* Why It Matters */}
-            <section className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100">
-                <h2 className="text-2xl font-bold text-gray-900 mb-4">
-                    Why {insuranceType.name} {location ? `in ${location}` : ''} Matters
-                </h2>
-                <div className="prose text-gray-600">
-                    <p className="mb-4">
-                        Having the right insurance coverage is essential for protecting yourself and your assets.
-                        {location && ` Each location has unique requirements and considerations that affect your insurance needs.`}
-                    </p>
-                    <ul className="list-disc list-inside space-y-2">
-                        <li>Financial protection against unexpected events</li>
-                        <li>Peace of mind knowing you're covered</li>
-                        <li>Compliance with local laws and regulations</li>
-                        <li>Access to quality services when you need them</li>
-                    </ul>
-                </div>
-            </section>
-
-            {/* Cost Factors */}
-            <section className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100">
-                <h2 className="text-2xl font-bold text-gray-900 mb-4">Key Cost Factors</h2>
-                <div className="grid md:grid-cols-2 gap-4">
-                    {[
-                        { icon: '📊', title: 'Coverage Level', desc: 'Higher coverage means higher premiums' },
-                        { icon: '🏠', title: 'Location', desc: 'Local factors affect insurance rates' },
-                        { icon: '📋', title: 'Personal Factors', desc: 'Age, history, and lifestyle considerations' },
-                        { icon: '💰', title: 'Deductible Amount', desc: 'Higher deductibles lower premiums' },
-                    ].map((factor, i) => (
-                        <div key={i} className="flex items-start gap-3 p-4 bg-gray-50 rounded-xl">
-                            <span className="text-2xl">{factor.icon}</span>
-                            <div>
-                                <h3 className="font-semibold text-gray-900">{factor.title}</h3>
-                                <p className="text-sm text-gray-600">{factor.desc}</p>
-                            </div>
-                        </div>
-                    ))}
-                </div>
-            </section>
-
-            {/* How to Choose */}
-            <section className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100">
-                <h2 className="text-2xl font-bold text-gray-900 mb-4">How to Choose the Right Coverage</h2>
-                <ol className="space-y-4">
-                    {[
-                        'Assess your coverage needs based on your situation',
-                        'Compare quotes from multiple providers',
-                        'Review policy details and exclusions carefully',
-                        'Consider bundling multiple insurance types',
-                        'Read reviews and check provider ratings',
-                    ].map((step, i) => (
-                        <li key={i} className="flex items-start gap-3">
-                            <span className="flex-shrink-0 w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold text-sm">
-                                {i + 1}
-                            </span>
-                            <span className="text-gray-600 pt-1">{step}</span>
-                        </li>
-                    ))}
-                </ol>
-            </section>
-
-            {/* FAQs */}
-            <section className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100">
-                <h2 className="text-2xl font-bold text-gray-900 mb-4">Frequently Asked Questions</h2>
-                <div className="space-y-4">
-                    {[
-                        {
-                            q: `What does ${insuranceType.name.toLowerCase()} cover?`,
-                            a: `${insuranceType.name} typically covers specific risks and provides financial protection against losses. Coverage varies by policy and provider.`
-                        },
-                        {
-                            q: 'How much does coverage cost?',
-                            a: 'Costs vary based on coverage level, location, personal factors, and the provider you choose. We recommend comparing quotes from multiple insurers.'
-                        },
-                        {
-                            q: 'How do I file a claim?',
-                            a: 'Contact your insurance provider directly to file a claim. Most providers offer online, phone, and mobile app options for filing claims.'
-                        },
-                    ].map((faq, i) => (
-                        <details key={i} className="group border-b border-gray-100 pb-4">
-                            <summary className="flex items-center justify-between cursor-pointer text-gray-900 font-medium py-2">
-                                {faq.q}
-                                <svg className="w-5 h-5 text-gray-400 group-open:rotate-180 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                                </svg>
-                            </summary>
-                            <p className="text-gray-600 pt-2">{faq.a}</p>
-                        </details>
-                    ))}
-                </div>
-            </section>
-        </div>
-    );
-}
-
-// Render custom page content from sections
-function PageContent({ page, insuranceType, country, state, city }: any) {
-    const sections = page.sections || [];
-
-    if (sections.length === 0) {
-        return <DefaultContent insuranceType={insuranceType} country={country} state={state} city={city} geoLevel="CITY" />;
-    }
-
-    return (
-        <div className="space-y-8">
-            {sections.map((section: any, i: number) => (
-                <section key={i} className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100">
-                    <h2 className="text-2xl font-bold text-gray-900 mb-4">{section.title}</h2>
-                    <div className="prose text-gray-600" dangerouslySetInnerHTML={{ __html: section.content || '' }} />
-                </section>
-            ))}
-        </div>
-    );
-}
-
-// Internal links sidebar
-function InternalLinks({ relatedLinks, insuranceType, country, state, city }: any) {
-    return (
-        <div className="space-y-6 sticky top-24">
-            {/* Other Insurance Types */}
-            {relatedLinks.otherNiches?.length > 0 && (
-                <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-                    <h3 className="font-bold text-gray-900 mb-4">
-                        {city ? `Other Insurance in ${city.name}` :
-                            state ? `Other Insurance in ${state.name}` :
-                                country ? `Other Insurance in ${country.name}` :
-                                    'Other Insurance Types'}
-                    </h3>
-                    <ul className="space-y-2">
-                        {relatedLinks.otherNiches.map((link: any) => (
-                            <li key={link.href}>
-                                <Link
-                                    href={link.href}
-                                    className="flex items-center gap-2 text-gray-600 hover:text-blue-600 transition"
-                                >
-                                    <span>{link.icon}</span>
-                                    <span>{link.label}</span>
-                                </Link>
-                            </li>
-                        ))}
-                    </ul>
-                </div>
-            )}
-
-            {/* Nearby Cities */}
-            {relatedLinks.nearbyCities?.length > 0 && (
-                <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-                    <h3 className="font-bold text-gray-900 mb-4">
-                        {insuranceType.name} in Nearby Cities
-                    </h3>
-                    <ul className="space-y-2">
-                        {relatedLinks.nearbyCities.map((link: any) => (
-                            <li key={link.href}>
-                                <Link
-                                    href={link.href}
-                                    className="text-gray-600 hover:text-blue-600 transition"
-                                >
-                                    {link.label}
-                                </Link>
-                            </li>
-                        ))}
-                    </ul>
-                </div>
-            )}
-
-            {/* Parent Locations */}
-            {relatedLinks.parentLocations?.length > 0 && (
-                <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-                    <h3 className="font-bold text-gray-900 mb-4">Explore More</h3>
-                    <ul className="space-y-2">
-                        {relatedLinks.parentLocations.map((link: any) => (
-                            <li key={link.href}>
-                                <Link
-                                    href={link.href}
-                                    className="text-gray-600 hover:text-blue-600 transition"
-                                >
-                                    {link.label}
-                                </Link>
-                            </li>
-                        ))}
-                    </ul>
-                </div>
-            )}
-
-            {/* CTA */}
-            <div className="bg-gradient-to-br from-blue-600 to-purple-600 rounded-2xl p-6 text-white">
-                <h3 className="font-bold mb-2">Need Help?</h3>
-                <p className="text-blue-100 text-sm mb-4">
-                    Not sure which coverage is right for you? Our guides can help you decide.
-                </p>
-                <Link
-                    href="/"
-                    className="inline-block bg-white text-blue-600 px-4 py-2 rounded-lg font-medium hover:bg-gray-100 transition"
-                >
-                    Browse All Types
-                </Link>
-            </div>
-        </div>
-    );
-}
-
 // Get related links for internal linking
 async function getRelatedLinks(insuranceType: any, country: any, state: any, city: any) {
     const links: any = {
@@ -455,6 +267,8 @@ async function getRelatedLinks(insuranceType: any, country: any, state: any, cit
         nearbyCities: [],
         parentLocations: [],
     };
+
+    if (!insuranceType) return links;
 
     // Get other insurance types at the same location
     const otherTypes = await prisma.insuranceType.findMany({
@@ -513,4 +327,278 @@ async function getRelatedLinks(insuranceType: any, country: any, state: any, cit
     }
 
     return links;
+}
+
+// Generate JSON-LD Schema
+function generateSchema(insuranceType: any, country: any, state: any, city: any, page: any) {
+    const schemas: any[] = [];
+    const location = city?.name || state?.name || country?.name;
+
+    // Organization schema
+    schemas.push({
+        '@context': 'https://schema.org',
+        '@type': 'Organization',
+        name: 'MyInsuranceBuddies',
+        url: 'https://myinsurancebuddies.com',
+        logo: 'https://myinsurancebuddies.com/logo.png',
+    });
+
+    // WebPage schema
+    schemas.push({
+        '@context': 'https://schema.org',
+        '@type': 'WebPage',
+        name: page?.title || buildTitle(insuranceType, country, state, city),
+        description: page?.metaDescription || buildDescription(insuranceType, country, state, city),
+        url: `https://myinsurancebuddies.com/${page?.slug || insuranceType?.slug}`,
+    });
+
+    // Breadcrumb schema
+    const breadcrumbItems: any[] = [
+        { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://myinsurancebuddies.com' },
+    ];
+
+    if (insuranceType) {
+        breadcrumbItems.push({
+            '@type': 'ListItem',
+            position: 2,
+            name: insuranceType.name,
+            item: `https://myinsurancebuddies.com/${insuranceType.slug}`,
+        });
+    }
+
+    if (country) {
+        breadcrumbItems.push({
+            '@type': 'ListItem',
+            position: 3,
+            name: country.name,
+            item: `https://myinsurancebuddies.com/${insuranceType?.slug}/${country.code}`,
+        });
+    }
+
+    if (state) {
+        breadcrumbItems.push({
+            '@type': 'ListItem',
+            position: 4,
+            name: state.name,
+            item: `https://myinsurancebuddies.com/${insuranceType?.slug}/${country?.code}/${state.slug}`,
+        });
+    }
+
+    if (city) {
+        breadcrumbItems.push({
+            '@type': 'ListItem',
+            position: 5,
+            name: city.name,
+            item: `https://myinsurancebuddies.com/${insuranceType?.slug}/${country?.code}/${state?.slug}/${city.slug}`,
+        });
+    }
+
+    schemas.push({
+        '@context': 'https://schema.org',
+        '@type': 'BreadcrumbList',
+        itemListElement: breadcrumbItems,
+    });
+
+    // FAQ schema if page has FAQ content
+    if (page?.schemaMarkup) {
+        schemas.push(page.schemaMarkup);
+    }
+
+    return schemas;
+}
+
+/**
+ * Generate static params for high-priority pages at build time
+ * This pre-renders important pages for instant loading
+ * Limited to prevent excessive build times with 100k+ pages
+ */
+export async function generateStaticParams() {
+    try {
+        // Get high-priority pages: niche homepages and state-level pages
+        const [insuranceTypes, topPages] = await Promise.all([
+            prisma.insuranceType.findMany({
+                where: { isActive: true },
+                select: { slug: true },
+            }),
+            prisma.page.findMany({
+                where: {
+                    isPublished: true,
+                    geoLevel: { in: ['NICHE', 'STATE'] },
+                },
+                select: { slug: true },
+                take: 500, // Limit to prevent long builds
+            }),
+        ]);
+
+        const params: { slug: string[] }[] = [];
+
+        // Add insurance type homepages
+        for (const type of insuranceTypes) {
+            params.push({ slug: [type.slug] });
+        }
+
+        // Add top pages from DB
+        for (const page of topPages) {
+            if (page.slug) {
+                params.push({ slug: page.slug.split('/') });
+            }
+        }
+
+        return params;
+    } catch (error) {
+        console.error('generateStaticParams error:', error);
+        return [];
+    }
+}
+
+export default async function DynamicPage({ params }: PageProps) {
+    const { insuranceType, country, state, city, page } = await resolveRoute(params.slug);
+
+    // If nothing found, show 404
+    if (!insuranceType && !page) {
+        notFound();
+    }
+
+    // Fetch data for header navigation
+    const [allInsuranceTypes, allStates] = await Promise.all([
+        prisma.insuranceType.findMany({
+            where: { isActive: true },
+            orderBy: { sortOrder: 'asc' },
+        }),
+        prisma.state.findMany({
+            where: { isActive: true },
+            include: { country: true },
+            orderBy: { name: 'asc' },
+            take: 10,
+        }),
+    ]);
+
+    // Get related links for internal linking
+    const relatedLinks = await getRelatedLinks(insuranceType, country, state, city);
+
+    // Build variables
+    const variables = buildVariables(insuranceType, country, state, city, page);
+
+    // Generate schema
+    const schemas = generateSchema(insuranceType, country, state, city, page);
+
+    // Build location string
+    const location = city?.name || state?.name || country?.name;
+    const locationBadge = city
+        ? `${city.name}, ${state?.name}`
+        : state
+            ? `${state.name}, ${country?.name}`
+            : country?.name;
+
+    // If page has template with sections, render dynamically
+    if (page?.template?.sections && Array.isArray(page.template.sections) && page.template.sections.length > 0) {
+        return (
+            <div className="min-h-screen bg-white">
+                {/* Schema.org JSON-LD */}
+                <script
+                    type="application/ld+json"
+                    dangerouslySetInnerHTML={{ __html: JSON.stringify(schemas) }}
+                />
+
+                {/* Custom CSS from template */}
+                {page.template.customCss && (
+                    <style dangerouslySetInnerHTML={{ __html: page.template.customCss }} />
+                )}
+
+                <Header insuranceTypes={allInsuranceTypes} states={allStates} />
+
+                <DynamicPageRenderer
+                    sections={page.template.sections as any[]}
+                    pageContent={page.content as any[] || []}
+                    variables={variables}
+                />
+
+                <Footer insuranceTypes={allInsuranceTypes} />
+
+                {/* Custom JS from template */}
+                {page.template.customJs && (
+                    <script dangerouslySetInnerHTML={{ __html: page.template.customJs }} />
+                )}
+            </div>
+        );
+    }
+
+    // Fallback to default funnel layout
+    const heroTitle = page?.title || variables.page_title;
+    const heroSubtitle = page?.subtitle || variables.page_subtitle;
+
+    const contentTitle = location
+        ? `Understanding ${insuranceType?.name} in ${location}`
+        : `Complete Guide to ${insuranceType?.name}`;
+
+    return (
+        <div className="min-h-screen bg-white">
+            {/* Schema.org JSON-LD */}
+            <script
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{ __html: JSON.stringify(schemas) }}
+            />
+
+            <Header insuranceTypes={allInsuranceTypes} states={allStates} />
+
+            {/* Hero Section */}
+            <HeroSection
+                title={heroTitle}
+                subtitle={heroSubtitle}
+                insuranceType={insuranceType}
+                location={location}
+                locationBadge={locationBadge}
+            />
+
+            {/* Trust Badges */}
+            <TrustBadges />
+
+            {/* Features Grid */}
+            <FeaturesGrid
+                insuranceType={insuranceType?.name || 'Insurance'}
+                location={location}
+            />
+
+            {/* Content Section */}
+            <ContentSection
+                title={contentTitle}
+                insuranceType={insuranceType?.name || 'Insurance'}
+                location={location}
+            />
+
+            {/* Stats Bar */}
+            <StatsBar />
+
+            {/* Why Choose Us */}
+            <WhyChooseUs
+                insuranceType={insuranceType?.name || 'Insurance'}
+                location={location}
+            />
+
+            {/* Mid-Page CTA */}
+            <CTABanner />
+
+            {/* FAQ Section */}
+            <FAQAccordion
+                insuranceType={insuranceType?.name || 'Insurance'}
+                location={location}
+            />
+
+            {/* Related Pages / Internal Links */}
+            <RelatedPagesGrid
+                insuranceType={insuranceType}
+                otherNiches={relatedLinks.otherNiches}
+                nearbyCities={relatedLinks.nearbyCities}
+                parentLocations={relatedLinks.parentLocations}
+            />
+
+            {/* Final CTA */}
+            <FinalCTA
+                insuranceType={insuranceType?.name || 'Insurance'}
+                location={location}
+            />
+
+            <Footer insuranceTypes={allInsuranceTypes} />
+        </div>
+    );
 }

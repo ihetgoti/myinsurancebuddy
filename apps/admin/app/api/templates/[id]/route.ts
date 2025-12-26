@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@myinsurancebuddy/db';
+import { prisma } from '@/lib/prisma';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 
-const prisma = new PrismaClient();
+
 
 // GET /api/templates/[id] - Get single template
 export async function GET(
@@ -34,7 +34,10 @@ export async function GET(
     }
 }
 
-// PATCH /api/templates/[id] - Update template
+/**
+ * PATCH /api/templates/[id] - Update template
+ * Includes automatic versioning for rollback capability
+ */
 export async function PATCH(
     request: NextRequest,
     { params }: { params: { id: string } }
@@ -46,7 +49,23 @@ export async function PATCH(
         }
 
         const body = await request.json();
-        const { name, slug, description, thumbnail, sections, variables, isActive } = body;
+        const { 
+            name, 
+            slug, 
+            description, 
+            thumbnail, 
+            sections, 
+            variables, 
+            customVariables,
+            type,
+            category,
+            seoTitleTemplate,
+            seoDescTemplate,
+            customCss,
+            customJs,
+            layout,
+            isActive 
+        } = body;
 
         // Check if slug is taken by another template
         if (slug) {
@@ -58,6 +77,18 @@ export async function PATCH(
             }
         }
 
+        // Get current template for versioning
+        const currentTemplate = await prisma.template.findUnique({
+            where: { id: params.id },
+        });
+
+        if (!currentTemplate) {
+            return NextResponse.json({ error: 'Template not found' }, { status: 404 });
+        }
+
+        // Increment version number
+        const newVersion = (currentTemplate.version || 1) + 1;
+
         const template = await prisma.template.update({
             where: { id: params.id },
             data: {
@@ -67,7 +98,16 @@ export async function PATCH(
                 ...(thumbnail !== undefined && { thumbnail }),
                 ...(sections !== undefined && { sections }),
                 ...(variables !== undefined && { variables }),
+                ...(customVariables !== undefined && { customVariables }),
+                ...(type !== undefined && { type }),
+                ...(category !== undefined && { category }),
+                ...(seoTitleTemplate !== undefined && { seoTitleTemplate }),
+                ...(seoDescTemplate !== undefined && { seoDescTemplate }),
+                ...(customCss !== undefined && { customCss }),
+                ...(customJs !== undefined && { customJs }),
+                ...(layout !== undefined && { layout }),
                 ...(isActive !== undefined && { isActive }),
+                version: newVersion,
             },
         });
 
