@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useRef, useCallback } from 'react';
+import { useEffect, useState, useRef, useCallback, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { getApiUrl } from '@/lib/api';
 
@@ -12,8 +12,9 @@ interface StyleProperties {
     justifyContent?: string;
     alignItems?: string;
     flexWrap?: string;
+    flex?: string;
     gap?: string;
-    
+
     // Spacing
     marginTop?: string;
     marginRight?: string;
@@ -23,7 +24,7 @@ interface StyleProperties {
     paddingRight?: string;
     paddingBottom?: string;
     paddingLeft?: string;
-    
+
     // Size
     width?: string;
     minWidth?: string;
@@ -31,7 +32,7 @@ interface StyleProperties {
     height?: string;
     minHeight?: string;
     maxHeight?: string;
-    
+
     // Position
     position?: string;
     top?: string;
@@ -39,7 +40,7 @@ interface StyleProperties {
     bottom?: string;
     left?: string;
     zIndex?: string;
-    
+
     // Background
     backgroundColor?: string;
     backgroundImage?: string;
@@ -47,20 +48,23 @@ interface StyleProperties {
     backgroundPosition?: string;
     backgroundRepeat?: string;
     backgroundAttachment?: string;
-    
+
     // Border
     borderWidth?: string;
     borderStyle?: string;
     borderColor?: string;
+    borderTopWidth?: string;
+    borderTopStyle?: string;
+    borderTopColor?: string;
     borderRadius?: string;
     borderTopLeftRadius?: string;
     borderTopRightRadius?: string;
     borderBottomLeftRadius?: string;
     borderBottomRightRadius?: string;
-    
+
     // Shadow
     boxShadow?: string;
-    
+
     // Typography
     fontFamily?: string;
     fontSize?: string;
@@ -72,13 +76,13 @@ interface StyleProperties {
     textDecoration?: string;
     textTransform?: string;
     color?: string;
-    
+
     // Effects
     opacity?: string;
     transform?: string;
     transition?: string;
     filter?: string;
-    
+
     // Overflow
     overflow?: string;
     overflowX?: string;
@@ -138,7 +142,7 @@ interface Template {
 }
 
 type DeviceType = 'desktop' | 'tablet' | 'mobile';
-type PanelType = 'elements' | 'style' | 'advanced' | 'responsive';
+type PanelType = 'elements' | 'style' | 'advanced' | 'responsive' | 'layers';
 
 const DEVICE_WIDTHS = {
     desktop: '100%',
@@ -227,11 +231,44 @@ const DEFAULT_STYLES: ResponsiveStyles = {
     mobile: {},
 };
 
-export default function AdvancedTemplateBuilder() {
+const THEME_PRESETS = {
+    minimal: {
+        name: 'Minimal (Light)',
+        styles: {
+            section: { backgroundColor: '#ffffff', color: '#111827' },
+            heading: { color: '#000000', fontFamily: 'Inter, sans-serif' },
+            text: { color: '#374151', fontFamily: 'Inter, sans-serif' },
+            button: { backgroundColor: '#000000', color: '#ffffff', borderRadius: '0px' },
+            container: { maxWidth: '1200px' }
+        }
+    },
+    modern: {
+        name: 'Modern (Blue)',
+        styles: {
+            section: { backgroundColor: '#f3f4f6', color: '#1f2937' },
+            heading: { color: '#1e3a8a', fontFamily: 'Plus Jakarta Sans, sans-serif' },
+            text: { color: '#4b5563', fontFamily: 'Plus Jakarta Sans, sans-serif' },
+            button: { backgroundColor: '#3b82f6', color: '#ffffff', borderRadius: '12px', boxShadow: '0 4px 6px -1px rgba(59, 130, 246, 0.5)' },
+            container: { maxWidth: '1280px' }
+        }
+    },
+    dark: {
+        name: 'Dark Mode',
+        styles: {
+            section: { backgroundColor: '#111827', color: '#f3f4f6' },
+            heading: { color: '#ffffff', fontFamily: 'Inter, sans-serif' },
+            text: { color: '#d1d5db', fontFamily: 'Inter, sans-serif' },
+            button: { backgroundColor: '#6366f1', color: '#ffffff', borderRadius: '8px' },
+            container: { maxWidth: '1200px' }
+        }
+    }
+};
+
+function AdvancedTemplateBuilderContent() {
     const searchParams = useSearchParams();
     const router = useRouter();
     const templateId = searchParams.get('id');
-    
+
     const [template, setTemplate] = useState<Template | null>(null);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
@@ -248,7 +285,7 @@ export default function AdvancedTemplateBuilder() {
     const [dropTarget, setDropTarget] = useState<{ id: string; position: 'before' | 'after' | 'inside' } | null>(null);
     const [showPreview, setShowPreview] = useState(false);
     const [previewData, setPreviewData] = useState<any>(null);
-    
+
     const canvasRef = useRef<HTMLDivElement>(null);
     const iframeRef = useRef<HTMLIFrameElement>(null);
 
@@ -314,11 +351,11 @@ export default function AdvancedTemplateBuilder() {
             const res = await fetch(getApiUrl(`/api/templates/${templateId}`));
             if (!res.ok) throw new Error('Template not found');
             const data = await res.json();
-            
+
             // Normalize sections to ensure styles structure exists
             const normalizedSections = (data.sections || []).map(normalizeElement);
             const normalizedData = { ...data, sections: normalizedSections };
-            
+
             setTemplate(normalizedData);
             if (normalizedSections.length > 0) {
                 setHistory([normalizedSections]);
@@ -414,8 +451,8 @@ export default function AdvancedTemplateBuilder() {
                 };
                 break;
             case 'button':
-                baseElement.content = { 
-                    type: 'button', 
+                baseElement.content = {
+                    type: 'button',
                     value: 'Click Here',
                     settings: { url: '#', target: '_self' }
                 };
@@ -433,8 +470,8 @@ export default function AdvancedTemplateBuilder() {
                 };
                 break;
             case 'image':
-                baseElement.content = { 
-                    type: 'image', 
+                baseElement.content = {
+                    type: 'image',
                     value: '/placeholder.jpg',
                     settings: { alt: '', width: '100%', height: 'auto' }
                 };
@@ -460,8 +497,8 @@ export default function AdvancedTemplateBuilder() {
                 };
                 break;
             case 'variable':
-                baseElement.content = { 
-                    type: 'variable', 
+                baseElement.content = {
+                    type: 'variable',
                     variable: 'page_title',
                     fallback: 'Default Value'
                 };
@@ -515,7 +552,7 @@ export default function AdvancedTemplateBuilder() {
         if (!template) return;
 
         const newSections = JSON.parse(JSON.stringify(template.sections));
-        
+
         const update = (elements: BuilderElement[]): boolean => {
             for (let i = 0; i < elements.length; i++) {
                 if (elements[i].id === elementId) {
@@ -528,7 +565,7 @@ export default function AdvancedTemplateBuilder() {
             }
             return false;
         };
-        
+
         update(newSections);
         setTemplate({ ...template, sections: newSections });
     };
@@ -537,7 +574,7 @@ export default function AdvancedTemplateBuilder() {
         if (!template) return;
 
         const newSections = JSON.parse(JSON.stringify(template.sections));
-        
+
         const update = (elements: BuilderElement[]): boolean => {
             for (let i = 0; i < elements.length; i++) {
                 if (elements[i].id === elementId) {
@@ -550,7 +587,7 @@ export default function AdvancedTemplateBuilder() {
             }
             return false;
         };
-        
+
         update(newSections);
         setTemplate({ ...template, sections: newSections });
     };
@@ -559,7 +596,7 @@ export default function AdvancedTemplateBuilder() {
         if (!template) return;
 
         const newSections = JSON.parse(JSON.stringify(template.sections));
-        
+
         const remove = (elements: BuilderElement[]): boolean => {
             for (let i = 0; i < elements.length; i++) {
                 if (elements[i].id === elementId) {
@@ -572,7 +609,7 @@ export default function AdvancedTemplateBuilder() {
             }
             return false;
         };
-        
+
         remove(newSections);
         setTemplate({ ...template, sections: newSections });
         saveToHistory(newSections);
@@ -583,7 +620,7 @@ export default function AdvancedTemplateBuilder() {
         if (!template) return;
 
         const newSections = JSON.parse(JSON.stringify(template.sections));
-        
+
         const duplicateWithNewIds = (element: BuilderElement): BuilderElement => {
             const newEl = { ...element, id: generateId() };
             if (newEl.children) {
@@ -605,7 +642,7 @@ export default function AdvancedTemplateBuilder() {
             }
             return false;
         };
-        
+
         duplicate(newSections);
         setTemplate({ ...template, sections: newSections });
         saveToHistory(newSections);
@@ -615,7 +652,7 @@ export default function AdvancedTemplateBuilder() {
         if (!template) return;
 
         const newSections = JSON.parse(JSON.stringify(template.sections));
-        
+
         const move = (elements: BuilderElement[]): boolean => {
             for (let i = 0; i < elements.length; i++) {
                 if (elements[i].id === elementId) {
@@ -632,7 +669,7 @@ export default function AdvancedTemplateBuilder() {
             }
             return false;
         };
-        
+
         move(newSections);
         setTemplate({ ...template, sections: newSections });
         saveToHistory(newSections);
@@ -651,12 +688,46 @@ export default function AdvancedTemplateBuilder() {
 
     const selectedElementData = selectedElement ? findElement(selectedElement) : null;
 
+    const applyTheme = (themeKey: keyof typeof THEME_PRESETS) => {
+        if (!template) return;
+        const theme = THEME_PRESETS[themeKey].styles;
+
+        const newSections = JSON.parse(JSON.stringify(template.sections));
+
+        const updateRecursive = (elements: BuilderElement[]) => {
+            elements.forEach(el => {
+                // Initialize desktop styles if missing
+                if (!el.styles.desktop) el.styles.desktop = {};
+
+                if (el.type === 'section') {
+                    Object.assign(el.styles.desktop, theme.section);
+                } else if (el.name === 'Heading') {
+                    Object.assign(el.styles.desktop, theme.heading);
+                } else if (el.name === 'Text' || el.name === 'Rich Text') {
+                    Object.assign(el.styles.desktop, theme.text);
+                } else if (el.name === 'Button') {
+                    Object.assign(el.styles.desktop, theme.button);
+                } else if (el.type === 'container') {
+                    if (theme.container.maxWidth) {
+                        el.styles.desktop.maxWidth = theme.container.maxWidth;
+                    }
+                }
+
+                if (el.children) updateRecursive(el.children);
+            });
+        };
+
+        updateRecursive(newSections);
+        setTemplate({ ...template, sections: newSections });
+        saveToHistory(newSections);
+    };
+
     const handleSave = async () => {
         if (!template) return;
         setSaving(true);
 
         try {
-            const url = template.id 
+            const url = template.id
                 ? getApiUrl(`/api/templates/${template.id}`)
                 : getApiUrl('/api/templates');
 
@@ -670,7 +741,7 @@ export default function AdvancedTemplateBuilder() {
             });
 
             if (!res.ok) throw new Error('Failed to save');
-            
+
             const saved = await res.json();
             if (!template.id) {
                 router.push(`/dashboard/templates/builder?id=${saved.id}`);
@@ -765,9 +836,8 @@ export default function AdvancedTemplateBuilder() {
                             <button
                                 key={device}
                                 onClick={() => setActiveDevice(device)}
-                                className={`px-3 py-1 rounded text-sm ${
-                                    activeDevice === device ? 'bg-blue-600' : 'hover:bg-gray-600'
-                                }`}
+                                className={`px-3 py-1 rounded text-sm ${activeDevice === device ? 'bg-blue-600' : 'hover:bg-gray-600'
+                                    }`}
                             >
                                 {device === 'desktop' ? '🖥' : device === 'tablet' ? '📱' : '📱'}
                             </button>
@@ -803,8 +873,27 @@ export default function AdvancedTemplateBuilder() {
 
                     <div className="h-6 w-px bg-gray-700 mx-2" />
 
+                    <div className="relative group">
+                        <button className="flex items-center gap-2 p-2 hover:bg-gray-700 rounded text-sm">
+                            🎨 Theme
+                        </button>
+                        <div className="absolute right-0 top-full mt-1 bg-gray-800 border border-gray-700 rounded-lg shadow-xl w-48 z-50 hidden group-hover:block">
+                            {Object.entries(THEME_PRESETS).map(([key, theme]) => (
+                                <button
+                                    key={key}
+                                    onClick={() => applyTheme(key as any)}
+                                    className="w-full text-left px-4 py-2 hover:bg-gray-700 text-sm"
+                                >
+                                    {theme.name}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div className="h-6 w-px bg-gray-700 mx-2" />
+
                     {/* Preview & Save */}
-                    <button 
+                    <button
                         onClick={() => setShowPreview(true)}
                         className="px-4 py-2 bg-gray-700 rounded-lg hover:bg-gray-600"
                     >
@@ -840,9 +929,8 @@ export default function AdvancedTemplateBuilder() {
                                 <button
                                     key={tab.id}
                                     onClick={() => setActivePanel(tab.id as any)}
-                                    className={`flex-1 py-1.5 rounded text-sm ${
-                                        activePanel === tab.id ? 'bg-gray-600' : ''
-                                    }`}
+                                    className={`flex-1 py-1.5 rounded text-sm ${activePanel === tab.id ? 'bg-gray-600' : ''
+                                        }`}
                                 >
                                     {tab.icon} {tab.label}
                                 </button>
@@ -912,7 +1000,7 @@ export default function AdvancedTemplateBuilder() {
                         }}
                     >
                         {showGrid && (
-                            <div 
+                            <div
                                 className="absolute inset-0 pointer-events-none"
                                 style={{
                                     backgroundImage: 'linear-gradient(rgba(0,0,0,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(0,0,0,0.05) 1px, transparent 1px)',
@@ -983,9 +1071,8 @@ export default function AdvancedTemplateBuilder() {
                                         <button
                                             key={tab.id}
                                             onClick={() => setActivePanel(tab.id as any)}
-                                            className={`flex-1 py-1 rounded text-xs ${
-                                                activePanel === tab.id ? 'bg-gray-600' : ''
-                                            }`}
+                                            className={`flex-1 py-1 rounded text-xs ${activePanel === tab.id ? 'bg-gray-600' : ''
+                                                }`}
                                         >
                                             {tab.label}
                                         </button>
@@ -1041,17 +1128,26 @@ export default function AdvancedTemplateBuilder() {
     );
 }
 
+// Default export wrapped in Suspense for useSearchParams
+export default function AdvancedTemplateBuilder() {
+    return (
+        <Suspense fallback={<div className="h-screen flex items-center justify-center bg-gray-900"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div></div>}>
+            <AdvancedTemplateBuilderContent />
+        </Suspense>
+    );
+}
+
 /**
  * Preview Modal Component
  * Shows a full-page preview of the template with sample data
  */
-function PreviewModal({ 
-    template, 
-    variables, 
-    onClose 
-}: { 
-    template: Template; 
-    variables: Record<string, string>; 
+function PreviewModal({
+    template,
+    variables,
+    onClose
+}: {
+    template: Template;
+    variables: Record<string, string>;
     onClose: () => void;
 }) {
     const [previewDevice, setPreviewDevice] = useState<'desktop' | 'tablet' | 'mobile'>('desktop');
@@ -1101,9 +1197,8 @@ function PreviewModal({
                             <button
                                 key={device}
                                 onClick={() => setPreviewDevice(device)}
-                                className={`px-3 py-1 rounded text-sm text-white ${
-                                    previewDevice === device ? 'bg-blue-600' : 'hover:bg-gray-600'
-                                }`}
+                                className={`px-3 py-1 rounded text-sm text-white ${previewDevice === device ? 'bg-blue-600' : 'hover:bg-gray-600'
+                                    }`}
                             >
                                 {device === 'desktop' ? '🖥 Desktop' : device === 'tablet' ? '📱 Tablet' : '📱 Mobile'}
                             </button>
@@ -1168,15 +1263,15 @@ function PreviewModal({
 }
 
 // Layers Panel Component
-function LayersPanel({ 
-    sections, 
-    selectedElement, 
-    onSelect, 
-    onDelete, 
-    onDuplicate, 
+function LayersPanel({
+    sections,
+    selectedElement,
+    onSelect,
+    onDelete,
+    onDuplicate,
     onMove,
     onToggleVisibility,
-    depth = 0 
+    depth = 0
 }: {
     sections: BuilderElement[];
     selectedElement: string | null;
@@ -1194,9 +1289,8 @@ function LayersPanel({
             {sections.map((element, index) => (
                 <div key={element.id}>
                     <div
-                        className={`flex items-center gap-2 px-2 py-1.5 rounded cursor-pointer group ${
-                            selectedElement === element.id ? 'bg-blue-600' : 'hover:bg-gray-700'
-                        }`}
+                        className={`flex items-center gap-2 px-2 py-1.5 rounded cursor-pointer group ${selectedElement === element.id ? 'bg-blue-600' : 'hover:bg-gray-700'
+                            }`}
                         style={{ paddingLeft: `${depth * 16 + 8}px` }}
                         onClick={() => onSelect(element.id)}
                     >
@@ -1297,10 +1391,10 @@ function CanvasRenderer({
         const isHovered = hoveredElement === element.id;
         const styles = getComputedStyles(element);
 
-        const outlineClass = showOutlines 
-            ? isSelected 
-                ? 'outline outline-2 outline-blue-500 outline-offset-2' 
-                : isHovered 
+        const outlineClass = showOutlines
+            ? isSelected
+                ? 'outline outline-2 outline-blue-500 outline-offset-2'
+                : isHovered
                     ? 'outline outline-1 outline-blue-300 outline-offset-1'
                     : 'outline outline-1 outline-transparent hover:outline-gray-300'
             : '';
@@ -1340,9 +1434,9 @@ function CanvasRenderer({
                     return <span>{element.content.value}</span>;
                 case 'image':
                     return (
-                        <img 
-                            src={element.content.value || '/placeholder.jpg'} 
-                            alt={element.content.settings?.alt || ''} 
+                        <img
+                            src={element.content.value || '/placeholder.jpg'}
+                            alt={element.content.settings?.alt || ''}
                             style={{ maxWidth: '100%', height: 'auto' }}
                         />
                     );
@@ -1392,12 +1486,12 @@ function CanvasRenderer({
                 {renderContent()}
 
                 {/* Drop zones for children */}
-                {(element.type === 'section' || element.type === 'container' || element.type === 'row' || element.type === 'column') && 
-                 (!element.children || element.children.length === 0) && (
-                    <div className="min-h-[60px] border-2 border-dashed border-gray-200 rounded flex items-center justify-center text-gray-400 text-sm">
-                        Drop elements here
-                    </div>
-                )}
+                {(element.type === 'section' || element.type === 'container' || element.type === 'row' || element.type === 'column') &&
+                    (!element.children || element.children.length === 0) && (
+                        <div className="min-h-[60px] border-2 border-dashed border-gray-200 rounded flex items-center justify-center text-gray-400 text-sm">
+                            Drop elements here
+                        </div>
+                    )}
             </div>
         );
     };
@@ -1532,8 +1626,8 @@ function StylePanel({
                             <input
                                 type="text"
                                 value={element.content.settings?.url || ''}
-                                onChange={(e) => onContentUpdate({ 
-                                    ...element.content!, 
+                                onChange={(e) => onContentUpdate({
+                                    ...element.content!,
                                     settings: { ...element.content!.settings, url: e.target.value }
                                 })}
                                 placeholder="Link URL"
@@ -1823,7 +1917,7 @@ function ResponsivePanel({
                                 <input
                                     type="text"
                                     value={element.styles?.[device.id]?.paddingTop || ''}
-                                    onChange={(e) => onUpdate(device.id, { 
+                                    onChange={(e) => onUpdate(device.id, {
                                         paddingTop: e.target.value,
                                         paddingRight: e.target.value,
                                         paddingBottom: e.target.value,

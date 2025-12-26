@@ -17,7 +17,7 @@ export async function GET() {
 
         // Check for pages without meta title
         const noMetaTitle = await prisma.page.findMany({
-            where: { 
+            where: {
                 isPublished: true,
                 OR: [
                     { metaTitle: null },
@@ -40,7 +40,7 @@ export async function GET() {
 
         // Check for pages without meta description
         const noMetaDesc = await prisma.page.findMany({
-            where: { 
+            where: {
                 isPublished: true,
                 OR: [
                     { metaDescription: null },
@@ -63,7 +63,7 @@ export async function GET() {
 
         // Check for short titles (< 30 chars)
         const shortTitles = await prisma.page.findMany({
-            where: { 
+            where: {
                 isPublished: true,
                 metaTitle: { not: null },
             },
@@ -95,9 +95,9 @@ export async function GET() {
 
         // Check for pages without schema markup
         const noSchema = await prisma.page.count({
-            where: { 
+            where: {
                 isPublished: true,
-                schemaMarkup: null,
+                schemaMarkup: { equals: null as any },
             },
         });
 
@@ -112,7 +112,7 @@ export async function GET() {
 
         // Check for pages without OG image
         const noOgImage = await prisma.page.count({
-            where: { 
+            where: {
                 isPublished: true,
                 ogImage: null,
             },
@@ -149,7 +149,7 @@ export async function GET() {
 
         // Check for pages without canonical
         const noCanonical = await prisma.page.count({
-            where: { 
+            where: {
                 isPublished: true,
                 canonicalTag: null,
                 canonicalUrl: null,

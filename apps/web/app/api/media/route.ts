@@ -80,10 +80,13 @@ export async function POST(request: NextRequest) {
         }
 
         // Save to database
+        const url = `/uploads/${year}/${month}/${filename}`;
         const media = await prisma.media.create({
             data: {
                 filename,
+                originalName: file.name,
                 path: `/${year}/${month}/${filename}`,
+                url,
                 width: metadata.width || null,
                 height: metadata.height || null,
                 sizeBytes: file.size,

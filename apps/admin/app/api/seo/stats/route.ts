@@ -10,20 +10,12 @@ export async function GET() {
             publishedPages,
             pagesWithMeta,
             pagesWithSchema,
-            avgTitleLength,
-            avgDescLength,
             sitemapStats,
         ] = await Promise.all([
             prisma.page.count(),
             prisma.page.count({ where: { isPublished: true } }),
             prisma.page.count({ where: { metaTitle: { not: null }, metaDescription: { not: null } } }),
-            prisma.page.count({ where: { schemaMarkup: { not: null } } }),
-            prisma.page.aggregate({
-                _avg: { 
-                    // Using raw query for string length would be better, approximating here
-                },
-            }),
-            prisma.page.aggregate({}),
+            prisma.page.count({ where: { schemaMarkup: { not: null as any } } }),
             prisma.sitemap.aggregate({
                 _sum: { urlCount: true },
                 _max: { lastGenerated: true },

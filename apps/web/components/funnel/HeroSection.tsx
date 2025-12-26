@@ -5,10 +5,10 @@ import Link from 'next/link';
 interface HeroSectionProps {
     title: string;
     subtitle: string;
-    insuranceType: {
+    insuranceType?: {
         name: string;
         icon?: string | null;
-    };
+    } | null;
     location?: string;
     locationBadge?: string;
 }
@@ -53,8 +53,8 @@ export default function HeroSection({
 
                     {/* Insurance Type Badge */}
                     <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-blue-500/20 to-purple-500/20 backdrop-blur-sm border border-blue-500/30 text-blue-300 text-sm font-semibold mb-6 animate-fade-in-up animation-delay-100">
-                        <span className="text-lg">{insuranceType.icon || '🛡️'}</span>
-                        <span>{insuranceType.name}</span>
+                        <span className="text-lg">{insuranceType?.icon || '🛡️'}</span>
+                        <span>{insuranceType?.name || 'Insurance'}</span>
                     </div>
 
                     {/* Main Title */}

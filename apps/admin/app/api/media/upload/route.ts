@@ -50,8 +50,11 @@ export async function POST(request: NextRequest) {
         // Create database record
         const media = await prisma.media.create({
             data: {
-                filename: file.name,
+                filename: uniqueName,
+                originalName: file.name,
                 path: `/uploads/${uniqueName}`,
+                url: `/uploads/${uniqueName}`,
+                mimeType: mimeType,
                 sizeBytes: buffer.length,
                 altText: file.name.replace(/\.[^/.]+$/, ''),
                 uploadedBy: session.user.id,

@@ -102,16 +102,26 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'A page already exists for this insurance type and location' }, { status: 400 });
         }
 
+        // Generate slug based on geo level and names
+        const insuranceType = await prisma.insuranceType.findUnique({ where: { id: insuranceTypeId } });
+        const state = stateId ? await prisma.state.findUnique({ where: { id: stateId } }) : null;
+        const city = cityId ? await prisma.city.findUnique({ where: { id: cityId } }) : null;
+
+        let slug = insuranceType?.slug || '';
+        if (state) slug += `/${state.slug}`;
+        if (city) slug += `/${city.slug}`;
+
         const page = await prisma.page.create({
             data: {
+                slug,
                 insuranceTypeId,
                 geoLevel: geoLevel as any,
                 countryId: geoLevel !== 'NICHE' ? countryId : null,
                 stateId: ['STATE', 'CITY'].includes(geoLevel) ? stateId : null,
                 cityId: geoLevel === 'CITY' ? cityId : null,
-                heroTitle,
-                heroSubtitle,
-                sections: sections || [],
+                title: heroTitle,
+                subtitle: heroSubtitle,
+                content: sections || [],
                 metaTitle,
                 metaDescription,
                 isPublished: isPublished ?? false,

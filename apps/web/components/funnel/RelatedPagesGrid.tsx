@@ -9,10 +9,10 @@ interface RelatedLink {
 
 interface RelatedPagesGridProps {
     title?: string;
-    insuranceType: {
+    insuranceType?: {
         name: string;
         slug: string;
-    };
+    } | null;
     otherNiches?: RelatedLink[];
     nearbyCities?: RelatedLink[];
     parentLocations?: RelatedLink[];
@@ -152,10 +152,10 @@ export default function RelatedPagesGrid({
                 {/* Browse All Link */}
                 <div className="mt-12 text-center">
                     <Link
-                        href={`/${insuranceType.slug}`}
+                        href={`/${insuranceType?.slug || 'insurance'}`}
                         className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-slate-900 text-white font-semibold hover:bg-slate-800 transition-all hover:-translate-y-1 shadow-lg"
                     >
-                        Browse All {insuranceType.name} Locations
+                        Browse All {insuranceType?.name || 'Insurance'} Locations
                         <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
                         </svg>

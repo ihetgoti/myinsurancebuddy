@@ -158,7 +158,7 @@ export async function POST(request: NextRequest) {
         }
 
         // Find duplicates
-        for (const [title, slugs] of titleMap) {
+        Array.from(titleMap.entries()).forEach(([title, slugs]) => {
             if (slugs.length > 1) {
                 stats.duplicateTitles += slugs.length - 1;
                 issues.push({
@@ -169,9 +169,9 @@ export async function POST(request: NextRequest) {
                     affectedPages: slugs,
                 });
             }
-        }
+        });
 
-        for (const [desc, slugs] of descMap) {
+        Array.from(descMap.entries()).forEach(([desc, slugs]) => {
             if (slugs.length > 1) {
                 stats.duplicateDescriptions += slugs.length - 1;
                 issues.push({
@@ -181,7 +181,7 @@ export async function POST(request: NextRequest) {
                     affectedPages: slugs,
                 });
             }
-        }
+        });
 
         // Calculate SEO score
         const seoScore = Math.round(

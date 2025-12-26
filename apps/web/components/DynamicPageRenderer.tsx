@@ -21,7 +21,7 @@ interface DynamicPageRendererProps {
  */
 function sanitizeHtml(html: string): string {
     if (!html) return '';
-    
+
     // Remove script tags and event handlers
     let clean = html
         .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
@@ -29,7 +29,7 @@ function sanitizeHtml(html: string): string {
         .replace(/on\w+\s*=\s*[^\s>]*/gi, '')
         .replace(/javascript:/gi, '')
         .replace(/data:/gi, 'data-blocked:');
-    
+
     return clean;
 }
 
@@ -192,15 +192,15 @@ function HeroCentered(props: any) {
     return (
         <section className={`${heights[props.height] || 'py-24'} relative`} style={bgStyle}>
             {props.overlay && (
-                <div 
-                    className="absolute inset-0 bg-black" 
-                    style={{ opacity: (props.overlayOpacity || 50) / 100 }} 
+                <div
+                    className="absolute inset-0 bg-black"
+                    style={{ opacity: (props.overlayOpacity || 50) / 100 }}
                 />
             )}
             <div className="container mx-auto px-4 text-center relative z-10" style={{ color: props.textColor || '#ffffff' }}>
                 <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6">{props.title}</h1>
                 {props.subtitle && <p className="text-xl md:text-2xl opacity-90 mb-8 max-w-3xl mx-auto">{props.subtitle}</p>}
-                
+
                 <div className="flex flex-wrap justify-center gap-4">
                     {props.primaryCta && (
                         <a href={props.primaryCtaUrl || '#'} className="bg-white text-gray-900 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition">
@@ -231,7 +231,7 @@ function HeroCentered(props: any) {
 
 function HeroSplit(props: any) {
     const isImageLeft = props.imagePosition === 'left';
-    
+
     return (
         <section className="py-16 lg:py-24" style={{ backgroundColor: props.backgroundColor || '#ffffff' }}>
             <div className={`container mx-auto px-4 flex flex-col ${isImageLeft ? 'lg:flex-row' : 'lg:flex-row-reverse'} items-center gap-12`}>
@@ -267,7 +267,7 @@ function HeroZipForm(props: any) {
             <div className="container mx-auto px-4 text-center">
                 <h1 className="text-4xl md:text-5xl font-bold mb-4">{props.title}</h1>
                 {props.subtitle && <p className="text-xl opacity-80 mb-8 max-w-2xl mx-auto">{props.subtitle}</p>}
-                
+
                 <form action={props.formAction || '/get-quote'} className="max-w-md mx-auto flex gap-2 mb-8">
                     <input
                         type="text"
@@ -298,7 +298,7 @@ function HeroAnimated(props: any) {
             <div className="container mx-auto px-4 text-center">
                 <h1 className="text-4xl md:text-5xl font-bold mb-4">{props.title}</h1>
                 {props.subtitle && <p className="text-xl opacity-80 mb-12">{props.subtitle}</p>}
-                
+
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
                     {(props.stats || []).map((stat: any, i: number) => (
                         <div key={i} className="text-center">
@@ -393,7 +393,7 @@ function ContentAccordion(props: any) {
             <div className="container mx-auto px-4 max-w-3xl">
                 {props.title && <h2 className="text-3xl font-bold mb-4 text-center">{props.title}</h2>}
                 {props.subtitle && <p className="text-gray-600 mb-8 text-center">{props.subtitle}</p>}
-                
+
                 <div className="space-y-3">
                     {(props.items || []).map((item: any, i: number) => (
                         <div key={i} className="bg-white rounded-lg shadow-sm overflow-hidden">
@@ -495,7 +495,7 @@ function ContentComparison(props: any) {
 
 function CTABanner(props: any) {
     return (
-        <section 
+        <section
             className="py-16"
             style={{ backgroundColor: props.backgroundColor || '#0f172a', color: props.textColor || '#ffffff' }}
         >
@@ -552,7 +552,7 @@ function FeaturesGrid(props: any) {
             <div className="container mx-auto px-4">
                 {props.title && <h2 className="text-3xl font-bold mb-4 text-center">{props.title}</h2>}
                 {props.subtitle && <p className="text-gray-600 mb-12 text-center max-w-2xl mx-auto">{props.subtitle}</p>}
-                
+
                 <div className={`grid ${columns[props.columns] || 'md:grid-cols-3'} gap-6`}>
                     {(props.features || []).map((feature: any, i: number) => (
                         <div key={i} className="bg-white p-6 rounded-xl shadow-sm hover:shadow-md transition">
@@ -598,7 +598,7 @@ function HowItWorks(props: any) {
             <div className="container mx-auto px-4">
                 {props.title && <h2 className="text-3xl font-bold mb-4 text-center">{props.title}</h2>}
                 {props.subtitle && <p className="text-gray-600 mb-12 text-center">{props.subtitle}</p>}
-                
+
                 <div className={`flex flex-col ${props.layout === 'horizontal' ? 'md:flex-row' : ''} gap-8 max-w-4xl mx-auto`}>
                     {(props.steps || []).map((step: any, i: number) => (
                         <div key={i} className="flex-1 text-center">
@@ -658,7 +658,7 @@ function TestimonialsCarousel(props: any) {
         <section className="py-16 bg-gray-50">
             <div className="container mx-auto px-4 max-w-3xl">
                 {props.title && <h2 className="text-3xl font-bold mb-8 text-center">{props.title}</h2>}
-                
+
                 <div className="bg-white rounded-xl p-8 shadow-sm text-center">
                     <p className="text-xl italic mb-6">"{testimonials[current].quote}"</p>
                     <div className="flex items-center justify-center gap-4">
@@ -742,7 +742,7 @@ function CarrierLogos(props: any) {
             <div className="container mx-auto px-4">
                 {props.title && <h2 className="text-2xl font-bold mb-2 text-center">{props.title}</h2>}
                 {props.subtitle && <p className="text-gray-600 mb-8 text-center">{props.subtitle}</p>}
-                
+
                 <div className={`flex flex-wrap justify-center items-center gap-8 ${props.grayscale ? 'grayscale' : ''}`}>
                     {(props.logos || []).map((logo: any, i: number) => (
                         <a key={i} href={logo.url || '#'} className="hover:grayscale-0 transition">
@@ -766,16 +766,16 @@ function RatingSummary(props: any) {
                     </div>
                     <div className="text-gray-500 text-sm">{(props.totalReviews || 10000).toLocaleString()} reviews</div>
                 </div>
-                
+
                 {props.showBreakdown && props.breakdown && (
                     <div className="space-y-1">
                         {[5, 4, 3, 2, 1].map((rating) => (
                             <div key={rating} className="flex items-center gap-2 text-sm">
                                 <span className="w-8">{rating}★</span>
                                 <div className="w-32 h-2 bg-gray-200 rounded-full overflow-hidden">
-                                    <div 
-                                        className="h-full bg-yellow-400" 
-                                        style={{ width: `${props.breakdown[rating] || 0}%` }} 
+                                    <div
+                                        className="h-full bg-yellow-400"
+                                        style={{ width: `${props.breakdown[rating] || 0}%` }}
                                     />
                                 </div>
                                 <span className="text-gray-500 w-8">{props.breakdown[rating] || 0}%</span>
@@ -887,7 +887,7 @@ function Divider(props: any) {
     };
 
     return (
-        <hr 
+        <hr
             className={`${widths[props.width] || 'w-full'} my-8`}
             style={{
                 borderStyle: props.style || 'solid',
@@ -944,7 +944,7 @@ function CalculatorSavings(props: any) {
                             placeholder="150"
                         />
                     </div>
-                    
+
                     {savings > 0 && (
                         <div className="mb-6">
                             <p className="text-gray-600">You could save up to</p>

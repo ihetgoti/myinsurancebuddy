@@ -1,35 +1,64 @@
 'use client';
 
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import AdminLayout from '@/components/AdminLayout';
-import { useEffect, useState } from 'react';
-import { getApiUrl } from '@/lib/api';
-import Link from 'next/link';
 
 interface Template {
     id: string;
     name: string;
-    slug: string;
-    description: string | null;
-    thumbnail: string | null;
-    sections: any[];
-    variables: Record<string, any> | null;
-    isActive: boolean;
-    createdAt: string;
-    _count: { pages: number };
+    description: string;
+    category: string;
+    type?: string;
+    usageCount?: number;
+    isBuiltIn?: boolean;
 }
 
+// Built-in HTML templates
+const BUILT_IN_TEMPLATES: Template[] = [
+    {
+        id: 'state-page',
+        name: 'State Insurance Page',
+        description: 'SEO-optimized for state-level pages with ad placements',
+        category: 'state',
+        isBuiltIn: true,
+    },
+    {
+        id: 'city-page',
+        name: 'City Insurance Page',
+        description: 'Local SEO optimized for city-level pages',
+        category: 'city',
+        isBuiltIn: true,
+    },
+    {
+        id: 'comparison',
+        name: 'Insurance Comparison',
+        description: 'Compare insurance companies or coverage types',
+        category: 'comparison',
+        isBuiltIn: true,
+    },
+    {
+        id: 'guide',
+        name: 'Insurance Guide',
+        description: 'Educational content with FAQ section',
+        category: 'guide',
+        isBuiltIn: true,
+    },
+    {
+        id: 'landing',
+        name: 'Landing Page',
+        description: 'High-converting page for lead generation',
+        category: 'landing',
+        isBuiltIn: true,
+    },
+];
+
 export default function TemplatesPage() {
+    const router = useRouter();
     const [templates, setTemplates] = useState<Template[]>([]);
     const [loading, setLoading] = useState(true);
-    const [showForm, setShowForm] = useState(false);
-    const [editingTemplate, setEditingTemplate] = useState<Template | null>(null);
-    const [formData, setFormData] = useState({
-        name: '',
-        slug: '',
-        description: '',
-    });
-    const [saving, setSaving] = useState(false);
-    const [error, setError] = useState('');
+    const [selectedCategory, setSelectedCategory] = useState<string>('all');
+    const [deleting, setDeleting] = useState<string | null>(null);
 
     useEffect(() => {
         fetchTemplates();
@@ -37,259 +66,189 @@ export default function TemplatesPage() {
 
     const fetchTemplates = async () => {
         try {
-            const res = await fetch(getApiUrl('/api/templates'));
+            const res = await fetch('/api/templates');
             const data = await res.json();
-            setTemplates(Array.isArray(data) ? data : []);
+            const customTemplates = (Array.isArray(data) ? data : []).map((t: Template) => ({
+                ...t,
+                isBuiltIn: false,
+            }));
+            setTemplates([...BUILT_IN_TEMPLATES, ...customTemplates]);
         } catch (error) {
-            console.error('Failed to fetch templates:', error);
+            setTemplates(BUILT_IN_TEMPLATES);
         } finally {
             setLoading(false);
-        }
-    };
-
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setError('');
-        setSaving(true);
-
-        try {
-            const url = editingTemplate
-                ? getApiUrl(`/api/templates/${editingTemplate.id}`)
-                : getApiUrl('/api/templates');
-
-            const res = await fetch(url, {
-                method: editingTemplate ? 'PATCH' : 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    ...formData,
-                    sections: editingTemplate?.sections || [],
-                    variables: editingTemplate?.variables || {},
-                }),
-            });
-
-            if (!res.ok) {
-                const data = await res.json();
-                throw new Error(data.error || 'Failed to save');
-            }
-
-            setShowForm(false);
-            setEditingTemplate(null);
-            setFormData({ name: '', slug: '', description: '' });
-            fetchTemplates();
-        } catch (err: any) {
-            setError(err.message);
-        } finally {
-            setSaving(false);
         }
     };
 
     const handleDelete = async (id: string) => {
         if (!confirm('Are you sure you want to delete this template?')) return;
 
+        setDeleting(id);
         try {
-            const res = await fetch(getApiUrl(`/api/templates/${id}`), { method: 'DELETE' });
-            if (!res.ok) {
-                const data = await res.json();
-                throw new Error(data.error || 'Failed to delete');
+            const res = await fetch(`/api/templates/${id}`, { method: 'DELETE' });
+            if (res.ok) {
+                setTemplates(templates.filter(t => t.id !== id));
+            } else {
+                alert('Failed to delete template');
             }
-            fetchTemplates();
-        } catch (err: any) {
-            alert(err.message);
+        } catch (error) {
+            alert('Failed to delete template');
+        } finally {
+            setDeleting(null);
         }
     };
 
-    const generateSlug = (name: string) => {
-        return name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+    const filteredTemplates = selectedCategory === 'all'
+        ? templates
+        : templates.filter(t => t.category === selectedCategory);
+
+    const categories = ['all', 'state', 'city', 'comparison', 'guide', 'landing', 'custom'];
+
+    const getCategoryIcon = (category: string) => {
+        switch (category) {
+            case 'state': return '🏛️';
+            case 'city': return '🏙️';
+            case 'comparison': return '⚖️';
+            case 'guide': return '📚';
+            case 'landing': return '🚀';
+            default: return '📄';
+        }
+    };
+
+    const getCategoryColor = (category: string) => {
+        switch (category) {
+            case 'state': return 'bg-blue-500';
+            case 'city': return 'bg-green-500';
+            case 'comparison': return 'bg-purple-500';
+            case 'guide': return 'bg-orange-500';
+            case 'landing': return 'bg-pink-500';
+            default: return 'bg-gray-500';
+        }
     };
 
     return (
         <AdminLayout>
-            <div>
-                <div className="flex justify-between items-center mb-6">
+            <div className="p-6 max-w-7xl mx-auto">
+                {/* Header */}
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
                     <div>
                         <h1 className="text-3xl font-bold text-gray-900">Templates</h1>
-                        <p className="text-gray-600 mt-1">Create reusable page templates</p>
+                        <p className="text-gray-600 mt-1">
+                            SEO-optimized templates with ad placements built-in
+                        </p>
                     </div>
                     <button
-                        onClick={() => {
-                            setEditingTemplate(null);
-                            setFormData({ name: '', slug: '', description: '' });
-                            setShowForm(true);
-                        }}
-                        className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
+                        onClick={() => router.push('/dashboard/templates/editor')}
+                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
                     >
-                        + New Template
+                        <span>+</span> Create Custom Template
                     </button>
                 </div>
 
-                {/* Form Modal */}
-                {showForm && (
-                    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-                        <div className="bg-white rounded-xl p-6 w-full max-w-md mx-4">
-                            <h2 className="text-xl font-bold mb-4">
-                                {editingTemplate ? 'Edit Template' : 'Create Template'}
-                            </h2>
-
-                            {error && (
-                                <div className="bg-red-50 text-red-700 px-4 py-3 rounded-lg mb-4">
-                                    {error}
-                                </div>
-                            )}
-
-                            <form onSubmit={handleSubmit} className="space-y-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                                        Name *
-                                    </label>
-                                    <input
-                                        type="text"
-                                        value={formData.name}
-                                        onChange={(e) => {
-                                            const name = e.target.value;
-                                            setFormData({
-                                                ...formData,
-                                                name,
-                                                slug: editingTemplate ? formData.slug : generateSlug(name),
-                                            });
-                                        }}
-                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                                        placeholder="City Page Template"
-                                        required
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                                        Slug *
-                                    </label>
-                                    <input
-                                        type="text"
-                                        value={formData.slug}
-                                        onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
-                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                                        placeholder="city-page-template"
-                                        required
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                                        Description
-                                    </label>
-                                    <textarea
-                                        value={formData.description}
-                                        onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                                        rows={3}
-                                        placeholder="Template for city-level insurance pages..."
-                                    />
-                                </div>
-
-                                <div className="flex gap-3 pt-4">
-                                    <button
-                                        type="submit"
-                                        disabled={saving}
-                                        className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50"
-                                    >
-                                        {saving ? 'Saving...' : 'Save'}
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={() => setShowForm(false)}
-                                        className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200"
-                                    >
-                                        Cancel
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                )}
+                {/* Category Filters */}
+                <div className="flex flex-wrap gap-2 mb-6">
+                    {categories.map(cat => (
+                        <button
+                            key={cat}
+                            onClick={() => setSelectedCategory(cat)}
+                            className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${selectedCategory === cat
+                                ? 'bg-gray-900 text-white'
+                                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                }`}
+                        >
+                            {cat === 'all' ? 'All Templates' : cat.charAt(0).toUpperCase() + cat.slice(1)}
+                        </button>
+                    ))}
+                </div>
 
                 {/* Templates Grid */}
                 {loading ? (
-                    <div className="text-center py-12 text-gray-500">Loading...</div>
-                ) : templates.length === 0 ? (
-                    <div className="text-center py-12 bg-white rounded-xl border">
-                        <div className="text-4xl mb-4">📄</div>
-                        <p className="text-gray-500 mb-4">No templates yet</p>
-                        <button
-                            onClick={() => setShowForm(true)}
-                            className="text-blue-600 hover:text-blue-700"
-                        >
-                            Create your first template →
-                        </button>
+                    <div className="flex items-center justify-center py-12">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
                     </div>
                 ) : (
-                    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {templates.map((template) => (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {filteredTemplates.map(template => (
                             <div
                                 key={template.id}
-                                className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden hover:shadow-md transition"
+                                className="bg-white border border-gray-200 rounded-xl overflow-hidden hover:shadow-lg transition-shadow group"
                             >
-                                {/* Thumbnail */}
-                                <div className="h-40 bg-gradient-to-br from-blue-50 to-purple-50 flex items-center justify-center">
-                                    {template.thumbnail ? (
-                                        <img
-                                            src={template.thumbnail}
-                                            alt={template.name}
-                                            className="w-full h-full object-cover"
-                                        />
-                                    ) : (
-                                        <div className="text-center">
-                                            <div className="text-4xl mb-2">📋</div>
-                                            <div className="text-xs text-gray-400">
-                                                {template.sections?.length || 0} sections
-                                            </div>
-                                        </div>
-                                    )}
+                                {/* Template Preview */}
+                                <div className="h-40 bg-gradient-to-br from-gray-100 to-gray-200 relative">
+                                    <div className="absolute inset-0 flex items-center justify-center text-6xl opacity-50">
+                                        {getCategoryIcon(template.category)}
+                                    </div>
+                                    <div className={`absolute top-3 right-3 ${getCategoryColor(template.category)} text-white text-xs px-2 py-1 rounded-full`}>
+                                        {template.category}
+                                    </div>
                                 </div>
 
-                                {/* Content */}
+                                {/* Template Info */}
                                 <div className="p-4">
-                                    <div className="flex items-start justify-between mb-2">
-                                        <div>
-                                            <h3 className="font-semibold text-gray-900">{template.name}</h3>
-                                            <code className="text-xs text-gray-500">{template.slug}</code>
-                                        </div>
-                                        <span className={`px-2 py-0.5 text-xs rounded-full ${template.isActive
-                                                ? 'bg-green-100 text-green-700'
-                                                : 'bg-gray-100 text-gray-600'
-                                            }`}>
-                                            {template.isActive ? 'Active' : 'Inactive'}
-                                        </span>
-                                    </div>
+                                    <h3 className="font-semibold text-gray-900 text-lg mb-1">
+                                        {template.name}
+                                    </h3>
+                                    <p className="text-gray-500 text-sm mb-4">
+                                        {template.description}
+                                    </p>
 
-                                    {template.description && (
-                                        <p className="text-sm text-gray-600 mb-3 line-clamp-2">
-                                            {template.description}
-                                        </p>
-                                    )}
-
-                                    <div className="flex items-center justify-between text-sm">
-                                        <span className="text-gray-500">
-                                            {template._count.pages} pages
-                                        </span>
-                                        <div className="flex gap-2">
-                                            <Link
-                                                href={`/dashboard/templates/builder?id=${template.id}`}
-                                                className="text-blue-600 hover:text-blue-800"
-                                            >
-                                                Edit
-                                            </Link>
-                                            <button
-                                                onClick={() => handleDelete(template.id)}
-                                                className="text-red-600 hover:text-red-800"
-                                            >
-                                                Delete
-                                            </button>
-                                        </div>
+                                    {/* Actions */}
+                                    <div className="flex gap-2">
+                                        <button
+                                            onClick={() => router.push(`/dashboard/templates/preview?id=${template.id}`)}
+                                            className="flex-1 px-3 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors text-sm"
+                                        >
+                                            Preview
+                                        </button>
+                                        <button
+                                            onClick={() => router.push(`/dashboard/quick-generate?template=${template.id}`)}
+                                            className="flex-1 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
+                                        >
+                                            Use
+                                        </button>
+                                        {!template.isBuiltIn && (
+                                            <>
+                                                <button
+                                                    onClick={() => router.push(`/dashboard/templates/editor?id=${template.id}`)}
+                                                    className="px-3 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors text-sm"
+                                                    title="Edit"
+                                                >
+                                                    ✏️
+                                                </button>
+                                                <button
+                                                    onClick={() => handleDelete(template.id)}
+                                                    disabled={deleting === template.id}
+                                                    className="px-3 py-2 border border-red-300 text-red-600 rounded-lg hover:bg-red-50 transition-colors text-sm disabled:opacity-50"
+                                                    title="Delete"
+                                                >
+                                                    {deleting === template.id ? '...' : '🗑️'}
+                                                </button>
+                                            </>
+                                        )}
                                     </div>
                                 </div>
                             </div>
                         ))}
                     </div>
                 )}
+
+                {/* Empty State */}
+                {!loading && filteredTemplates.length === 0 && (
+                    <div className="text-center py-12">
+                        <p className="text-gray-500">No templates found in this category.</p>
+                    </div>
+                )}
+
+                {/* Info Section */}
+                <div className="mt-12 bg-blue-50 border border-blue-100 rounded-xl p-6">
+                    <h3 className="font-semibold text-blue-900 mb-2">💡 Pro Tips</h3>
+                    <ul className="text-blue-800 text-sm space-y-2">
+                        <li>• <strong>State templates</strong> work best for targeting state-level keywords</li>
+                        <li>• <strong>City templates</strong> are optimized for local SEO with location schema</li>
+                        <li>• <strong>All templates</strong> include strategic ad placements for maximum revenue</li>
+                        <li>• Use <strong>Quick Generate</strong> to create thousands of pages instantly</li>
+                    </ul>
+                </div>
             </div>
         </AdminLayout>
     );

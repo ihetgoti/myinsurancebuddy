@@ -49,7 +49,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     // If page has template-based SEO, use it
     if (page?.template?.seoTitleTemplate) {
         const title = replaceVariables(page.template.seoTitleTemplate, variables);
-        const description = page.template.seoDescTemplate 
+        const description = page.template.seoDescTemplate
             ? replaceVariables(page.template.seoDescTemplate, variables)
             : page.metaDescription || buildDescription(insuranceType, country, state, city);
 
@@ -184,7 +184,7 @@ async function resolveRoute(segments: string[]) {
 
 function buildVariables(insuranceType: any, country: any, state: any, city: any, page: any): Record<string, string> {
     const currentDate = new Date();
-    
+
     return {
         page_title: page?.title || buildTitle(insuranceType, country, state, city).replace(' | MyInsuranceBuddies', ''),
         page_subtitle: page?.subtitle || buildDescription(insuranceType, country, state, city),
@@ -220,16 +220,16 @@ function buildVariables(insuranceType: any, country: any, state: any, city: any,
  */
 function replaceVariables(template: string, variables: Record<string, string>): string {
     if (!template) return '';
-    
+
     let result = template;
-    
+
     // Replace all known variables
     Object.entries(variables).forEach(([key, value]) => {
         // Escape special regex characters in key
         const escapedKey = key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
         result = result.replace(new RegExp(`{{${escapedKey}}}`, 'g'), value || '');
     });
-    
+
     // SECURITY: Remove any remaining unreplaced variables to prevent raw token display
     // Log warning in development for debugging
     const unresolvedMatches = result.match(/{{[^}]+}}/g);
@@ -237,7 +237,7 @@ function replaceVariables(template: string, variables: Record<string, string>): 
         console.warn('[Template] Unresolved variables found:', unresolvedMatches);
     }
     result = result.replace(/{{[^}]+}}/g, '');
-    
+
     return result;
 }
 
@@ -293,7 +293,7 @@ async function getRelatedLinks(insuranceType: any, country: any, state: any, cit
     });
 
     // Get nearby cities in the same state
-    if (state && city) {
+    if (state && city && insuranceType && country) {
         const nearbyCities = await prisma.city.findMany({
             where: {
                 stateId: state.id,
@@ -310,17 +310,17 @@ async function getRelatedLinks(insuranceType: any, country: any, state: any, cit
     }
 
     // Parent locations
-    if (city) {
+    if (city && insuranceType && state && country) {
         links.parentLocations = [
             { label: `All ${insuranceType.name} in ${state.name}`, href: `/${insuranceType.slug}/${country.code}/${state.slug}` },
             { label: `All ${insuranceType.name} in ${country.name}`, href: `/${insuranceType.slug}/${country.code}` },
         ];
-    } else if (state) {
+    } else if (state && insuranceType && country) {
         links.parentLocations = [
             { label: `All ${insuranceType.name} in ${country.name}`, href: `/${insuranceType.slug}/${country.code}` },
             { label: `${insuranceType.name} Overview`, href: `/${insuranceType.slug}` },
         ];
-    } else if (country) {
+    } else if (country && insuranceType) {
         links.parentLocations = [
             { label: `${insuranceType.name} Overview`, href: `/${insuranceType.slug}` },
         ];
@@ -545,7 +545,7 @@ export default async function DynamicPage({ params }: PageProps) {
             <HeroSection
                 title={heroTitle}
                 subtitle={heroSubtitle}
-                insuranceType={insuranceType}
+                insuranceType={insuranceType || { name: 'Insurance' }}
                 location={location}
                 locationBadge={locationBadge}
             />
@@ -586,7 +586,7 @@ export default async function DynamicPage({ params }: PageProps) {
 
             {/* Related Pages / Internal Links */}
             <RelatedPagesGrid
-                insuranceType={insuranceType}
+                insuranceType={insuranceType || { name: 'Insurance', slug: 'insurance' }}
                 otherNiches={relatedLinks.otherNiches}
                 nearbyCities={relatedLinks.nearbyCities}
                 parentLocations={relatedLinks.parentLocations}

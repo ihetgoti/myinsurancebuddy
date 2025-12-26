@@ -319,16 +319,16 @@ export default async function HomePage() {
                             {recentPages.map(page => (
                                 <article key={page.id} className="bg-white rounded-xl overflow-hidden shadow-sm border border-slate-100 hover:shadow-lg transition-shadow group">
                                     <div className="h-48 bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center">
-                                        <span className="text-6xl opacity-50">{page.insuranceType.icon || '📄'}</span>
+                                        <span className="text-6xl opacity-50">{page.insuranceType?.icon || '📄'}</span>
                                     </div>
                                     <div className="p-6">
                                         <div className="flex items-center gap-2 mb-3">
-                                            <span className="text-xs font-semibold text-teal-600 bg-teal-50 px-2 py-1 rounded">{page.insuranceType.name}</span>
+                                            <span className="text-xs font-semibold text-teal-600 bg-teal-50 px-2 py-1 rounded">{page.insuranceType?.name || 'Insurance'}</span>
                                             <span className="text-xs text-slate-400">{page.publishedAt ? new Date(page.publishedAt).toLocaleDateString() : 'Recently'}</span>
                                         </div>
                                         <h3 className="text-lg font-bold text-slate-900 mb-2 group-hover:text-teal-600 transition-colors">
                                             <Link href={`/pages/${page.id}`}>
-                                                {page.heroTitle || `${page.insuranceType.name} in ${page.city?.name || page.state?.name || 'Your Area'}`}
+                                                {page.title || `${page.insuranceType?.name || 'Insurance'} in ${page.city?.name || page.state?.name || 'Your Area'}`}
                                             </Link>
                                         </h3>
                                         <p className="text-slate-500 text-sm leading-relaxed mb-4 line-clamp-2">

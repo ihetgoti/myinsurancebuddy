@@ -22,7 +22,8 @@ import {
     ChevronDown,
     ChevronRight,
     Search,
-    Settings
+    Settings,
+    Zap
 } from 'lucide-react';
 
 interface AdminLayoutProps {
@@ -94,6 +95,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
             items: [
                 { href: '/dashboard/pages', label: 'Pages', icon: <FileText size={18} /> },
                 { href: '/dashboard/templates', label: 'Templates', icon: <LayoutTemplate size={18} /> },
+                { href: '/dashboard/quick-generate', label: '⚡ Quick Generate', icon: <Zap size={18} /> },
                 { href: '/dashboard/bulk-generate', label: 'Bulk Generate', icon: <Database size={18} /> },
                 { href: '/dashboard/media', label: 'Media Library', icon: <ImageIcon size={18} /> },
             ],

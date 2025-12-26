@@ -170,7 +170,7 @@ async function processJob(job: any) {
                 updatedPages,
                 skippedPages,
                 failedPages,
-                errorLog: errorLog.length > 0 ? errorLog : null,
+                errorLog: errorLog.length > 0 ? errorLog : undefined,
                 completedAt: new Date(),
             },
         });
@@ -181,7 +181,7 @@ async function processJob(job: any) {
             data: {
                 status: 'FAILED',
                 errorMessage: error.message,
-                errorLog: errorLog.length > 0 ? errorLog : null,
+                errorLog: errorLog.length > 0 ? errorLog : undefined,
                 completedAt: new Date(),
             },
         });
