@@ -25,6 +25,7 @@ function TemplateEditorContent() {
     const [showMediaPicker, setShowMediaPicker] = useState(false);
     const [mediaItems, setMediaItems] = useState<MediaItem[]>([]);
     const [activeTab, setActiveTab] = useState<'html' | 'css' | 'preview'>('html');
+    const [customVariables, setCustomVariables] = useState<string[]>([]);
 
     useEffect(() => {
         if (editId) {
@@ -233,12 +234,29 @@ function TemplateEditorContent() {
                                         id="custom-var-input"
                                         placeholder="my_variable"
                                         className="flex-1 px-2 py-1 border rounded text-sm"
+                                        onKeyDown={(e) => {
+                                            if (e.key === 'Enter') {
+                                                const input = e.target as HTMLInputElement;
+                                                if (input.value.trim()) {
+                                                    const varName = input.value.trim().replace(/\s+/g, '_').toLowerCase();
+                                                    if (!customVariables.includes(varName)) {
+                                                        setCustomVariables(prev => [...prev, varName]);
+                                                    }
+                                                    insertVariable(varName);
+                                                    input.value = '';
+                                                }
+                                            }
+                                        }}
                                     />
                                     <button
                                         onClick={() => {
                                             const input = document.getElementById('custom-var-input') as HTMLInputElement;
                                             if (input.value.trim()) {
-                                                insertVariable(input.value.trim());
+                                                const varName = input.value.trim().replace(/\s+/g, '_').toLowerCase();
+                                                if (!customVariables.includes(varName)) {
+                                                    setCustomVariables(prev => [...prev, varName]);
+                                                }
+                                                insertVariable(varName);
                                                 input.value = '';
                                             }
                                         }}
@@ -248,6 +266,25 @@ function TemplateEditorContent() {
                                     </button>
                                 </div>
                                 <p className="text-xs text-gray-500 mt-1">Creates {"{{your_variable}}"}</p>
+
+                                {/* Display created custom variables */}
+                                {customVariables.length > 0 && (
+                                    <div className="mt-3 p-2 bg-purple-50 rounded-lg border border-purple-200">
+                                        <p className="text-xs font-medium text-purple-800 mb-2">✨ Your Custom Variables:</p>
+                                        <div className="flex flex-wrap gap-1">
+                                            {customVariables.map((v, i) => (
+                                                <button
+                                                    key={i}
+                                                    onClick={() => insertVariable(v)}
+                                                    className="px-2 py-1 bg-purple-100 text-purple-700 rounded text-xs hover:bg-purple-200 transition-colors"
+                                                    title="Click to insert"
+                                                >
+                                                    {`{{${v}}}`}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         </div>
                     </div>

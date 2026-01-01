@@ -58,7 +58,7 @@ export default async function StatesPage() {
                                     {stateList.map((state) => (
                                         <Link
                                             key={state.id}
-                                            href={`/car-insurance/${state.country.code}/${state.slug}`}
+                                            href={`/states/${state.country.code}/${state.slug}`}
                                             className="p-3 rounded-lg border border-slate-200 hover:border-slate-400 hover:bg-slate-50 transition-all text-slate-700 hover:text-slate-900 font-medium"
                                         >
                                             {state.name}

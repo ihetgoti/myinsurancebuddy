@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { prisma } from '@/lib/prisma';
 import { GeoLevel } from '@myinsurancebuddy/db';
 import { notFound } from 'next/navigation';
@@ -5,18 +6,7 @@ import { Metadata } from 'next';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import DynamicPageRenderer from '@/components/DynamicPageRenderer';
-import {
-    HeroSection,
-    TrustBadges,
-    FeaturesGrid,
-    ContentSection,
-    StatsBar,
-    WhyChooseUs,
-    CTABanner,
-    FAQAccordion,
-    RelatedPagesGrid,
-    FinalCTA,
-} from '@/components/funnel';
+import { Building2, MapPin, FileText, Shield, ArrowRight, ChevronDown } from 'lucide-react';
 
 /**
  * ISR Configuration for optimal performance at scale
@@ -459,8 +449,8 @@ export default async function DynamicPage({ params }: PageProps) {
         notFound();
     }
 
-    // Fetch data for header navigation
-    const [allInsuranceTypes, allStates] = await Promise.all([
+    // Fetch data for header navigation and stats
+    const [allInsuranceTypes, allStates, totalPages, totalStates, totalCities] = await Promise.all([
         prisma.insuranceType.findMany({
             where: { isActive: true },
             orderBy: { sortOrder: 'asc' },
@@ -471,6 +461,9 @@ export default async function DynamicPage({ params }: PageProps) {
             orderBy: { name: 'asc' },
             take: 10,
         }),
+        prisma.page.count({ where: { isPublished: true } }),
+        prisma.state.count({ where: { isActive: true } }),
+        prisma.city.count({ where: { isActive: true } }),
     ]);
 
     // Get related links for internal linking
@@ -541,62 +534,146 @@ export default async function DynamicPage({ params }: PageProps) {
 
             <Header insuranceTypes={allInsuranceTypes} states={allStates} />
 
-            {/* Hero Section */}
-            <HeroSection
-                title={heroTitle}
-                subtitle={heroSubtitle}
-                insuranceType={insuranceType || { name: 'Insurance' }}
-                location={location}
-                locationBadge={locationBadge}
-            />
+            {/* Hero Section - Corporate Minimal */}
+            <section className="relative bg-[#0F172A] border-b border-slate-800 py-16">
+                <div className="container mx-auto px-4">
+                    <div className="max-w-3xl">
+                        {locationBadge && (
+                            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-900/30 border border-blue-800 mb-6">
+                                <MapPin className="w-4 h-4 text-blue-400" />
+                                <span className="text-xs font-medium text-blue-200 uppercase tracking-wider">{locationBadge}</span>
+                            </div>
+                        )}
+                        <h1 className="text-3xl md:text-4xl font-bold text-white mb-4 leading-tight tracking-tight">
+                            {heroTitle}
+                        </h1>
+                        <p className="text-lg text-slate-400 leading-relaxed font-light">
+                            {heroSubtitle}
+                        </p>
+                    </div>
+                </div>
+            </section>
 
-            {/* Trust Badges */}
-            <TrustBadges />
+            {/* Main Content Area */}
+            <section className="py-16 bg-white">
+                <div className="container mx-auto px-4">
+                    <div className="grid lg:grid-cols-3 gap-12">
+                        {/* Main Content */}
+                        <div className="lg:col-span-2 space-y-12">
+                            {/* Content Section */}
+                            <div>
+                                <h2 className="text-2xl font-bold text-slate-900 mb-6 tracking-tight">
+                                    {contentTitle}
+                                </h2>
+                                <div className="prose prose-slate max-w-none">
+                                    <p className="text-slate-600 leading-relaxed">
+                                        Finding the right {insuranceType?.name?.toLowerCase() || 'insurance'} coverage {location ? `in ${location}` : ''} requires understanding local regulations, comparing rates from multiple providers, and choosing the coverage limits that match your needs.
+                                    </p>
+                                    <p className="text-slate-600 leading-relaxed">
+                                        Our comprehensive guide helps you navigate the insurance landscape, understand your options, and make informed decisions that protect what matters most.
+                                    </p>
+                                </div>
+                            </div>
 
-            {/* Features Grid */}
-            <FeaturesGrid
-                insuranceType={insuranceType?.name || 'Insurance'}
-                location={location}
-            />
+                            {/* Key Features */}
+                            <div>
+                                <h3 className="text-xl font-bold text-slate-900 mb-6">What You'll Learn</h3>
+                                <div className="grid md:grid-cols-2 gap-4">
+                                    {[
+                                        { icon: Shield, title: 'Coverage Requirements', desc: `Minimum coverage needed ${location ? `in ${location}` : 'in your area'}` },
+                                        { icon: Building2, title: 'Top Providers', desc: 'Best-rated insurance companies' },
+                                        { icon: FileText, title: 'Policy Comparison', desc: 'Side-by-side rate analysis' },
+                                        { icon: ArrowRight, title: 'How to Save', desc: 'Discounts and savings tips' },
+                                    ].map((item, i) => (
+                                        <div key={i} className="flex items-start gap-4 p-4 rounded-lg border border-slate-200 hover:border-blue-500/50 transition-colors">
+                                            <div className="w-10 h-10 bg-slate-50 rounded-md flex items-center justify-center flex-shrink-0">
+                                                <item.icon className="w-5 h-5 text-slate-600" />
+                                            </div>
+                                            <div>
+                                                <h4 className="font-semibold text-slate-900">{item.title}</h4>
+                                                <p className="text-sm text-slate-500">{item.desc}</p>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
 
-            {/* Content Section */}
-            <ContentSection
-                title={contentTitle}
-                insuranceType={insuranceType?.name || 'Insurance'}
-                location={location}
-            />
+                            {/* FAQ Section */}
+                            <div>
+                                <h3 className="text-xl font-bold text-slate-900 mb-6">Common Questions</h3>
+                                <div className="space-y-3">
+                                    {[
+                                        { q: `What are the minimum ${insuranceType?.name?.toLowerCase() || 'insurance'} requirements${location ? ` in ${location}` : ''}?`, a: `Requirements vary by location. We provide detailed coverage minimums specific to your area.` },
+                                        { q: 'How can I get the best rates?', a: 'Compare multiple quotes, maintain a good record, and ask about available discounts.' },
+                                        { q: 'How often should I compare rates?', a: 'We recommend comparing rates every 6-12 months or when your policy renews.' },
+                                    ].map((faq, i) => (
+                                        <details key={i} className="bg-white rounded-lg border border-slate-200 overflow-hidden group">
+                                            <summary className="p-4 cursor-pointer font-medium text-slate-900 hover:bg-slate-50 transition-colors flex items-center justify-between">
+                                                {faq.q}
+                                                <ChevronDown className="w-5 h-5 text-slate-400 group-open:rotate-180 transition-transform" />
+                                            </summary>
+                                            <div className="px-4 pb-4 text-slate-600 text-sm">
+                                                {faq.a}
+                                            </div>
+                                        </details>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
 
-            {/* Stats Bar */}
-            <StatsBar />
+                        {/* Sidebar */}
+                        <div className="space-y-6">
 
-            {/* Why Choose Us */}
-            <WhyChooseUs
-                insuranceType={insuranceType?.name || 'Insurance'}
-                location={location}
-            />
+                            {/* Related Links */}
+                            {relatedLinks.nearbyCities.length > 0 && (
+                                <div className="p-6 bg-slate-50 rounded-lg border border-slate-200">
+                                    <h3 className="font-bold text-slate-900 mb-4">Nearby Cities</h3>
+                                    <ul className="space-y-2">
+                                        {relatedLinks.nearbyCities.slice(0, 5).map((link: any, i: number) => (
+                                            <li key={i}>
+                                                <Link href={link.href} className="text-sm text-slate-600 hover:text-blue-600 transition-colors flex items-center gap-2">
+                                                    <ArrowRight className="w-3 h-3" />
+                                                    {link.label}
+                                                </Link>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </div>
+                            )}
 
-            {/* Mid-Page CTA */}
-            <CTABanner />
+                            {/* Browse More */}
+                            <div className="p-6 bg-blue-50 rounded-lg border border-blue-100">
+                                <h3 className="font-bold text-blue-900 mb-2">Explore More</h3>
+                                <p className="text-sm text-blue-700/80 mb-4">Find coverage options in other areas.</p>
+                                <div className="flex gap-2">
+                                    <Link href="/states" className="flex-1 py-2 bg-white border border-blue-200 text-blue-700 text-center rounded text-sm font-semibold hover:bg-blue-50 transition-colors">
+                                        All States
+                                    </Link>
+                                    <Link href="/cities" className="flex-1 py-2 bg-white border border-blue-200 text-blue-700 text-center rounded text-sm font-semibold hover:bg-blue-50 transition-colors">
+                                        All Cities
+                                    </Link>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
 
-            {/* FAQ Section */}
-            <FAQAccordion
-                insuranceType={insuranceType?.name || 'Insurance'}
-                location={location}
-            />
-
-            {/* Related Pages / Internal Links */}
-            <RelatedPagesGrid
-                insuranceType={insuranceType || { name: 'Insurance', slug: 'insurance' }}
-                otherNiches={relatedLinks.otherNiches}
-                nearbyCities={relatedLinks.nearbyCities}
-                parentLocations={relatedLinks.parentLocations}
-            />
-
-            {/* Final CTA */}
-            <FinalCTA
-                insuranceType={insuranceType?.name || 'Insurance'}
-                location={location}
-            />
+            {/* CTA Section */}
+            <section className="bg-slate-900 border-t border-slate-800 py-16 text-center">
+                <div className="container mx-auto px-4">
+                    <h2 className="text-2xl md:text-3xl font-bold text-white mb-4">Ready to Compare Rates?</h2>
+                    <p className="text-slate-400 max-w-xl mx-auto mb-8 font-light">
+                        Get personalized quotes from top-rated carriers in minutes.
+                    </p>
+                    <Link
+                        href="/get-quote"
+                        className="inline-block bg-white text-slate-900 px-8 py-3 rounded-lg font-bold hover:bg-blue-50 transition-all"
+                    >
+                        Get Your Free Quote
+                    </Link>
+                </div>
+            </section>
 
             <Footer insuranceTypes={allInsuranceTypes} />
         </div>

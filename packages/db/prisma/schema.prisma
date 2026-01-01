@@ -1,5 +1,6 @@
 generator client {
   provider = "prisma-client-js"
+  previewFeatures = ["fullTextSearch", "fullTextIndex"]
 }
 
 datasource db {
@@ -31,6 +32,8 @@ model User {
   bulkJobs        BulkJob[]
   comments        PageComment[]
   apiKeys         ApiKey[]
+  notifications   Notification[]
+  blogPosts       BlogPost[]
 }
 
 enum UserRole {
@@ -39,6 +42,29 @@ enum UserRole {
   EDITOR
   VIEWER
   API_USER
+}
+
+enum NotificationType {
+  SUCCESS
+  WARNING
+  INFO
+  ERROR
+}
+
+model Notification {
+  id        String           @id @default(uuid())
+  userId    String?
+  user      User?            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      NotificationType @default(INFO)
+  title     String
+  message   String
+  link      String?          // Optional link to navigate to
+  isRead    Boolean          @default(false)
+  createdAt DateTime         @default(now())
+
+  @@index([userId])
+  @@index([isRead])
+  @@index([createdAt])
 }
 
 model ApiKey {
@@ -636,7 +662,10 @@ model Page {
   @@index([status])
   @@index([isPublished])
   @@index([publishedAt])
-  @@index([scheduledAt])
+  @@index([stateId, isPublished])
+  @@index([cityId, isPublished])
+  @@index([insuranceTypeId, isPublished])
+  @@index([countryId, isPublished])
 }
 
 enum GeoLevel {
@@ -1022,6 +1051,71 @@ model AuditLog {
 }
 
 // ============================================
+// BLOG POSTS
+// ============================================
+
+model BlogCategory {
+  id          String     @id @default(uuid())
+  name        String
+  slug        String     @unique
+  description String?
+  color       String?    // Hex color for UI
+  isActive    Boolean    @default(true)
+  sortOrder   Int        @default(0)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  
+  posts       BlogPost[]
+  
+  @@index([isActive])
+  @@index([slug])
+}
+
+model BlogPost {
+  id              String        @id @default(uuid())
+  title           String
+  slug            String        @unique
+  excerpt         String?       @db.Text
+  content         String        @db.Text
+  
+  // Media
+  featuredImage   String?
+  featuredAlt     String?
+  
+  // Categorization
+  categoryId      String?
+  category        BlogCategory? @relation(fields: [categoryId], references: [id])
+  tags            String[]
+  
+  // Author
+  authorId        String?
+  author          User?         @relation(fields: [authorId], references: [id])
+  authorName      String?       // Fallback if author deleted
+  
+  // SEO
+  metaTitle       String?
+  metaDescription String?
+  ogImage         String?
+  
+  // Publishing
+  isPublished     Boolean       @default(false)
+  isFeatured      Boolean       @default(false)
+  publishedAt     DateTime?
+  
+  // Stats
+  viewCount       Int           @default(0)
+  
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  
+  @@index([isPublished])
+  @@index([isFeatured])
+  @@index([categoryId])
+  @@index([publishedAt])
+  @@index([slug])
+}
+
+// ============================================
 // SCHEDULED TASKS
 // ============================================
 
@@ -1110,4 +1204,41 @@ model AnalyticsSnapshot {
   
   @@unique([date])
   @@index([date])
+}
+
+// ============================================
+// AFFILIATE PARTNERS
+// ============================================
+
+model AffiliatePartner {
+  id              String   @id @default(uuid())
+  name            String   // e.g., "Progressive", "GEICO", "State Farm"
+  slug            String   @unique
+  logo            String?  // URL to logo image
+  description     String?  // Short description of the partner
+  
+  // Affiliate link settings
+  affiliateUrl    String?  // The affiliate link URL (placeholder if not set)
+  affiliateId     String?  // Your affiliate ID with this partner
+  trackingParams  Json?    // Additional tracking parameters
+  
+  // Display settings
+  displayOrder    Int      @default(0)
+  isActive        Boolean  @default(true)
+  isFeatured      Boolean  @default(false)
+  
+  // Categorization
+  insuranceTypes  String[] // ["car", "home", "life"] - types they offer
+  
+  // CTA text
+  ctaText         String   @default("Get Quote")
+  
+  // Metadata
+  notes           String?  // Internal notes
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  @@index([isActive])
+  @@index([isFeatured])
+  @@index([displayOrder])
 }

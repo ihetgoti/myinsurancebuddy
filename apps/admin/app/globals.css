@@ -1,3 +1,180 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+    body {
+        @apply bg-slate-50 text-slate-900 antialiased;
+    }
+}
+
+@layer components {
+
+    /* Professional Form Controls - Light Mode Enterprise */
+    .input-field {
+        @apply w-full px-3 py-2 bg-white border border-slate-300 rounded text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-sm;
+    }
+
+    .select-field {
+        @apply w-full px-3 py-2 bg-white border border-slate-300 rounded text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all cursor-pointer shadow-sm;
+    }
+
+    .textarea-field {
+        @apply w-full px-3 py-2 bg-white border border-slate-300 rounded text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all resize-y min-h-[80px] shadow-sm;
+    }
+
+    /* Buttons */
+    .btn-primary {
+        @apply px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded shadow-sm hover:bg-blue-700 hover:shadow transition-all disabled:opacity-50 disabled:cursor-not-allowed border border-transparent;
+    }
+
+    .btn-secondary {
+        @apply px-4 py-2 bg-white text-slate-700 text-sm font-medium rounded border border-slate-300 shadow-sm hover:bg-slate-50 hover:text-slate-900 hover:border-slate-400 transition-all disabled:opacity-50 disabled:cursor-not-allowed;
+    }
+
+    .btn-danger {
+        @apply px-4 py-2 bg-red-600 text-white text-sm font-medium rounded shadow-sm hover:bg-red-700 hover:shadow transition-all disabled:opacity-50 disabled:cursor-not-allowed border border-transparent;
+    }
+
+    .btn-ghost {
+        @apply px-4 py-2 text-slate-600 text-sm font-medium rounded hover:bg-slate-100 hover:text-slate-900 transition-colors;
+    }
+
+    /* Cards - Clean White Enterprise */
+    .card {
+        @apply bg-white border border-slate-200 rounded-lg shadow-sm;
+    }
+
+    .card-header {
+        @apply px-6 py-4 border-b border-slate-100 flex items-center justify-between;
+    }
+
+    .card-body {
+        @apply p-6;
+    }
+
+    /* Tables */
+    .table-container {
+        @apply overflow-x-auto rounded-lg border border-slate-200 shadow-sm bg-white;
+    }
+
+    .table {
+        @apply w-full text-sm text-left;
+    }
+
+    .table thead {
+        @apply bg-slate-50 border-b border-slate-200;
+    }
+
+    .table th {
+        @apply px-6 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap;
+    }
+
+    .table tbody {
+        @apply divide-y divide-slate-100;
+    }
+
+    .table td {
+        @apply px-6 py-4 text-slate-700 whitespace-nowrap;
+    }
+
+    .table tr:hover {
+        @apply bg-slate-50/50;
+    }
+
+    /* Badges */
+    .badge {
+        @apply inline-flex items-center px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide rounded-full border shadow-sm;
+    }
+
+    .badge-success {
+        @apply bg-emerald-50 text-emerald-700 border-emerald-200;
+    }
+
+    .badge-warning {
+        @apply bg-amber-50 text-amber-700 border-amber-200;
+    }
+
+    .badge-danger {
+        @apply bg-red-50 text-red-700 border-red-200;
+    }
+
+    .badge-info {
+        @apply bg-blue-50 text-blue-700 border-blue-200;
+    }
+
+    .badge-default {
+        @apply bg-slate-100 text-slate-600 border-slate-200;
+    }
+
+    /* Page Header */
+    .page-header {
+        @apply mb-8;
+    }
+
+    .page-title {
+        @apply text-2xl font-bold text-slate-900 tracking-tight;
+    }
+
+    .page-description {
+        @apply text-sm text-slate-500 mt-1;
+    }
+
+    /* Modal */
+    .modal-overlay {
+        @apply fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center;
+    }
+
+    .modal-content {
+        @apply bg-white border border-slate-200 rounded-xl shadow-2xl max-w-lg w-full mx-4 max-h-[90vh] overflow-y-auto;
+    }
+
+    .modal-header {
+        @apply px-6 py-5 border-b border-slate-100 flex items-center justify-between;
+    }
+
+    .modal-body {
+        @apply p-6;
+    }
+
+    .modal-footer {
+        @apply px-6 py-5 border-t border-slate-100 flex justify-end gap-3 bg-slate-50;
+    }
+
+    /* Labels */
+    .label {
+        @apply block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wide;
+    }
+
+    /* Stat Cards */
+    .stat-card {
+        @apply bg-white border border-slate-200 rounded-lg p-6 shadow-sm hover:shadow-md transition-shadow;
+    }
+
+    .stat-value {
+        @apply text-3xl font-bold text-slate-900 tracking-tight;
+    }
+
+    .stat-label {
+        @apply text-xs font-bold text-slate-500 mt-1 uppercase tracking-wide;
+    }
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}

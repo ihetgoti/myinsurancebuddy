@@ -2,14 +2,28 @@ import { prisma } from '@/lib/prisma';
 import Link from 'next/link';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
-import ZipCodeForm from '@/components/ZipCodeForm';
-import CarrierLogos from '@/components/CarrierLogos';
-import TrustpilotBadge from '@/components/TrustpilotBadge';
+import UserLocationBanner from '@/components/UserLocationBanner';
+import { FAQSchema } from '@/components/SchemaMarkup';
+import { BadgeCheck, Building2, MapPin, FileText, Shield, ArrowRight, TrendingDown, Users, Search, Car, Home, Heart, Stethoscope, Dog, Briefcase, Bike, Plane, Ship, Umbrella, CheckCircle2, TrendingUp } from 'lucide-react';
+
+const getIconForType = (slug: string, className?: string) => {
+    const baseClass = className || "w-6 h-6 text-slate-400 group-hover:text-blue-600 transition-colors stroke-[1.5]";
+    if (slug.includes('auto') || slug.includes('car')) return <Car className={baseClass} />;
+    if (slug.includes('home')) return <Home className={baseClass} />;
+    if (slug.includes('life')) return <Heart className={baseClass} />;
+    if (slug.includes('health') || slug.includes('med')) return <Stethoscope className={baseClass} />;
+    if (slug.includes('pet') || slug.includes('dog')) return <Dog className={baseClass} />;
+    if (slug.includes('business')) return <Briefcase className={baseClass} />;
+    if (slug.includes('cycle') || slug.includes('bike')) return <Bike className={baseClass} />;
+    if (slug.includes('travel')) return <Plane className={baseClass} />;
+    if (slug.includes('boat')) return <Ship className={baseClass} />;
+    return <Shield className={baseClass} />;
+};
 
 export const dynamic = 'force-dynamic';
 
 async function getHomeData() {
-    const [insuranceTypes, states, recentPages] = await Promise.all([
+    const [insuranceTypes, states, recentPages, totalPages, totalStates, totalCities, affiliates, allStates, blogPosts] = await Promise.all([
         prisma.insuranceType.findMany({
             where: { isActive: true },
             orderBy: { sortOrder: 'asc' },
@@ -24,196 +38,178 @@ async function getHomeData() {
             where: { isPublished: true },
             include: {
                 insuranceType: true,
+                country: true,
                 state: true,
                 city: true,
             },
             orderBy: { publishedAt: 'desc' },
             take: 6,
         }),
+        prisma.page.count({ where: { isPublished: true } }),
+        prisma.state.count({ where: { isActive: true } }),
+        prisma.city.count({ where: { isActive: true } }),
+        prisma.affiliatePartner.findMany({
+            where: { isActive: true },
+            orderBy: [{ isFeatured: 'desc' }, { displayOrder: 'asc' }],
+            take: 6,
+        }),
+        prisma.state.findMany({
+            where: { isActive: true },
+            select: { id: true, name: true, slug: true, country: { select: { code: true } } },
+            orderBy: { name: 'asc' },
+        }),
+        prisma.blogPost.findMany({
+            where: { isPublished: true },
+            orderBy: { publishedAt: 'desc' },
+            take: 3,
+            select: {
+                id: true,
+                title: true,
+                slug: true,
+                excerpt: true,
+                featuredImage: true,
+                publishedAt: true,
+                category: { select: { name: true, color: true } },
+            },
+        }),
     ]);
 
-    return { insuranceTypes, states, recentPages };
+    return { insuranceTypes, states, recentPages, totalPages, totalStates, totalCities, affiliates, allStates, blogPosts };
 }
 
 export default async function HomePage() {
-    const { insuranceTypes, states, recentPages } = await getHomeData();
+    const { insuranceTypes, states, recentPages, totalPages, totalStates, totalCities, affiliates, allStates, blogPosts } = await getHomeData();
 
     return (
         <div className="min-h-screen bg-white">
             <Header insuranceTypes={insuranceTypes} states={states} />
 
-            {/* Hero Section - Compare.com Style */}
-            <section className="relative bg-gradient-to-br from-[#0B1B34] via-[#0F2847] to-[#1A3A5C] pt-8 pb-20 overflow-hidden">
-                {/* Decorative Background Elements */}
-                <div className="absolute inset-0 overflow-hidden">
-                    <div className="absolute -top-40 -right-40 w-96 h-96 bg-teal-500/10 rounded-full blur-3xl"></div>
-                    <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl"></div>
-                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-gradient-radial from-teal-500/5 to-transparent rounded-full"></div>
-                </div>
-
+            {/* Hero Section - Corporate Minimal */}
+            <section className="relative bg-[#0F172A] border-b border-slate-800 pt-20 pb-28">
                 <div className="container mx-auto px-4 relative z-10">
-                    <div className="max-w-4xl mx-auto text-center pt-12">
-                        {/* Insurance Type Tabs */}
-                        <div className="inline-flex items-center bg-white/10 backdrop-blur-sm rounded-full p-1 mb-10 border border-white/20">
-                            <button className="px-6 py-2.5 rounded-full bg-white text-[#0B1B34] font-semibold text-sm transition-all">
-                                Car
-                            </button>
-                            <button className="px-6 py-2.5 rounded-full text-white/80 hover:text-white font-medium text-sm transition-all">
-                                Bundle
-                            </button>
-                            <button className="px-6 py-2.5 rounded-full text-white/80 hover:text-white font-medium text-sm transition-all">
-                                Home
-                            </button>
-                            <button className="px-6 py-2.5 rounded-full text-white/80 hover:text-white font-medium text-sm transition-all">
-                                Pet
-                            </button>
-                            <button className="px-6 py-2.5 rounded-full text-white/80 hover:text-white font-medium text-sm transition-all">
-                                Plan
-                            </button>
+                    <div className="max-w-3xl mx-auto text-center">
+                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-900/30 border border-blue-800 mb-8">
+                            <BadgeCheck className="w-4 h-4 text-blue-400" />
+                            <span className="text-xs font-medium text-blue-200 uppercase tracking-wider">Your Trusted Financial Resource</span>
                         </div>
 
                         <h1 className="text-4xl md:text-6xl font-bold text-white mb-6 leading-tight tracking-tight">
-                            Compare Car Insurance<br />
-                            <span className="text-teal-400">Quotes & Save</span>
+                            Smart Insurance &<br />
+                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-200 to-white">Financial Planning</span>
                         </h1>
 
-                        <p className="text-lg text-white/70 mb-10 max-w-2xl mx-auto">
-                            Compare rates from 120+ top insurance companies. Our customers save up to $867 per year.
+                        <p className="text-lg text-slate-400 mb-10 max-w-2xl mx-auto leading-relaxed font-light">
+                            Expert guidance on insurance coverage and financial planning. Learn, compare, and make confident decisions for your future.
                         </p>
 
-                        {/* ZIP Code Form */}
-                        <ZipCodeForm />
-
-                        <p className="text-sm text-white/50 mt-4">
-                            Been here before? <Link href="/login" className="text-teal-400 hover:text-teal-300 underline">Get your quotes back.</Link>
-                        </p>
-
-                        {/* Trustpilot Badge */}
-                        <div className="mt-8">
-                            <TrustpilotBadge />
+                        <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                            <Link
+                                href="/states"
+                                className="inline-flex items-center justify-center gap-2 bg-white text-slate-900 px-8 py-4 rounded-lg font-bold hover:bg-blue-50 transition-all shadow-lg"
+                            >
+                                <MapPin className="w-5 h-5" />
+                                Browse by State
+                            </Link>
+                            <Link
+                                href="/guides"
+                                className="inline-flex items-center justify-center gap-2 bg-blue-600 text-white px-8 py-4 rounded-lg font-bold hover:bg-blue-500 transition-all border border-blue-500"
+                            >
+                                <Search className="w-5 h-5" />
+                                Explore Guides
+                            </Link>
                         </div>
-                    </div>
 
-                    {/* Carrier Logos */}
-                    <div className="mt-16">
-                        <p className="text-center text-white/40 text-xs uppercase tracking-widest mb-6">auto insurance</p>
-                        <CarrierLogos />
+                        <div className="mt-8 flex items-center justify-center gap-2 text-sm text-slate-500">
+                            <Shield className="w-4 h-4" />
+                            <span>Trusted by thousands of users nationwide</span>
+                        </div>
                     </div>
                 </div>
             </section>
 
-            {/* How It Works Section */}
+
+
+            {/* Insurance Partners */}
+            {affiliates.length > 0 && (
+                <section className="py-16 bg-slate-50 border-y border-slate-200">
+                    <div className="container mx-auto px-4">
+                        <div className="text-center mb-10">
+                            <h2 className="text-2xl font-bold text-slate-900 mb-3">Compare Top Insurance Providers</h2>
+                            <p className="text-slate-500">Get quotes from trusted insurance carriers</p>
+                        </div>
+
+                        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 max-w-4xl mx-auto">
+                            {affiliates.map((partner: any) => (
+                                <a
+                                    key={partner.id}
+                                    href={partner.affiliateUrl || '#'}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className={`group flex items-center gap-4 p-5 bg-white rounded-lg border hover:shadow-lg transition-all ${partner.affiliateUrl
+                                        ? 'border-slate-200 hover:border-blue-500'
+                                        : 'border-dashed border-slate-300 opacity-60'
+                                        }`}
+                                >
+                                    <div className="w-12 h-12 bg-slate-100 rounded-lg flex items-center justify-center overflow-hidden flex-shrink-0">
+                                        {partner.logo ? (
+                                            <img src={partner.logo} alt={partner.name} className="w-full h-full object-contain p-1" />
+                                        ) : (
+                                            <span className="text-xl font-bold text-slate-400">{partner.name[0]}</span>
+                                        )}
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <h3 className="font-semibold text-slate-900 group-hover:text-blue-600 transition-colors truncate">
+                                            {partner.name}
+                                        </h3>
+                                        <p className="text-xs text-slate-400 truncate">
+                                            {partner.insuranceTypes?.join(', ') || 'Multiple coverage types'}
+                                        </p>
+                                    </div>
+                                    <span className={`text-sm font-semibold px-3 py-1.5 rounded-lg flex-shrink-0 ${partner.affiliateUrl
+                                        ? 'bg-blue-600 text-white group-hover:bg-blue-700'
+                                        : 'bg-slate-200 text-slate-500'
+                                        }`}>
+                                        {partner.ctaText || 'Get Quote'}
+                                    </span>
+                                </a>
+                            ))}
+                        </div>
+
+                        <p className="text-center text-xs text-slate-400 mt-6">
+                            Clicking these links may take you to partner websites. We may earn a commission at no extra cost to you.
+                        </p>
+                    </div>
+                </section>
+            )}
+
+
+
+            {/* Insurance Grid - Minimalist */}
             <section className="py-20 bg-white">
                 <div className="container mx-auto px-4">
-                    <h2 className="text-3xl md:text-4xl font-bold text-center text-slate-900 mb-4">
-                        How InsuranceBuddies Saves You Time and Money
-                    </h2>
-                    <p className="text-center text-slate-500 mb-16 max-w-2xl mx-auto">
-                        We make comparing insurance quotes simple, fast, and free.
-                    </p>
-
-                    <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-                        <div className="text-center p-8 rounded-2xl bg-slate-50 hover:bg-slate-100 transition-colors">
-                            <div className="w-16 h-16 bg-teal-100 rounded-2xl flex items-center justify-center mx-auto mb-6">
-                                <svg className="w-8 h-8 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
-                                </svg>
-                            </div>
-                            <h3 className="text-xl font-bold text-slate-900 mb-3">See All Your Options</h3>
-                            <p className="text-slate-500 leading-relaxed">
-                                Not all insurance companies offer the same rates. We give you access to real, accurate quotes from more than 120 top companies.
-                            </p>
-                        </div>
-
-                        <div className="text-center p-8 rounded-2xl bg-slate-50 hover:bg-slate-100 transition-colors">
-                            <div className="w-16 h-16 bg-blue-100 rounded-2xl flex items-center justify-center mx-auto mb-6">
-                                <svg className="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3" />
-                                </svg>
-                            </div>
-                            <h3 className="text-xl font-bold text-slate-900 mb-3">Find the Right Fit</h3>
-                            <p className="text-slate-500 leading-relaxed">
-                                Compare several auto insurance quotes at once, side by side. Select the policy that best fits your needs and budget.
-                            </p>
-                        </div>
-
-                        <div className="text-center p-8 rounded-2xl bg-slate-50 hover:bg-slate-100 transition-colors">
-                            <div className="w-16 h-16 bg-green-100 rounded-2xl flex items-center justify-center mx-auto mb-6">
-                                <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg>
-                            </div>
-                            <h3 className="text-xl font-bold text-slate-900 mb-3">Cut Your Bill in Half</h3>
-                            <p className="text-slate-500 leading-relaxed">
-                                Our customers save up to $867† per year on their car insurance, cutting their insurance bills by up to 50%.
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            {/* Stats Section */}
-            <section className="py-20 bg-gradient-to-r from-[#0B1B34] to-[#1A3A5C] text-white">
-                <div className="container mx-auto px-4">
-                    <h2 className="text-3xl md:text-4xl font-bold text-center mb-4">
-                        Leading Innovation in Insurance Shopping for 12+ Years
-                    </h2>
-                    <p className="text-center text-white/60 mb-16 max-w-3xl mx-auto">
-                        InsuranceBuddies delivers on its promise to help customers save money and find the best insurance. As a licensed insurance agent in all 50 states, we exist to empower customers with bite-sized tips to ease those big decisions.
-                    </p>
-
-                    <div className="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto">
-                        <div className="text-center">
-                            <div className="text-5xl font-bold text-teal-400 mb-2">58M+</div>
-                            <div className="text-sm text-white/60 uppercase tracking-widest">Total Quotes</div>
-                            <p className="text-white/40 text-sm mt-2">Our customers have compared more than 58 million insurance quotes.</p>
-                        </div>
-                        <div className="text-center">
-                            <div className="text-5xl font-bold text-teal-400 mb-2">$340M</div>
-                            <div className="text-sm text-white/60 uppercase tracking-widest">All-Time Savings</div>
-                            <p className="text-white/40 text-sm mt-2">Our shoppers lowered their annual premiums by up to $867.</p>
-                        </div>
-                        <div className="text-center">
-                            <div className="text-5xl font-bold text-teal-400 mb-2">8M+</div>
-                            <div className="text-sm text-white/60 uppercase tracking-widest">Happy Customers</div>
-                            <p className="text-white/40 text-sm mt-2">More than eight million customers have found the right policy.</p>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            {/* Insurance Types Grid */}
-            <section className="py-20 bg-slate-50">
-                <div className="container mx-auto px-4">
                     <div className="max-w-xl mx-auto text-center mb-16">
-                        <h2 className="text-3xl font-bold text-slate-900 mb-4 tracking-tight">Expert Guides by Category</h2>
-                        <p className="text-slate-600 leading-relaxed">
-                            Select an insurance type to find detailed coverage options, state requirements, and savings opportunities.
+                        <h2 className="text-2xl font-bold text-slate-900 mb-4 tracking-tight">Browse by Category</h2>
+                        <p className="text-slate-500 font-light leading-relaxed">
+                            Research coverage options and find the best policies.
                         </p>
                     </div>
 
-                    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto">
                         {insuranceTypes.map((type) => (
                             <Link
                                 key={type.id}
                                 href={`/${type.slug}`}
-                                className="group bg-white rounded-xl p-6 shadow-sm hover:shadow-xl transition-all duration-300 border border-slate-100"
+                                className="group flex items-center p-6 bg-white rounded-lg border border-slate-200 hover:border-blue-600 transition-all duration-300"
                             >
-                                <div className="flex items-start gap-4">
-                                    <div className="w-12 h-12 bg-gradient-to-br from-teal-500 to-blue-600 rounded-xl flex items-center justify-center flex-shrink-0">
-                                        <span className="text-2xl text-white">{type.icon || '🛡️'}</span>
-                                    </div>
-                                    <div>
-                                        <h3 className="text-lg font-bold text-slate-900 mb-2 group-hover:text-teal-600 transition-colors">
-                                            {type.name}
-                                        </h3>
-                                        <p className="text-slate-500 text-sm leading-relaxed mb-3">
-                                            {type.description || `Compare ${type.name.toLowerCase()} quotes and find the best rates.`}
-                                        </p>
-                                        <span className="text-sm font-semibold text-teal-600 group-hover:translate-x-1 inline-flex items-center gap-1 transition-transform">
-                                            Compare Quotes →
-                                        </span>
-                                    </div>
+                                <div className="w-12 h-12 bg-slate-50 rounded-full flex items-center justify-center mr-5 group-hover:bg-blue-50 transition-colors">
+                                    {getIconForType(type.slug)}
+                                </div>
+                                <div className="flex-1">
+                                    <h3 className="font-semibold text-slate-900 group-hover:text-blue-700 transition-colors flex items-center gap-2">
+                                        {type.name}
+                                        <ArrowRight className="w-4 h-4 opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300 text-blue-600" />
+                                    </h3>
+                                    <p className="text-sm text-slate-400 mt-1">Compare rates & coverage</p>
                                 </div>
                             </Link>
                         ))}
@@ -221,56 +217,6 @@ export default async function HomePage() {
                 </div>
             </section>
 
-            {/* Rate Comparison Table */}
-            <section className="py-20 bg-white">
-                <div className="container mx-auto px-4">
-                    <h2 className="text-3xl font-bold text-center text-slate-900 mb-4">
-                        Why It's Important to Compare Personalized Quotes
-                    </h2>
-                    <p className="text-center text-slate-500 mb-12 max-w-3xl mx-auto">
-                        Multiple factors affect your car insurance rates, and each insurance company calculates premiums differently. That means prices can vary by hundreds of dollars.
-                    </p>
-
-                    <div className="max-w-5xl mx-auto overflow-x-auto">
-                        <table className="w-full">
-                            <thead>
-                                <tr className="border-b-2 border-slate-200">
-                                    <th className="text-left py-4 px-4 font-semibold text-slate-900">Company</th>
-                                    <th className="text-center py-4 px-4 font-semibold text-slate-900">Average Premium</th>
-                                    <th className="text-center py-4 px-4 font-semibold text-slate-900">Action</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {[
-                                    { name: 'Progressive', logo: '🔵', premium: '$134/mo' },
-                                    { name: 'USAA', logo: '🔴', premium: '$76/mo' },
-                                    { name: 'Liberty Mutual', logo: '🟡', premium: '$182/mo' },
-                                    { name: 'Allstate', logo: '🟠', premium: '$107/mo' },
-                                    { name: 'State Farm', logo: '🔴', premium: '$89/mo' },
-                                ].map((company, index) => (
-                                    <tr key={index} className="border-b border-slate-100 hover:bg-slate-50 transition-colors">
-                                        <td className="py-4 px-4">
-                                            <div className="flex items-center gap-3">
-                                                <span className="text-2xl">{company.logo}</span>
-                                                <span className="font-medium text-slate-900">{company.name}</span>
-                                            </div>
-                                        </td>
-                                        <td className="py-4 px-4 text-center">
-                                            <span className="font-bold text-slate-900">{company.premium}</span>
-                                            <span className="text-xs text-slate-400 block">*average rate</span>
-                                        </td>
-                                        <td className="py-4 px-4 text-center">
-                                            <Link href="/get-quote" className="inline-flex items-center gap-2 bg-teal-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-teal-700 transition-colors">
-                                                Get Quotes
-                                            </Link>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </section>
 
             {/* Popular States Grid */}
             <section className="py-20 bg-slate-50">
@@ -289,13 +235,17 @@ export default async function HomePage() {
                         {states.map(state => (
                             <Link
                                 key={state.id}
-                                href={`/car-insurance/${state.country.code}/${state.slug}`}
+                                href={`/states/${state.country.code}/${state.slug}`}
                                 className="group flex items-center justify-between p-4 rounded-lg border border-slate-200 hover:border-teal-500 hover:shadow-md transition-all bg-white"
                             >
                                 <span className="font-medium text-slate-700 group-hover:text-slate-900 text-sm">{state.name}</span>
                                 <span className="text-slate-300 group-hover:text-teal-500 transition-colors">→</span>
                             </Link>
                         ))}
+                        <Link href="/states" className="flex items-center justify-center p-4 rounded-lg border border-dashed border-slate-300 hover:border-teal-500 hover:bg-teal-50 transition-all group">
+                            <span className="font-semibold text-slate-600 group-hover:text-teal-700 text-sm">View All 50 States</span>
+                            <ArrowRight className="w-4 h-4 ml-2 text-slate-400 group-hover:text-teal-700" />
+                        </Link>
                     </div>
 
                     <div className="mt-8 text-center md:hidden">
@@ -309,34 +259,30 @@ export default async function HomePage() {
                 <section className="py-20 bg-white">
                     <div className="container mx-auto px-4">
                         <h2 className="text-3xl font-bold text-slate-900 mb-4 text-center tracking-tight">
-                            Your Resource for All Things Insurance
+                            Learn & Make Smarter Decisions
                         </h2>
                         <p className="text-center text-slate-500 mb-12 max-w-2xl mx-auto">
-                            Expert guides and articles to help you make informed insurance decisions.
+                            Expert guides on insurance, financial planning, and protecting what matters most.
                         </p>
 
-                        <div className="grid md:grid-cols-3 gap-8">
+                        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                             {recentPages.map(page => (
-                                <article key={page.id} className="bg-white rounded-xl overflow-hidden shadow-sm border border-slate-100 hover:shadow-lg transition-shadow group">
-                                    <div className="h-48 bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center">
-                                        <span className="text-6xl opacity-50">{page.insuranceType?.icon || '📄'}</span>
+                                <article key={page.id} className="bg-white rounded-lg overflow-hidden shadow-sm border border-slate-100 hover:shadow-md transition-shadow group flex flex-col">
+                                    <div className="h-40 bg-slate-50 flex items-center justify-center border-b border-slate-50">
+                                        {getIconForType(page.insuranceType?.slug || '', "w-12 h-12 text-slate-300 group-hover:text-blue-500 transition-colors")}
                                     </div>
-                                    <div className="p-6">
+                                    <div className="p-5 flex-1 flex flex-col">
                                         <div className="flex items-center gap-2 mb-3">
-                                            <span className="text-xs font-semibold text-teal-600 bg-teal-50 px-2 py-1 rounded">{page.insuranceType?.name || 'Insurance'}</span>
-                                            <span className="text-xs text-slate-400">{page.publishedAt ? new Date(page.publishedAt).toLocaleDateString() : 'Recently'}</span>
+                                            <span className="text-[10px] uppercase tracking-wider font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded">{page.insuranceType?.name || 'Insurance'}</span>
                                         </div>
-                                        <h3 className="text-lg font-bold text-slate-900 mb-2 group-hover:text-teal-600 transition-colors">
-                                            <Link href={`/pages/${page.id}`}>
+                                        <h3 className="text-base font-bold text-slate-900 mb-2 leading-snug group-hover:text-blue-600 transition-colors">
+                                            <Link href={page.slug ? `/${page.slug}` : `/${page.insuranceType?.slug || 'insurance'}${page.country ? `/${page.country.code}` : ''}${page.state ? `/${page.state.slug}` : ''}${page.city ? `/${page.city.slug}` : ''}`}>
                                                 {page.title || `${page.insuranceType?.name || 'Insurance'} in ${page.city?.name || page.state?.name || 'Your Area'}`}
                                             </Link>
                                         </h3>
-                                        <p className="text-slate-500 text-sm leading-relaxed mb-4 line-clamp-2">
-                                            Detailed breakdown of coverage options, legal requirements, and top providers.
-                                        </p>
-                                        <Link href={`/pages/${page.id}`} className="text-sm font-semibold text-teal-600 hover:text-teal-700 inline-flex items-center gap-1">
-                                            Read More →
-                                        </Link>
+                                        <div className="mt-auto pt-4 flex items-center text-sm font-semibold text-slate-400 group-hover:text-blue-600 transition-colors">
+                                            Read Guide <ArrowRight className="w-4 h-4 ml-1" />
+                                        </div>
                                     </div>
                                 </article>
                             ))}
@@ -345,11 +291,62 @@ export default async function HomePage() {
                 </section>
             )}
 
+            {/* Blog Posts Section */}
+            {blogPosts && blogPosts.length > 0 && (
+                <section className="py-20 bg-white">
+                    <div className="container mx-auto px-4">
+                        <div className="flex items-center justify-between mb-10">
+                            <h2 className="text-2xl font-bold text-slate-900 tracking-tight">
+                                From Our Blog
+                            </h2>
+                            <Link href="/blog" className="text-blue-600 font-semibold hover:underline flex items-center gap-1">
+                                View All <ArrowRight className="w-4 h-4" />
+                            </Link>
+                        </div>
+                        <div className="grid md:grid-cols-3 gap-8">
+                            {blogPosts.map((post: any) => (
+                                <article key={post.id} className="group">
+                                    <Link href={`/blog/${post.slug}`}>
+                                        <div className="aspect-video rounded-xl overflow-hidden bg-slate-100 mb-4">
+                                            {post.featuredImage ? (
+                                                <img
+                                                    src={post.featuredImage}
+                                                    alt={post.title}
+                                                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                                />
+                                            ) : (
+                                                <div className="w-full h-full flex items-center justify-center">
+                                                    <FileText className="w-12 h-12 text-slate-300" />
+                                                </div>
+                                            )}
+                                        </div>
+                                        {post.category && (
+                                            <span
+                                                className="text-xs font-bold uppercase tracking-wider mb-2 inline-block"
+                                                style={{ color: post.category.color || '#3b82f6' }}
+                                            >
+                                                {post.category.name}
+                                            </span>
+                                        )}
+                                        <h3 className="text-lg font-bold text-slate-900 mb-2 group-hover:text-blue-600 transition-colors line-clamp-2">
+                                            {post.title}
+                                        </h3>
+                                        {post.excerpt && (
+                                            <p className="text-slate-500 text-sm line-clamp-2">{post.excerpt}</p>
+                                        )}
+                                    </Link>
+                                </article>
+                            ))}
+                        </div>
+                    </div>
+                </section>
+            )}
+
             {/* FAQ Section */}
-            <section className="py-20 bg-slate-50">
+            <section className="py-20 bg-white">
                 <div className="container mx-auto px-4">
-                    <h2 className="text-3xl font-bold text-center text-slate-900 mb-12">
-                        Frequently Asked Questions
+                    <h2 className="text-2xl font-bold text-center text-slate-900 mb-12 tracking-tight">
+                        Common Questions
                     </h2>
 
                     <div className="max-w-3xl mx-auto space-y-4">
@@ -359,39 +356,63 @@ export default async function HomePage() {
                             { q: 'What\'s the easiest way to compare car insurance?', a: 'By far the easiest way to compare car insurance is with an insurance-comparison site. You only have to enter your information once to get quotes from multiple companies.' },
                             { q: 'Which company has the cheapest car insurance?', a: 'The cheapest company varies by driver profile and location. That\'s why comparing personalized quotes is so important.' },
                         ].map((faq, index) => (
-                            <details key={index} className="bg-white rounded-xl border border-slate-200 overflow-hidden group">
-                                <summary className="p-6 cursor-pointer font-semibold text-slate-900 hover:bg-slate-50 transition-colors flex items-center justify-between">
+                            <details key={index} className="bg-white rounded-lg border border-slate-200 overflow-hidden group">
+                                <summary className="p-6 cursor-pointer font-medium text-slate-900 hover:bg-slate-50 transition-colors flex items-center justify-between">
                                     {faq.q}
-                                    <svg className="w-5 h-5 text-slate-400 group-open:rotate-180 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                                    </svg>
+                                    <TrendingDown className="w-5 h-5 text-slate-400 group-open:rotate-180 transition-transform" />
                                 </summary>
-                                <div className="px-6 pb-6 text-slate-600 leading-relaxed">
+                                <div className="px-6 pb-6 text-slate-600 leading-relaxed text-sm">
                                     {faq.a}
                                 </div>
                             </details>
                         ))}
                     </div>
                 </div>
+                {/* FAQ Schema for SEO/LLM */}
+                <FAQSchema faqs={[
+                    { question: 'Why is it important to compare car insurance?', answer: 'Insurance companies calculate your rates based on factors like your driving history, location, age, and gender. Every insurer values each factor differently, so any two companies may give you widely different quotes.' },
+                    { question: 'How often should you compare car insurance quotes?', answer: 'We recommend comparing quotes every six or 12 months, or whenever your policy is coming up for renewal.' },
+                    { question: 'What is the easiest way to compare car insurance?', answer: 'By far the easiest way to compare car insurance is with an insurance-comparison site. You only have to enter your information once to get quotes from multiple companies.' },
+                    { question: 'Which company has the cheapest car insurance?', answer: 'The cheapest company varies by driver profile and location. That is why comparing personalized quotes is so important.' },
+                ]} />
+            </section>
+
+            {/* National Coverage Directory (SEO) */}
+            <section className="py-16 bg-slate-50 border-t border-slate-200">
+                <div className="container mx-auto px-4">
+                    <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-6">National Coverage</h3>
+                    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-y-2 gap-x-4">
+                        {allStates && allStates.map(state => (
+                            <Link
+                                key={state.id}
+                                href={`/states/${state.country.code}/${state.slug}`}
+                                className="text-sm text-slate-500 hover:text-blue-600 hover:underline transition-colors"
+                            >
+                                {state.name}
+                            </Link>
+                        ))}
+                    </div>
+                </div>
             </section>
 
             {/* Final CTA */}
-            <section className="bg-gradient-to-r from-teal-600 to-teal-700 py-20 text-center">
+            <section className="bg-slate-900 border-t border-slate-800 py-24 text-center">
                 <div className="container mx-auto px-4">
-                    <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">Ready to Start Saving?</h2>
-                    <p className="text-teal-100 max-w-2xl mx-auto mb-10 text-lg">
-                        Join millions of Americans who saved an average of $867/year by comparing with InsuranceBuddies.
+                    <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">Start Your Financial Journey</h2>
+                    <p className="text-slate-400 max-w-2xl mx-auto mb-10 text-lg font-light">
+                        Access comprehensive guides, compare options, and take control of your insurance and financial future.
                     </p>
                     <Link
-                        href="/get-quote"
-                        className="inline-block bg-white text-teal-700 px-10 py-4 rounded-xl font-bold hover:bg-teal-50 transition-all transform hover:-translate-y-1 shadow-lg"
+                        href="/states"
+                        className="inline-block bg-white text-slate-900 px-10 py-4 rounded-lg font-bold hover:bg-blue-50 transition-all transform hover:-translate-y-1 shadow-lg"
                     >
-                        Compare Quotes Now
+                        Explore Resources
                     </Link>
                 </div>
             </section>
 
             <Footer insuranceTypes={insuranceTypes} />
-        </div>
+            <UserLocationBanner />
+        </div >
     );
 }

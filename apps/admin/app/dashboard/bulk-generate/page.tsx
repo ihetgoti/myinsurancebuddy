@@ -4,6 +4,7 @@ import AdminLayout from '@/components/AdminLayout';
 import { useEffect, useState, useRef } from 'react';
 import { getApiUrl } from '@/lib/api';
 import { systemVariables } from '@/lib/component-definitions';
+import { addActiveJob, updateJobProgress } from '@/lib/job-store';
 
 interface Template {
     id: string;
@@ -79,11 +80,10 @@ export default function BulkGeneratePage() {
                 fetch(getApiUrl('/api/bulk-generate')),
             ]);
 
-            const [templatesData, typesData, jobsData] = await Promise.all([
-                templatesRes.json(),
-                typesRes.json(),
-                jobsRes.json(),
-            ]);
+            // Check if responses are ok before parsing
+            const templatesData = templatesRes.ok ? await templatesRes.json() : [];
+            const typesData = typesRes.ok ? await typesRes.json() : [];
+            const jobsData = jobsRes.ok ? await jobsRes.json() : [];
 
             setTemplates(Array.isArray(templatesData) ? templatesData : []);
             setInsuranceTypes(Array.isArray(typesData) ? typesData : []);
@@ -233,6 +233,21 @@ export default function BulkGeneratePage() {
             const job = await res.json();
             setCurrentJob(job);
 
+            // Add to global job store for persistent tracking
+            addActiveJob({
+                id: job.id,
+                type: 'bulk',
+                name: job.name || `Bulk Job - ${new Date().toLocaleTimeString()}`,
+                status: 'QUEUED',
+                total: job.totalRows || csvData.length || 0,
+                processed: 0,
+                created: 0,
+                updated: 0,
+                skipped: 0,
+                failed: 0,
+                startedAt: new Date().toISOString(),
+            });
+
             // Start execution
             const execRes = await fetch(getApiUrl(`/api/bulk-generate/${job.id}/execute`), {
                 method: 'POST',
@@ -257,6 +272,17 @@ export default function BulkGeneratePage() {
                 const job = await res.json();
                 setCurrentJob(job);
 
+                // Update global job store
+                updateJobProgress(jobId, {
+                    status: job.status,
+                    processed: job.processedRows || 0,
+                    total: job.totalRows || 0,
+                    created: job.createdPages || 0,
+                    updated: job.updatedPages || 0,
+                    skipped: job.skippedPages || 0,
+                    failed: job.failedPages || 0,
+                });
+
                 if (job.status === 'PROCESSING' || job.status === 'QUEUED') {
                     setTimeout(poll, 1000);
                 } else {
@@ -279,10 +305,10 @@ export default function BulkGeneratePage() {
                         onClick={() => setStep(s)}
                         disabled={getStepNumber(s) > getStepNumber(step) + 1}
                         className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold transition ${step === s
-                                ? 'bg-blue-600 text-white'
-                                : getStepNumber(s) < getStepNumber(step)
-                                    ? 'bg-green-500 text-white'
-                                    : 'bg-gray-200 text-gray-500'
+                            ? 'bg-blue-600 text-white'
+                            : getStepNumber(s) < getStepNumber(step)
+                                ? 'bg-green-500 text-white'
+                                : 'bg-gray-200 text-gray-500'
                             }`}
                     >
                         {getStepNumber(s) < getStepNumber(step) ? '✓' : i + 1}
@@ -356,8 +382,8 @@ export default function BulkGeneratePage() {
                                         key={source.id}
                                         onClick={() => setDataSource(source.id as any)}
                                         className={`p-6 rounded-xl border-2 text-left transition ${dataSource === source.id
-                                                ? 'border-blue-500 bg-blue-50'
-                                                : 'border-gray-200 hover:border-gray-300'
+                                            ? 'border-blue-500 bg-blue-50'
+                                            : 'border-gray-200 hover:border-gray-300'
                                             }`}
                                     >
                                         <div className="text-3xl mb-3">{source.icon}</div>
@@ -504,6 +530,11 @@ export default function BulkGeneratePage() {
                                             No templates found. <a href="/dashboard/templates" className="underline">Create one first</a>.
                                         </p>
                                     )}
+                                    <p className="text-xs text-gray-500 mt-2">
+                                        <a href="/dashboard/templates/editor" className="text-blue-600 hover:underline">
+                                            + Create custom template
+                                        </a>
+                                    </p>
                                 </div>
 
                                 <div>
@@ -722,10 +753,10 @@ export default function BulkGeneratePage() {
                                                     <td className="px-4 py-2">{item.title}</td>
                                                     <td className="px-4 py-2">
                                                         <span className={`px-2 py-0.5 rounded text-xs ${item.exists
-                                                                ? options.updateExisting
-                                                                    ? 'bg-yellow-100 text-yellow-700'
-                                                                    : 'bg-gray-100 text-gray-600'
-                                                                : 'bg-green-100 text-green-700'
+                                                            ? options.updateExisting
+                                                                ? 'bg-yellow-100 text-yellow-700'
+                                                                : 'bg-gray-100 text-gray-600'
+                                                            : 'bg-green-100 text-green-700'
                                                             }`}>
                                                             {item.exists
                                                                 ? options.updateExisting ? 'Will Update' : 'Will Skip'
@@ -783,8 +814,8 @@ export default function BulkGeneratePage() {
                                     <div className="flex items-center justify-between">
                                         <h3 className="font-semibold">{currentJob?.name || 'Processing...'}</h3>
                                         <span className={`px-3 py-1 rounded-full text-sm ${currentJob?.status === 'COMPLETED' ? 'bg-green-100 text-green-700' :
-                                                currentJob?.status === 'FAILED' ? 'bg-red-100 text-red-700' :
-                                                    'bg-blue-100 text-blue-700'
+                                            currentJob?.status === 'FAILED' ? 'bg-red-100 text-red-700' :
+                                                'bg-blue-100 text-blue-700'
                                             }`}>
                                             {currentJob?.status || 'Starting...'}
                                         </span>
@@ -899,9 +930,9 @@ export default function BulkGeneratePage() {
                                             <td className="px-4 py-3 text-gray-500">{job.template?.name}</td>
                                             <td className="px-4 py-3">
                                                 <span className={`px-2 py-0.5 rounded text-xs ${job.status === 'COMPLETED' ? 'bg-green-100 text-green-700' :
-                                                        job.status === 'FAILED' ? 'bg-red-100 text-red-700' :
-                                                            job.status === 'PROCESSING' ? 'bg-blue-100 text-blue-700' :
-                                                                'bg-gray-100 text-gray-600'
+                                                    job.status === 'FAILED' ? 'bg-red-100 text-red-700' :
+                                                        job.status === 'PROCESSING' ? 'bg-blue-100 text-blue-700' :
+                                                            'bg-gray-100 text-gray-600'
                                                     }`}>
                                                     {job.status}
                                                 </span>

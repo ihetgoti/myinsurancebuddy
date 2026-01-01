@@ -44,6 +44,7 @@ export default function SEODashboardPage() {
     const [linkResults, setLinkResults] = useState<LinkCheckResult[]>([]);
     const [checkingLinks, setCheckingLinks] = useState(false);
     const [fixing, setFixing] = useState(false);
+    const [submittingToGoogle, setSubmittingToGoogle] = useState(false);
 
     useEffect(() => {
         fetchData();
@@ -103,6 +104,27 @@ export default function SEODashboardPage() {
             alert(error.message);
         } finally {
             setGenerating(false);
+        }
+    };
+
+    const submitToGoogle = async () => {
+        setSubmittingToGoogle(true);
+        try {
+            const res = await fetch(getApiUrl('/api/seo/sitemaps/ping'), {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ pingAll: true }),
+            });
+            const data = await res.json();
+            if (data.success) {
+                alert(`✅ ${data.message}`);
+            } else {
+                alert(`⚠️ ${data.message}`);
+            }
+        } catch (error: any) {
+            alert('Failed to submit to Google: ' + error.message);
+        } finally {
+            setSubmittingToGoogle(false);
         }
     };
 
@@ -570,7 +592,20 @@ export default function SEODashboardPage() {
                                 {/* Submit to Search Engines */}
                                 <div className="mt-8 bg-gray-50 rounded-lg p-6">
                                     <h3 className="font-semibold mb-4">Submit to Search Engines</h3>
-                                    <div className="grid md:grid-cols-2 gap-4">
+                                    <div className="grid md:grid-cols-3 gap-4">
+                                        <button
+                                            onClick={submitToGoogle}
+                                            disabled={submittingToGoogle}
+                                            className="flex items-center gap-3 p-4 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-lg hover:from-green-600 hover:to-green-700 transition disabled:opacity-50"
+                                        >
+                                            <div className="text-2xl">🚀</div>
+                                            <div className="text-left">
+                                                <div className="font-medium">
+                                                    {submittingToGoogle ? 'Submitting...' : 'Ping Google Now'}
+                                                </div>
+                                                <div className="text-sm opacity-90">Instant sitemap notification</div>
+                                            </div>
+                                        </button>
                                         <a
                                             href="https://search.google.com/search-console"
                                             target="_blank"
@@ -579,7 +614,7 @@ export default function SEODashboardPage() {
                                             <div className="text-2xl">🔍</div>
                                             <div>
                                                 <div className="font-medium">Google Search Console</div>
-                                                <div className="text-sm text-gray-500">Submit sitemap to Google</div>
+                                                <div className="text-sm text-gray-500">Manual sitemap management</div>
                                             </div>
                                         </a>
                                         <a
@@ -635,6 +670,54 @@ export default function SEODashboardPage() {
                                             <input type="checkbox" defaultChecked className="rounded" />
                                             <span>Auto-generate sitemaps on page publish</span>
                                         </label>
+                                    </div>
+                                </div>
+
+                                {/* Search Engine Verification */}
+                                <div className="mt-8 p-6 bg-gradient-to-r from-blue-50 to-green-50 rounded-lg border border-blue-200">
+                                    <h3 className="font-semibold mb-4 flex items-center gap-2">
+                                        <span className="text-xl">🔐</span>
+                                        Search Engine Verification
+                                    </h3>
+                                    <p className="text-sm text-gray-600 mb-4">
+                                        Add your verification codes to prove ownership of your site. Get these codes from Google Search Console and Bing Webmaster Tools.
+                                    </p>
+                                    <div className="grid md:grid-cols-2 gap-6">
+                                        <div>
+                                            <label className="block text-sm font-medium mb-2">
+                                                🔍 Google Verification Code
+                                            </label>
+                                            <input
+                                                type="text"
+                                                placeholder="e.g., google1234567890abcdef"
+                                                className="w-full px-4 py-2 border rounded-lg"
+                                            />
+                                            <p className="text-xs text-gray-500 mt-2">
+                                                Get from: <a href="https://search.google.com/search-console" target="_blank" className="text-blue-600 hover:underline">Google Search Console</a> → Settings → Ownership verification → HTML tag
+                                            </p>
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium mb-2">
+                                                🅱️ Bing Verification Code
+                                            </label>
+                                            <input
+                                                type="text"
+                                                placeholder="e.g., ABCDEF123456789"
+                                                className="w-full px-4 py-2 border rounded-lg"
+                                            />
+                                            <p className="text-xs text-gray-500 mt-2">
+                                                Get from: <a href="https://www.bing.com/webmasters" target="_blank" className="text-blue-600 hover:underline">Bing Webmaster</a> → Add site → Ownership verification
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                                        <p className="text-sm text-amber-800">
+                                            <strong>💡 How to use:</strong> Add these codes to your <code>.env</code> file:
+                                        </p>
+                                        <pre className="mt-2 text-xs bg-white p-2 rounded border font-mono overflow-x-auto">
+                                            {`GOOGLE_SITE_VERIFICATION=your_google_code
+BING_SITE_VERIFICATION=your_bing_code`}
+                                        </pre>
                                     </div>
                                 </div>
 

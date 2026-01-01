@@ -15,6 +15,7 @@ export async function GET(request: NextRequest) {
         const stateId = searchParams.get('stateId');
         const cityId = searchParams.get('cityId');
         const isPublished = searchParams.get('isPublished');
+        const idsOnly = searchParams.get('idsOnly') === 'true';
         const limit = parseInt(searchParams.get('limit') || '50');
         const offset = parseInt(searchParams.get('offset') || '0');
 
@@ -25,6 +26,16 @@ export async function GET(request: NextRequest) {
         if (stateId) where.stateId = stateId;
         if (cityId) where.cityId = cityId;
         if (isPublished !== null) where.isPublished = isPublished === 'true';
+
+        // If idsOnly, return just the IDs for bulk selection
+        if (idsOnly) {
+            const pages = await prisma.page.findMany({
+                where,
+                select: { id: true },
+            });
+            const ids = pages.map(p => p.id);
+            return NextResponse.json({ ids, total: ids.length });
+        }
 
         const [pages, total] = await Promise.all([
             prisma.page.findMany({
@@ -133,6 +144,18 @@ export async function POST(request: NextRequest) {
                 state: { select: { id: true, slug: true, name: true } },
                 city: { select: { id: true, slug: true, name: true } },
             }
+        });
+
+        // Create audit log
+        await prisma.auditLog.create({
+            data: {
+                userId: session.user.id,
+                action: 'CREATE',
+                entityType: 'Page',
+                entityId: page.id,
+                entityName: page.title || page.slug,
+                metadata: { geoLevel, insuranceTypeId },
+            },
         });
 
         return NextResponse.json(page, { status: 201 });

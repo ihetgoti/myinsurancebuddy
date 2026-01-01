@@ -82,6 +82,21 @@ export async function PATCH(
             }
         });
 
+        // Create audit log for update
+        await prisma.auditLog.create({
+            data: {
+                userId: session.user.id,
+                action: 'UPDATE',
+                entityType: 'Page',
+                entityId: params.id,
+                entityName: page.title || page.slug,
+                changes: {
+                    ...(heroTitle !== undefined && { heroTitle: { old: currentPage.title, new: heroTitle } }),
+                    ...(isPublished !== undefined && { isPublished: { old: currentPage.isPublished, new: isPublished } }),
+                },
+            },
+        });
+
         return NextResponse.json(page);
     } catch (error) {
         console.error('Failed to update page:', error);
@@ -100,7 +115,28 @@ export async function DELETE(
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
+        // Get page info before delete for audit
+        const page = await prisma.page.findUnique({
+            where: { id: params.id },
+            select: { id: true, title: true, slug: true }
+        });
+
+        if (!page) {
+            return NextResponse.json({ error: 'Not found' }, { status: 404 });
+        }
+
         await prisma.page.delete({ where: { id: params.id } });
+
+        // Create audit log for delete
+        await prisma.auditLog.create({
+            data: {
+                userId: session.user.id,
+                action: 'DELETE',
+                entityType: 'Page',
+                entityId: params.id,
+                entityName: page.title || page.slug,
+            },
+        });
 
         return NextResponse.json({ success: true });
     } catch (error) {

@@ -1,6 +1,8 @@
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
+import { OrganizationSchema, WebsiteSchema } from '@/components/SchemaMarkup'
+import Providers from '@/components/Providers'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -49,6 +51,12 @@ export const metadata: Metadata = {
     alternates: {
         canonical: baseUrl,
     },
+    verification: {
+        google: process.env.GOOGLE_SITE_VERIFICATION || undefined,
+        other: {
+            'msvalidate.01': process.env.BING_SITE_VERIFICATION || '',
+        },
+    },
 }
 
 export default function RootLayout({
@@ -58,7 +66,13 @@ export default function RootLayout({
 }) {
     return (
         <html lang="en">
-            <body className={`${inter.className} bg-slate-50 text-slate-900 antialiased`}>{children}</body>
+            <body className={`${inter.className} bg-slate-50 text-slate-900 antialiased`}>
+                <Providers>
+                    <OrganizationSchema />
+                    <WebsiteSchema />
+                    {children}
+                </Providers>
+            </body>
         </html>
     )
 }

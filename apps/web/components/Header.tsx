@@ -2,6 +2,8 @@
 
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
+import { ChevronDown, Menu, X, Shield, Phone, Car, Home, Heart, Stethoscope, Briefcase, Dog, User, LogOut } from 'lucide-react';
+import { useSession, signOut } from 'next-auth/react';
 
 interface InsuranceType {
     id: string;
@@ -23,6 +25,7 @@ interface HeaderProps {
 }
 
 export default function Header({ insuranceTypes = [], states = [] }: HeaderProps) {
+    const { data: session, status } = useSession();
     const [scrolled, setScrolled] = useState(false);
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
@@ -43,239 +46,265 @@ export default function Header({ insuranceTypes = [], states = [] }: HeaderProps
         }
     }, [mobileMenuOpen]);
 
-    const popularStates = states.slice(0, 10);
+    const insuranceCategories = [
+        { name: 'Auto Insurance', href: '/car-insurance', icon: <Car className="w-5 h-5" />, desc: 'Compare rates & save' },
+        { name: 'Home Insurance', href: '/home-insurance', icon: <Home className="w-5 h-5" />, desc: 'Protect your property' },
+        { name: 'Life Insurance', href: '/life-insurance', icon: <Heart className="w-5 h-5" />, desc: 'Secure your family' },
+        { name: 'Health Insurance', href: '/health-insurance', icon: <Stethoscope className="w-5 h-5" />, desc: 'Medical coverage' },
+        { name: 'Business', href: '/business-insurance', icon: <Briefcase className="w-5 h-5" />, desc: 'Liability & assets' },
+        { name: 'Pet Insurance', href: '/pet-insurance', icon: <Dog className="w-5 h-5" />, desc: 'For furry friends' },
+    ];
+
+    const handleSignOut = () => {
+        signOut({ callbackUrl: '/' });
+    };
 
     return (
         <>
-            <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled
-                ? 'bg-white shadow-lg'
-                : 'bg-white'
-                }`}>
-                {/* Top Contact Bar - Compare.com Style */}
-                <div className="bg-[#0B1B34] text-white py-2">
-                    <div className="container mx-auto px-4">
-                        <div className="flex items-center justify-between text-sm">
-                            <div className="flex items-center gap-6">
-                                <a href="tel:1-855-205-2412" className="flex items-center gap-2 hover:text-teal-400 transition-colors">
-                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                                    </svg>
-                                    <span className="font-medium">Call us 1-855-205-2412</span>
-                                </a>
-                                <a href="sms:1-855-627-3925" className="hidden md:flex items-center gap-2 hover:text-teal-400 transition-colors">
-                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                                    </svg>
-                                    <span>Text us 1-855-627-3925</span>
-                                </a>
+            <header
+                className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 bg-white ${scrolled
+                        ? 'h-16 border-b border-slate-200 shadow-sm'
+                        : 'h-20 border-b border-transparent'
+                    }`}
+            >
+                <div className="container mx-auto px-4 h-full max-w-7xl flex items-center justify-between">
+
+                    {/* Brand */}
+                    <Link href="/" className="flex items-center gap-2.5 group mr-8">
+                        <div className="w-9 h-9 bg-blue-600 text-white flex items-center justify-center rounded-lg shadow-sm group-hover:shadow-md transition-all">
+                            <Shield className="w-5 h-5 fill-current" />
+                        </div>
+                        <span className="text-xl font-bold text-slate-900 tracking-tight group-hover:text-blue-600 transition-colors">
+                            MyInsurance<span className="text-slate-400">Buddies</span>
+                        </span>
+                    </Link>
+
+                    {/* Desktop Navigation */}
+                    <nav className="hidden lg:flex items-center gap-1 flex-1">
+                        {/* Insurance Products Dropdown */}
+                        <div className="relative group" onMouseEnter={() => setActiveDropdown('insurance')} onMouseLeave={() => setActiveDropdown(null)}>
+                            <button className={`flex items-center gap-1.5 px-4 py-2 text-sm font-bold rounded-full transition-colors ${activeDropdown === 'insurance' ? 'text-blue-600 bg-blue-50' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                                }`}>
+                                Insurance Products
+                                <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${activeDropdown === 'insurance' ? 'rotate-180' : ''}`} />
+                            </button>
+
+                            {/* Mega Menu */}
+                            <div className={`absolute top-full left-0 pt-3 w-[650px] transition-all duration-200 ${activeDropdown === 'insurance' ? 'opacity-100 visible translate-y-0' : 'opacity-0 invisible translate-y-2'}`}>
+                                <div className="bg-white rounded-2xl shadow-xl ring-1 ring-slate-200/50 p-6">
+                                    <div className="grid grid-cols-2 gap-4">
+                                        {insuranceCategories.map((item) => (
+                                            <Link
+                                                key={item.name}
+                                                href={item.href}
+                                                className="flex items-start gap-4 p-3 rounded-xl hover:bg-slate-50 transition-colors group/item"
+                                            >
+                                                <div className="p-2.5 bg-blue-50 text-blue-600 rounded-lg group-hover/item:bg-blue-600 group-hover/item:text-white transition-colors">
+                                                    {item.icon}
+                                                </div>
+                                                <div>
+                                                    <div className="font-bold text-slate-900 group-hover/item:text-blue-600 transition-colors text-sm">{item.name}</div>
+                                                    <div className="text-xs text-slate-500 font-medium">{item.desc}</div>
+                                                </div>
+                                            </Link>
+                                        ))}
+                                    </div>
+                                    <div className="mt-4 pt-4 border-t border-slate-100 flex justify-between items-center bg-slate-50/50 -mx-6 -mb-6 p-4 rounded-b-2xl">
+                                        <div className="text-xs font-semibold text-slate-500 px-2">
+                                            Don't see what you need?
+                                        </div>
+                                        <Link href="/insurance-types" className="text-xs font-bold text-blue-600 hover:underline px-2">
+                                            View all 50+ categories →
+                                        </Link>
+                                    </div>
+                                </div>
                             </div>
-                            <div className="flex items-center gap-4">
-                                <Link href="/login" className="hover:text-teal-400 transition-colors font-medium">
+                        </div>
+
+                        {/* Resources Dropdown */}
+                        <div className="relative group" onMouseEnter={() => setActiveDropdown('resources')} onMouseLeave={() => setActiveDropdown(null)}>
+                            <button className={`flex items-center gap-1.5 px-4 py-2 text-sm font-bold rounded-full transition-colors ${activeDropdown === 'resources' ? 'text-blue-600 bg-blue-50' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                                }`}>
+                                Resources
+                                <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${activeDropdown === 'resources' ? 'rotate-180' : ''}`} />
+                            </button>
+
+                            <div className={`absolute top-full left-0 pt-3 w-[260px] transition-all duration-200 ${activeDropdown === 'resources' ? 'opacity-100 visible translate-y-0' : 'opacity-0 invisible translate-y-2'}`}>
+                                <div className="bg-white rounded-xl shadow-xl ring-1 ring-slate-200/50 p-3 flex flex-col gap-1">
+                                    <Link href="/tools" className="block px-4 py-2.5 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-50 hover:text-blue-600 transition-colors">
+                                        Calculators & Tools
+                                    </Link>
+                                    <Link href="/guides" className="block px-4 py-2.5 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-50 hover:text-blue-600 transition-colors">
+                                        Insurance Guides
+                                    </Link>
+                                    <Link href="/states" className="block px-4 py-2.5 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-50 hover:text-blue-600 transition-colors">
+                                        Coverage by State
+                                    </Link>
+                                    <Link href="/faq" className="block px-4 py-2.5 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-50 hover:text-blue-600 transition-colors">
+                                        FAQ
+                                    </Link>
+                                </div>
+                            </div>
+                        </div>
+
+                        <Link href="/about" className="px-4 py-2 text-sm font-bold text-slate-600 hover:text-slate-900 hover:bg-slate-50 rounded-full transition-colors">
+                            About Us
+                        </Link>
+                    </nav>
+
+                    {/* Right Actions */}
+                    <div className="flex items-center gap-6">
+                        <div className="hidden md:flex flex-col items-end">
+                            <a href="tel:1-855-205-2412" className="text-sm font-bold text-slate-900 hover:text-blue-600 flex items-center gap-2">
+                                <Phone className="w-4 h-4 text-blue-600" /> 1-855-205-2412
+                            </a>
+                        </div>
+
+                        <div className="h-8 w-px bg-slate-200 hidden lg:block"></div>
+
+                        {/* Session-aware Auth Buttons */}
+                        {status === 'loading' ? (
+                            <div className="hidden lg:block w-16 h-8 bg-slate-100 rounded animate-pulse"></div>
+                        ) : session ? (
+                            <div className="hidden lg:flex items-center gap-4">
+                                <div className="relative group" onMouseEnter={() => setActiveDropdown('user')} onMouseLeave={() => setActiveDropdown(null)}>
+                                    <button className="flex items-center gap-2 px-3 py-2 rounded-full hover:bg-slate-50 transition-colors">
+                                        <div className="w-8 h-8 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center">
+                                            <User className="w-4 h-4" />
+                                        </div>
+                                        <span className="text-sm font-bold text-slate-700 max-w-[100px] truncate">
+                                            {session.user?.name || session.user?.email?.split('@')[0]}
+                                        </span>
+                                        <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
+                                    </button>
+
+                                    <div className={`absolute top-full right-0 pt-2 w-48 transition-all duration-200 ${activeDropdown === 'user' ? 'opacity-100 visible translate-y-0' : 'opacity-0 invisible translate-y-2'}`}>
+                                        <div className="bg-white rounded-xl shadow-xl ring-1 ring-slate-200/50 p-2">
+                                            <div className="px-3 py-2 border-b border-slate-100 mb-1">
+                                                <p className="text-xs text-slate-400">Signed in as</p>
+                                                <p className="text-sm font-semibold text-slate-900 truncate">{session.user?.email}</p>
+                                            </div>
+                                            <button
+                                                onClick={handleSignOut}
+                                                className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium text-red-600 hover:bg-red-50 transition-colors"
+                                            >
+                                                <LogOut className="w-4 h-4" />
+                                                Sign Out
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        ) : (
+                            <>
+                                <Link href="/login" className="hidden lg:block text-sm font-bold text-slate-600 hover:text-slate-900">
                                     Log in
                                 </Link>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                                <Link
+                                    href="/signup"
+                                    className="hidden lg:inline-flex items-center justify-center px-5 py-2.5 text-sm font-bold text-blue-600 bg-blue-50 rounded-full hover:bg-blue-100 transition-all"
+                                >
+                                    Sign Up
+                                </Link>
+                            </>
+                        )}
 
-                {/* Main Navigation */}
-                <div className="container mx-auto px-4 border-b border-slate-100">
-                    <div className="flex items-center justify-between h-16">
-                        {/* Logo */}
-                        <Link href="/" className="flex items-center gap-3 flex-shrink-0 group">
-                            <div className="w-10 h-10 bg-gradient-to-br from-teal-500 to-blue-600 text-white flex items-center justify-center rounded-xl shadow-lg shadow-teal-500/20">
-                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                                </svg>
-                            </div>
-                            <span className="text-xl font-bold text-slate-900 tracking-tight">
-                                InsuranceBuddies
-                            </span>
+                        <Link
+                            href="/get-quote"
+                            className="hidden lg:inline-flex items-center justify-center px-6 py-2.5 text-sm font-bold text-white bg-blue-600 rounded-full hover:bg-blue-700 transition-all shadow-md active:scale-95"
+                        >
+                            Get Quotes
                         </Link>
 
-                        {/* Desktop Navigation */}
-                        <nav className="hidden lg:flex items-center gap-1">
-                            {/* Auto Insurance Dropdown */}
-                            <div
-                                className="relative"
-                                onMouseEnter={() => setActiveDropdown('auto')}
-                                onMouseLeave={() => setActiveDropdown(null)}
-                            >
-                                <button className={`flex items-center gap-1 px-4 py-2 rounded-lg text-sm font-medium transition-all ${activeDropdown === 'auto'
-                                    ? 'text-teal-600 bg-teal-50'
-                                    : 'text-slate-700 hover:text-teal-600 hover:bg-slate-50'
-                                    }`}>
-                                    Auto Insurance
-                                    <svg className={`w-4 h-4 transition-transform ${activeDropdown === 'auto' ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                                    </svg>
-                                </button>
-
-                                {activeDropdown === 'auto' && (
-                                    <div className="absolute top-full left-0 pt-2 w-[700px]">
-                                        <div className="bg-white rounded-xl shadow-2xl border border-slate-100 p-6 grid grid-cols-2 gap-8">
-                                            <div>
-                                                <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">Compare Quotes</h4>
-                                                <ul className="space-y-3">
-                                                    <li><Link href="/car-insurance" className="text-slate-700 hover:text-teal-600 font-medium block">Compare Car Insurance Rates</Link></li>
-                                                    <li><Link href="/car-insurance/calculator" className="text-slate-700 hover:text-teal-600 font-medium block">Car Insurance Calculator</Link></li>
-                                                    <li><Link href="/car-insurance/cheapest" className="text-slate-700 hover:text-teal-600 font-medium block">Cheapest Car Insurance Companies</Link></li>
-                                                    <li><Link href="/compare" className="text-slate-700 hover:text-teal-600 font-medium block">Best Car Insurance Comparison Sites</Link></li>
-                                                    <li><Link href="/car-insurance/best" className="text-slate-700 hover:text-teal-600 font-medium block">Best Car Insurance Companies</Link></li>
-                                                </ul>
-                                            </div>
-                                            <div>
-                                                <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">Car Insurance Guides</h4>
-                                                <ul className="space-y-3">
-                                                    <li><Link href="/states" className="text-slate-700 hover:text-teal-600 font-medium block">Car Insurance Rates by State</Link></li>
-                                                    <li><Link href="/guides/how-to-shop" className="text-slate-700 hover:text-teal-600 font-medium block">How to Shop for Car Insurance</Link></li>
-                                                    <li><Link href="/guides/reviews" className="text-slate-700 hover:text-teal-600 font-medium block">Car Insurance Company Reviews</Link></li>
-                                                    <li><Link href="/guides/discounts" className="text-slate-700 hover:text-teal-600 font-medium block">Car Insurance Discounts</Link></li>
-                                                </ul>
-                                            </div>
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
-
-                            {/* Home Insurance Dropdown */}
-                            <div
-                                className="relative"
-                                onMouseEnter={() => setActiveDropdown('home')}
-                                onMouseLeave={() => setActiveDropdown(null)}
-                            >
-                                <button className={`flex items-center gap-1 px-4 py-2 rounded-lg text-sm font-medium transition-all ${activeDropdown === 'home'
-                                    ? 'text-teal-600 bg-teal-50'
-                                    : 'text-slate-700 hover:text-teal-600 hover:bg-slate-50'
-                                    }`}>
-                                    Home Insurance
-                                    <svg className={`w-4 h-4 transition-transform ${activeDropdown === 'home' ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                                    </svg>
-                                </button>
-
-                                {activeDropdown === 'home' && (
-                                    <div className="absolute top-full left-0 pt-2 w-[350px]">
-                                        <div className="bg-white rounded-xl shadow-2xl border border-slate-100 p-6">
-                                            <ul className="space-y-3">
-                                                <li><Link href="/home-insurance" className="text-slate-700 hover:text-teal-600 font-medium block">Compare Home Insurance Quotes</Link></li>
-                                                <li><Link href="/home-insurance/best" className="text-slate-700 hover:text-teal-600 font-medium block">Best Home Insurance Companies</Link></li>
-                                                <li><Link href="/home-insurance/cost" className="text-slate-700 hover:text-teal-600 font-medium block">Average Cost of Home Insurance</Link></li>
-                                                <li><Link href="/home-insurance/how-much" className="text-slate-700 hover:text-teal-600 font-medium block">How Much Home Insurance Do You Need?</Link></li>
-                                                <li><Link href="/home-insurance/cheap" className="text-slate-700 hover:text-teal-600 font-medium block">Cheap Home Insurance</Link></li>
-                                            </ul>
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
-
-                            {/* Other Insurance Types */}
-                            {insuranceTypes.filter(t => !['car-insurance', 'home-insurance'].includes(t.slug)).slice(0, 3).map((type) => (
-                                <Link
-                                    key={type.id}
-                                    href={`/${type.slug}`}
-                                    className="px-4 py-2 rounded-lg text-sm font-medium text-slate-700 hover:text-teal-600 hover:bg-slate-50 transition-all"
-                                >
-                                    {type.name.replace(' Insurance', '')}
-                                </Link>
-                            ))}
-
-                            {/* About Us Dropdown */}
-                            <div
-                                className="relative"
-                                onMouseEnter={() => setActiveDropdown('about')}
-                                onMouseLeave={() => setActiveDropdown(null)}
-                            >
-                                <button className={`flex items-center gap-1 px-4 py-2 rounded-lg text-sm font-medium transition-all ${activeDropdown === 'about'
-                                    ? 'text-teal-600 bg-teal-50'
-                                    : 'text-slate-700 hover:text-teal-600 hover:bg-slate-50'
-                                    }`}>
-                                    About Us
-                                    <svg className={`w-4 h-4 transition-transform ${activeDropdown === 'about' ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                                    </svg>
-                                </button>
-
-                                {activeDropdown === 'about' && (
-                                    <div className="absolute top-full right-0 pt-2 w-[250px]">
-                                        <div className="bg-white rounded-xl shadow-2xl border border-slate-100 p-6">
-                                            <ul className="space-y-3">
-                                                <li><Link href="/about" className="text-slate-700 hover:text-teal-600 font-medium block">About Us</Link></li>
-                                                <li><Link href="/about#team" className="text-slate-700 hover:text-teal-600 font-medium block">Our Team</Link></li>
-                                                <li><Link href="/about#how-it-works" className="text-slate-700 hover:text-teal-600 font-medium block">How It Works</Link></li>
-                                                <li><Link href="/contact" className="text-slate-700 hover:text-teal-600 font-medium block">Contact Us</Link></li>
-                                            </ul>
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
-                        </nav>
-
-                        {/* CTA Button */}
-                        <div className="hidden lg:flex items-center gap-4">
-                            <Link
-                                href="/get-quote"
-                                className="bg-teal-600 text-white px-6 py-2.5 rounded-full text-sm font-semibold hover:bg-teal-700 transition-colors shadow-lg shadow-teal-600/20"
-                            >
-                                Get Quotes
-                            </Link>
-                        </div>
-
-                        {/* Mobile Menu Button */}
+                        {/* Mobile Menu Toggle */}
                         <button
                             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                            className="lg:hidden p-2 text-slate-600 hover:text-slate-900"
+                            className="lg:hidden p-2 -mr-2 text-slate-900"
                         >
-                            <span className="sr-only">Open menu</span>
-                            {mobileMenuOpen ? (
-                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                </svg>
-                            ) : (
-                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                                </svg>
-                            )}
+                            {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
                         </button>
                     </div>
                 </div>
 
-                {/* Mobile Menu */}
+                {/* Mobile Menu Overlay */}
                 {mobileMenuOpen && (
-                    <div className="lg:hidden absolute top-full left-0 right-0 bg-white border-b shadow-xl p-4 max-h-[80vh] overflow-y-auto">
-                        <nav className="space-y-2">
-                            <Link href="/car-insurance" className="block p-3 rounded-lg hover:bg-slate-50 text-slate-700 font-medium" onClick={() => setMobileMenuOpen(false)}>
-                                Auto Insurance
-                            </Link>
-                            <Link href="/home-insurance" className="block p-3 rounded-lg hover:bg-slate-50 text-slate-700 font-medium" onClick={() => setMobileMenuOpen(false)}>
-                                Home Insurance
-                            </Link>
-                            {insuranceTypes.slice(0, 4).map(type => (
+                    <div className="lg:hidden fixed inset-0 z-40 bg-white pt-24 px-6 overflow-y-auto">
+                        <nav className="space-y-4">
+                            <div className="space-y-1">
+                                <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 px-2">Insurance</h3>
+                                {insuranceCategories.map((item) => (
+                                    <Link
+                                        key={item.name}
+                                        href={item.href}
+                                        className="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 text-slate-700 font-bold transition-all"
+                                        onClick={() => setMobileMenuOpen(false)}
+                                    >
+                                        <div className="text-blue-600">{item.icon}</div>
+                                        {item.name}
+                                    </Link>
+                                ))}
+                            </div>
+
+                            <hr className="border-slate-100" />
+
+                            <div className="space-y-1">
+                                <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 px-2">Resources</h3>
                                 <Link
-                                    key={type.id}
-                                    href={`/${type.slug}`}
-                                    className="block p-3 rounded-lg hover:bg-slate-50 text-slate-700 font-medium"
+                                    href="/tools"
+                                    className="block p-3 rounded-xl hover:bg-slate-50 text-slate-700 font-bold"
                                     onClick={() => setMobileMenuOpen(false)}
                                 >
-                                    {type.name}
+                                    Tools & Calculators
                                 </Link>
-                            ))}
-                            <div className="pt-4 border-t border-slate-100 space-y-2">
-                                <Link href="/about" className="block p-3 rounded-lg hover:bg-slate-50 text-slate-700" onClick={() => setMobileMenuOpen(false)}>
+                                <Link
+                                    href="/guides"
+                                    className="block p-3 rounded-xl hover:bg-slate-50 text-slate-700 font-bold"
+                                    onClick={() => setMobileMenuOpen(false)}
+                                >
+                                    Guides
+                                </Link>
+                                <Link
+                                    href="/about"
+                                    className="block p-3 rounded-xl hover:bg-slate-50 text-slate-700 font-bold"
+                                    onClick={() => setMobileMenuOpen(false)}
+                                >
                                     About Us
                                 </Link>
-                                <Link href="/contact" className="block p-3 rounded-lg hover:bg-slate-50 text-slate-700" onClick={() => setMobileMenuOpen(false)}>
-                                    Contact
-                                </Link>
                             </div>
-                            <div className="pt-4">
+
+                            <div className="pb-8 pt-4">
                                 <Link
                                     href="/get-quote"
-                                    className="block w-full text-center bg-teal-600 text-white px-4 py-3 rounded-full font-semibold"
+                                    className="block w-full py-4 bg-blue-600 text-white text-center font-bold rounded-xl shadow-lg shadow-blue-900/10 mb-4"
                                     onClick={() => setMobileMenuOpen(false)}
                                 >
-                                    Get Quotes
+                                    Start My Quote
                                 </Link>
+                                {session ? (
+                                    <button
+                                        onClick={() => { handleSignOut(); setMobileMenuOpen(false); }}
+                                        className="block w-full py-4 text-center font-bold text-red-600 bg-red-50 rounded-xl"
+                                    >
+                                        Sign Out
+                                    </button>
+                                ) : (
+                                    <>
+                                        <Link
+                                            href="/login"
+                                            className="block w-full py-4 text-center font-bold text-slate-600 bg-slate-50 rounded-xl mb-3"
+                                            onClick={() => setMobileMenuOpen(false)}
+                                        >
+                                            Log In
+                                        </Link>
+                                        <Link
+                                            href="/signup"
+                                            className="block w-full py-4 text-center font-bold text-blue-600 bg-blue-50 rounded-xl"
+                                            onClick={() => setMobileMenuOpen(false)}
+                                        >
+                                            Sign Up
+                                        </Link>
+                                    </>
+                                )}
                             </div>
                         </nav>
                     </div>
@@ -283,7 +312,7 @@ export default function Header({ insuranceTypes = [], states = [] }: HeaderProps
             </header>
 
             {/* Spacer for fixed header */}
-            <div className="h-[104px]"></div>
+            <div className={`transition-all duration-300 ${scrolled ? 'h-16' : 'h-20'}`} />
         </>
     );
 }

@@ -5,6 +5,7 @@ import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { getApiUrl } from '@/lib/api';
 import { GENERATION_PRESETS, GenerationPreset } from '@/lib/presets';
+import { addActiveJob, updateJobProgress, JobProgress } from '@/lib/job-store';
 
 interface InsuranceType {
     id: string;
@@ -125,6 +126,22 @@ function QuickGenerateContent() {
             }
 
             const data = await res.json();
+
+            // Add job to global store for persistent tracking
+            addActiveJob({
+                id: data.jobId,
+                type: 'quick',
+                name: `${preset.name} - ${new Date().toLocaleTimeString()}`,
+                status: 'QUEUED',
+                total: data.total || 0,
+                processed: 0,
+                created: 0,
+                updated: 0,
+                skipped: 0,
+                failed: 0,
+                startedAt: new Date().toISOString(),
+            });
+
             pollJobStatus(data.jobId);
         } catch (error: any) {
             alert(error.message);
@@ -139,6 +156,17 @@ function QuickGenerateContent() {
                 const status = await res.json();
 
                 setCurrentJob({ id: jobId, status });
+
+                // Update global job store
+                updateJobProgress(jobId, {
+                    status: status.status,
+                    processed: status.processed || 0,
+                    total: status.total || 0,
+                    created: status.created || 0,
+                    updated: status.updated || 0,
+                    skipped: status.skipped || 0,
+                    failed: status.failed || 0,
+                });
 
                 if (status.status === 'PROCESSING' || status.status === 'QUEUED') {
                     setTimeout(poll, 1000);
@@ -223,11 +251,28 @@ function QuickGenerateContent() {
                                 className="w-full px-4 py-3 rounded-lg bg-white/10 border border-white/20 text-white placeholder-blue-200 focus:outline-none focus:ring-2 focus:ring-white/50"
                                 disabled={generating}
                             >
-                                {templates.map((template: Template) => (
-                                    <option key={template.id} value={template.id} className="text-gray-900">
-                                        {template.name}
-                                    </option>
-                                ))}
+                                {templates.filter((t: Template) => t.category !== 'custom').length > 0 && (
+                                    <optgroup label="📦 Built-in Templates" className="text-gray-900">
+                                        {templates
+                                            .filter((t: Template) => t.category !== 'custom')
+                                            .map((template: Template) => (
+                                                <option key={template.id} value={template.id} className="text-gray-900">
+                                                    {template.name}
+                                                </option>
+                                            ))}
+                                    </optgroup>
+                                )}
+                                {templates.filter((t: Template) => t.category === 'custom').length > 0 && (
+                                    <optgroup label="✨ Custom Templates" className="text-gray-900">
+                                        {templates
+                                            .filter((t: Template) => t.category === 'custom')
+                                            .map((template: Template) => (
+                                                <option key={template.id} value={template.id} className="text-gray-900">
+                                                    {template.name}
+                                                </option>
+                                            ))}
+                                    </optgroup>
+                                )}
                             </select>
                         </div>
                     </div>

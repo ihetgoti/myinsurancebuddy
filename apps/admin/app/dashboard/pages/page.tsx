@@ -36,8 +36,20 @@ export default function PagesAdminPage() {
     const [page, setPage] = useState(0);
     const limit = 50;
 
+    // Mass selection state
+    const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+    const [showConfirmModal, setShowConfirmModal] = useState(false);
+    const [bulkAction, setBulkAction] = useState<'delete' | 'publish' | 'unpublish' | null>(null);
+    const [bulkLoading, setBulkLoading] = useState(false);
+    const [selectingAll, setSelectingAll] = useState(false);
+
     useEffect(() => {
         fetchData();
+    }, [filters, page]);
+
+    // Clear selection when filters/page change
+    useEffect(() => {
+        setSelectedIds(new Set());
     }, [filters, page]);
 
     const fetchData = async () => {
@@ -78,6 +90,78 @@ export default function PagesAdminPage() {
         }
     };
 
+    const handleBulkAction = async () => {
+        if (!bulkAction || selectedIds.size === 0) return;
+
+        setBulkLoading(true);
+        try {
+            const res = await fetch(getApiUrl('/api/pages/bulk'), {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    ids: Array.from(selectedIds),
+                    action: bulkAction,
+                }),
+            });
+
+            const data = await res.json();
+            if (data.success) {
+                alert(data.message);
+                setSelectedIds(new Set());
+                fetchData();
+            } else {
+                alert('Error: ' + (data.error || 'Unknown error'));
+            }
+        } catch (error) {
+            console.error('Bulk action failed:', error);
+            alert('Bulk action failed');
+        } finally {
+            setBulkLoading(false);
+            setShowConfirmModal(false);
+            setBulkAction(null);
+        }
+    };
+
+    const toggleSelectAll = () => {
+        if (selectedIds.size === pages.length) {
+            setSelectedIds(new Set());
+        } else {
+            setSelectedIds(new Set(pages.map(p => p.id)));
+        }
+    };
+
+    const toggleSelect = (id: string) => {
+        const newSelection = new Set(selectedIds);
+        if (newSelection.has(id)) {
+            newSelection.delete(id);
+        } else {
+            newSelection.add(id);
+        }
+        setSelectedIds(newSelection);
+    };
+
+    const selectAllMatching = async () => {
+        setSelectingAll(true);
+        try {
+            const params = new URLSearchParams();
+            if (filters.insuranceTypeId) params.set('insuranceTypeId', filters.insuranceTypeId);
+            if (filters.geoLevel) params.set('geoLevel', filters.geoLevel);
+            if (filters.isPublished) params.set('isPublished', filters.isPublished);
+            params.set('idsOnly', 'true');
+
+            const res = await fetch(getApiUrl(`/api/pages?${params}`));
+            const data = await res.json();
+
+            if (data.ids && Array.isArray(data.ids)) {
+                setSelectedIds(new Set(data.ids));
+            }
+        } catch (error) {
+            console.error('Failed to select all:', error);
+        } finally {
+            setSelectingAll(false);
+        }
+    };
+
     const getPageUrl = (pageDef: Page) => {
         const parts = [pageDef.insuranceType.slug];
         if (pageDef.country) parts.push(pageDef.country.code);
@@ -98,6 +182,11 @@ export default function PagesAdminPage() {
     };
 
     const totalPages = Math.ceil(total / limit);
+
+    const openConfirmModal = (action: 'delete' | 'publish' | 'unpublish') => {
+        setBulkAction(action);
+        setShowConfirmModal(true);
+    };
 
     return (
         <AdminLayout>
@@ -158,7 +247,54 @@ export default function PagesAdminPage() {
                         <option value="true">Published</option>
                         <option value="false">Draft</option>
                     </select>
+
+                    {/* Select All Matching Button */}
+                    <button
+                        onClick={selectAllMatching}
+                        disabled={selectingAll || total === 0}
+                        className="px-4 py-2 border border-blue-600 text-blue-600 rounded-lg hover:bg-blue-50 transition disabled:opacity-50"
+                    >
+                        {selectingAll ? 'Selecting...' : `Select All ${total.toLocaleString()} Matching`}
+                    </button>
+
+                    {selectedIds.size > 0 && (
+                        <button
+                            onClick={() => setSelectedIds(new Set())}
+                            className="px-4 py-2 border border-gray-300 text-gray-600 rounded-lg hover:bg-gray-50 transition"
+                        >
+                            Clear Selection
+                        </button>
+                    )}
                 </div>
+
+                {/* Mass Actions Toolbar */}
+                {selectedIds.size > 0 && (
+                    <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg flex items-center justify-between">
+                        <span className="font-medium text-blue-800">
+                            {selectedIds.size} page{selectedIds.size > 1 ? 's' : ''} selected
+                        </span>
+                        <div className="flex gap-2">
+                            <button
+                                onClick={() => openConfirmModal('publish')}
+                                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition text-sm"
+                            >
+                                Publish Selected
+                            </button>
+                            <button
+                                onClick={() => openConfirmModal('unpublish')}
+                                className="px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition text-sm"
+                            >
+                                Unpublish Selected
+                            </button>
+                            <button
+                                onClick={() => openConfirmModal('delete')}
+                                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition text-sm"
+                            >
+                                Delete Selected
+                            </button>
+                        </div>
+                    </div>
+                )}
 
                 {/* Pages List */}
                 <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
@@ -176,6 +312,14 @@ export default function PagesAdminPage() {
                             <table className="w-full">
                                 <thead className="bg-gray-50 border-b">
                                     <tr>
+                                        <th className="px-4 py-3 text-left">
+                                            <input
+                                                type="checkbox"
+                                                checked={selectedIds.size === pages.length && pages.length > 0}
+                                                onChange={toggleSelectAll}
+                                                className="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
+                                            />
+                                        </th>
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Page</th>
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Insurance</th>
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Level</th>
@@ -186,7 +330,15 @@ export default function PagesAdminPage() {
                                 </thead>
                                 <tbody className="divide-y divide-gray-100">
                                     {pages.map((pageDef) => (
-                                        <tr key={pageDef.id} className="hover:bg-gray-50">
+                                        <tr key={pageDef.id} className={`hover:bg-gray-50 ${selectedIds.has(pageDef.id) ? 'bg-blue-50' : ''}`}>
+                                            <td className="px-4 py-4">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={selectedIds.has(pageDef.id)}
+                                                    onChange={() => toggleSelect(pageDef.id)}
+                                                    className="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
+                                                />
+                                            </td>
                                             <td className="px-6 py-4">
                                                 <p className="font-medium text-gray-900">{getPageTitle(pageDef)}</p>
                                             </td>
@@ -198,9 +350,9 @@ export default function PagesAdminPage() {
                                             </td>
                                             <td className="px-6 py-4">
                                                 <span className={`px-2 py-1 text-xs rounded-full ${pageDef.geoLevel === 'CITY' ? 'bg-purple-100 text-purple-700' :
-                                                        pageDef.geoLevel === 'STATE' ? 'bg-blue-100 text-blue-700' :
-                                                            pageDef.geoLevel === 'COUNTRY' ? 'bg-green-100 text-green-700' :
-                                                                'bg-gray-100 text-gray-700'
+                                                    pageDef.geoLevel === 'STATE' ? 'bg-blue-100 text-blue-700' :
+                                                        pageDef.geoLevel === 'COUNTRY' ? 'bg-green-100 text-green-700' :
+                                                            'bg-gray-100 text-gray-700'
                                                     }`}>
                                                     {pageDef.geoLevel}
                                                 </span>
@@ -212,8 +364,8 @@ export default function PagesAdminPage() {
                                             </td>
                                             <td className="px-6 py-4">
                                                 <span className={`px-2 py-1 text-xs rounded-full ${pageDef.isPublished
-                                                        ? 'bg-green-100 text-green-700'
-                                                        : 'bg-yellow-100 text-yellow-700'
+                                                    ? 'bg-green-100 text-green-700'
+                                                    : 'bg-yellow-100 text-yellow-700'
                                                     }`}>
                                                     {pageDef.isPublished ? 'Published' : 'Draft'}
                                                 </span>
@@ -265,6 +417,62 @@ export default function PagesAdminPage() {
                     )}
                 </div>
             </div>
+
+            {/* Confirmation Modal */}
+            {showConfirmModal && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                    <div className="bg-white rounded-xl shadow-xl max-w-md w-full mx-4 p-6">
+                        <h2 className="text-xl font-bold text-gray-900 mb-2">
+                            {bulkAction === 'delete' && '⚠️ Confirm Delete'}
+                            {bulkAction === 'publish' && '✅ Confirm Publish'}
+                            {bulkAction === 'unpublish' && '📝 Confirm Unpublish'}
+                        </h2>
+                        <p className="text-gray-600 mb-6">
+                            {bulkAction === 'delete' && (
+                                <>
+                                    Are you sure you want to <strong className="text-red-600">permanently delete</strong> {selectedIds.size} page{selectedIds.size > 1 ? 's' : ''}?
+                                    <br />
+                                    <span className="text-red-600 text-sm">This action cannot be undone.</span>
+                                </>
+                            )}
+                            {bulkAction === 'publish' && (
+                                <>You are about to publish {selectedIds.size} page{selectedIds.size > 1 ? 's' : ''}. They will be visible to the public.</>
+                            )}
+                            {bulkAction === 'unpublish' && (
+                                <>You are about to unpublish {selectedIds.size} page{selectedIds.size > 1 ? 's' : ''}. They will be set to Draft status.</>
+                            )}
+                        </p>
+                        <div className="flex gap-3 justify-end">
+                            <button
+                                onClick={() => {
+                                    setShowConfirmModal(false);
+                                    setBulkAction(null);
+                                }}
+                                className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition"
+                                disabled={bulkLoading}
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleBulkAction}
+                                disabled={bulkLoading}
+                                className={`px-4 py-2 text-white rounded-lg transition ${bulkAction === 'delete'
+                                    ? 'bg-red-600 hover:bg-red-700'
+                                    : bulkAction === 'publish'
+                                        ? 'bg-green-600 hover:bg-green-700'
+                                        : 'bg-yellow-600 hover:bg-yellow-700'
+                                    } disabled:opacity-50`}
+                            >
+                                {bulkLoading ? 'Processing...' : (
+                                    bulkAction === 'delete' ? 'Yes, Delete' :
+                                        bulkAction === 'publish' ? 'Yes, Publish' :
+                                            'Yes, Unpublish'
+                                )}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </AdminLayout>
     );
 }

@@ -1,22 +1,27 @@
-export function GET() {
-    const robotsTxt = `User-agent: *
+import { NextResponse } from 'next/server';
+
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://myinsurancebuddies.com';
+
+export async function GET() {
+    const robotsTxt = `# Robots.txt for ${SITE_URL}
+User-agent: *
 Allow: /
 
-Sitemap: https://myinsurancebuddies.com/sitemap-index.xml
+# Sitemaps
+Sitemap: ${SITE_URL}/sitemap.xml
 
-# Disallow admin areas
-Disallow: /admin/
+# Crawl-delay (optional, be nice to servers)
+Crawl-delay: 1
+
+# Disallow admin and API routes
 Disallow: /api/
-
-# Allow blog and insurance guides
-Allow: /blog/
-Allow: /state/
-Allow: /city/
+Disallow: /admin/
 `;
 
-    return new Response(robotsTxt, {
+    return new NextResponse(robotsTxt, {
         headers: {
-            "Content-Type": "text/plain",
+            'Content-Type': 'text/plain',
+            'Cache-Control': 'public, max-age=86400',
         },
     });
 }
