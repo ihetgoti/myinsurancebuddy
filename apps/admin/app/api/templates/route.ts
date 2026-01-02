@@ -53,17 +53,17 @@ export async function POST(request: NextRequest) {
             layout,
         } = body;
 
-        if (!name || !slug) {
-            return NextResponse.json({
-                error: `Name and slug are required. Received: name=${name ? 'yes' : 'missing'}, slug=${slug ? 'yes' : 'missing'}`
-            }, { status: 400 });
+        if (!name) {
+            return NextResponse.json({ error: 'Name is required' }, { status: 400 });
         }
 
+        // Auto-generate slug from name if not provided
+        const finalSlug = slug || name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
 
         const template = await prisma.template.create({
             data: {
                 name,
-                slug,
+                slug: finalSlug,
                 description,
                 thumbnail,
                 sections: sections || [],
