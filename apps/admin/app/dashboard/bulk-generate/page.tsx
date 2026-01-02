@@ -272,17 +272,29 @@ export default function BulkGeneratePage() {
     const getAvailableVariables = () => {
         const template = templates.find(t => t.id === selectedTemplate);
 
+        // Always include system variables
+        const variables = systemVariables.map(v => ({ name: v.name, label: v.label, type: 'system' }));
+
         if (template?.htmlContent) {
             const extracted = extractVariablesFromHtml(template.htmlContent);
-            return extracted.map(name => ({ name, label: name, type: 'custom' }));
+            // Add extracted vars if not already in system vars
+            extracted.forEach(name => {
+                if (!variables.find(v => v.name === name)) {
+                    variables.push({ name, label: name, type: 'custom' });
+                }
+            });
+            return variables;
         }
 
         const customVars = template?.customVariables || [];
 
-        return [
-            ...systemVariables.map(v => ({ name: v.name, label: v.label, type: 'system' })),
-            ...customVars.map((v: any) => ({ name: v.name, label: v.label, type: 'custom' })),
-        ];
+        customVars.forEach((v: any) => {
+            if (!variables.find(sys => sys.name === v.name)) {
+                variables.push({ name: v.name, label: v.label, type: 'custom' });
+            }
+        });
+
+        return variables;
     };
 
     const generatePreview = async () => {
