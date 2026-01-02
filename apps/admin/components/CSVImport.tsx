@@ -72,26 +72,60 @@ export default function CSVImport({
         setImporting(true);
         setResult(null);
 
+        const BATCH_SIZE = 100;
+        const totalBatches = Math.ceil(parsedData.length / BATCH_SIZE);
+
+        const aggregatedResult = {
+            success: true,
+            created: 0,
+            updated: 0,
+            skipped: 0,
+            errors: [] as string[],
+        };
+
         try {
-            const res = await fetch(importUrl, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ data: parsedData, mode }),
-            });
+            for (let i = 0; i < totalBatches; i++) {
+                const start = i * BATCH_SIZE;
+                const end = Math.min(start + BATCH_SIZE, parsedData.length);
+                const batch = parsedData.slice(start, end);
 
-            const data = await res.json();
-            setResult(data);
+                // Update progress
+                setResult({
+                    ...aggregatedResult,
+                    errors: [`Processing batch ${i + 1}/${totalBatches} (rows ${start + 1}-${end})...`],
+                });
 
-            if (data.created > 0 || data.updated > 0) {
+                const res = await fetch(importUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ data: batch, mode }),
+                });
+
+                const data = await res.json();
+
+                if (data.error) {
+                    aggregatedResult.errors.push(`Batch ${i + 1}: ${data.error}`);
+                } else {
+                    aggregatedResult.created += data.created || 0;
+                    aggregatedResult.updated += data.updated || 0;
+                    aggregatedResult.skipped += data.skipped || 0;
+                    if (data.errors && data.errors.length > 0) {
+                        aggregatedResult.errors.push(...data.errors.slice(0, 5)); // Limit errors per batch
+                    }
+                }
+            }
+
+            setResult(aggregatedResult);
+            if (aggregatedResult.created > 0 || aggregatedResult.updated > 0) {
                 onSuccess();
             }
         } catch (error) {
             setResult({
                 success: false,
-                created: 0,
-                updated: 0,
-                skipped: 0,
-                errors: ['Import failed. Please try again.'],
+                created: aggregatedResult.created,
+                updated: aggregatedResult.updated,
+                skipped: aggregatedResult.skipped,
+                errors: [...aggregatedResult.errors, 'Import failed. Please try again.'],
             });
         } finally {
             setImporting(false);
@@ -213,8 +247,8 @@ export default function CSVImport({
                             <label
                                 key={opt.value}
                                 className={`flex-1 p-4 border rounded-lg cursor-pointer transition ${mode === opt.value
-                                        ? 'border-blue-500 bg-blue-50'
-                                        : 'border-gray-200 hover:border-gray-300'
+                                    ? 'border-blue-500 bg-blue-50'
+                                    : 'border-gray-200 hover:border-gray-300'
                                     }`}
                             >
                                 <input
