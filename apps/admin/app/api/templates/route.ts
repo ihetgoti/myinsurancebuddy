@@ -36,12 +36,12 @@ export async function POST(request: NextRequest) {
         }
 
         const body = await request.json();
-        const { 
-            name, 
-            slug, 
-            description, 
-            thumbnail, 
-            sections, 
+        const {
+            name,
+            slug,
+            description,
+            thumbnail,
+            sections,
             variables,
             customVariables,
             type,
@@ -54,13 +54,17 @@ export async function POST(request: NextRequest) {
         } = body;
 
         if (!name || !slug) {
-            return NextResponse.json({ error: 'Name and slug are required' }, { status: 400 });
+            return NextResponse.json({
+                error: `Name and slug are required. Received: name=${name ? 'yes' : 'missing'}, slug=${slug ? 'yes' : 'missing'}`
+            }, { status: 400 });
         }
 
         // Check slug uniqueness
         const existing = await prisma.template.findUnique({ where: { slug } });
         if (existing) {
-            return NextResponse.json({ error: 'Template with this slug already exists' }, { status: 400 });
+            return NextResponse.json({
+                error: `Template with slug "${slug}" already exists. Please choose a different slug.`
+            }, { status: 400 });
         }
 
         const template = await prisma.template.create({
