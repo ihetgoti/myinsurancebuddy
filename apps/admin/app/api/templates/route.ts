@@ -51,6 +51,7 @@ export async function POST(request: NextRequest) {
             customCss,
             customJs,
             layout,
+            htmlContent,
         } = body;
 
         if (!name) {
@@ -60,16 +61,20 @@ export async function POST(request: NextRequest) {
         // Auto-generate slug from name if not provided
         const finalSlug = slug || name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
 
+        // Normalize type to match Enum (HTML, PAGE, etc)
+        const normalizedType = type ? type.toUpperCase() : 'PAGE';
+
         const template = await prisma.template.create({
             data: {
                 name,
                 slug: finalSlug,
                 description,
                 thumbnail,
+                htmlContent,
                 sections: sections || [],
                 variables: variables || {},
                 customVariables: customVariables || [],
-                type: type || 'PAGE',
+                type: normalizedType,
                 category,
                 seoTitleTemplate,
                 seoDescTemplate,

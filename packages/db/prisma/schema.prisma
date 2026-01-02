@@ -465,6 +465,7 @@ model Template {
   slug            String    // No longer unique - allows variations
   description     String?   @db.Text
   thumbnail       String?   // Preview image URL
+  htmlContent     String?   @db.Text
   
   // Template type
   type            TemplateType @default(PAGE)
@@ -533,6 +534,7 @@ enum TemplateType {
   COMPARISON    // Comparison page
   CALCULATOR    // Calculator tool
   GUIDE         // How-to guide
+  HTML          // Raw HTML template
   FAQ           // FAQ page
   GLOSSARY      // Glossary term
   CUSTOM        // Custom type
