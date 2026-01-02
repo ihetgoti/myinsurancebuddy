@@ -35,9 +35,18 @@ function StatesContent() {
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState('');
 
+    // Selection state
+    const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+    const [bulkLoading, setBulkLoading] = useState(false);
+
     useEffect(() => {
         fetchData();
     }, [countryIdFilter]);
+
+    // Clear selection when data changes
+    useEffect(() => {
+        setSelectedIds(new Set());
+    }, [states]);
 
     const fetchData = async () => {
         try {
@@ -115,6 +124,62 @@ function StatesContent() {
         return name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
     };
 
+    // Selection handlers
+    const toggleSelectAll = () => {
+        if (selectedIds.size === states.length) {
+            setSelectedIds(new Set());
+        } else {
+            setSelectedIds(new Set(states.map(s => s.id)));
+        }
+    };
+
+    const toggleSelect = (id: string) => {
+        const newSet = new Set(selectedIds);
+        if (newSet.has(id)) {
+            newSet.delete(id);
+        } else {
+            newSet.add(id);
+        }
+        setSelectedIds(newSet);
+    };
+
+    const handleBulkAction = async (action: string) => {
+        if (selectedIds.size === 0) return;
+
+        const actionLabel = action === 'delete' ? 'delete' : action;
+        const count = selectedIds.size;
+
+        if (action === 'delete') {
+            if (!confirm(`Are you sure you want to delete ${count} states? This will also delete all their cities and pages.`)) {
+                return;
+            }
+        }
+
+        setBulkLoading(true);
+        try {
+            const res = await fetch(getApiUrl('/api/states/bulk'), {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ids: Array.from(selectedIds), action }),
+            });
+
+            const data = await res.json();
+            if (data.error) {
+                alert(`Error: ${data.error}`);
+            } else {
+                alert(data.message || `${actionLabel} completed successfully`);
+                fetchData();
+            }
+        } catch (error) {
+            alert('Bulk action failed');
+        } finally {
+            setBulkLoading(false);
+        }
+    };
+
+    const isAllSelected = states.length > 0 && selectedIds.size === states.length;
+    const isSomeSelected = selectedIds.size > 0;
+
     return (
         <div>
             <div className="flex justify-between items-center mb-6">
@@ -166,6 +231,44 @@ function StatesContent() {
                             {country.name}
                         </Link>
                     ))}
+                </div>
+            )}
+
+            {/* Bulk Actions Bar */}
+            {isSomeSelected && (
+                <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-xl flex items-center justify-between">
+                    <span className="text-blue-800 font-medium">
+                        {selectedIds.size} {selectedIds.size === 1 ? 'state' : 'states'} selected
+                    </span>
+                    <div className="flex gap-2">
+                        <button
+                            onClick={() => handleBulkAction('activate')}
+                            disabled={bulkLoading}
+                            className="px-3 py-1 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 text-sm"
+                        >
+                            ✓ Activate
+                        </button>
+                        <button
+                            onClick={() => handleBulkAction('deactivate')}
+                            disabled={bulkLoading}
+                            className="px-3 py-1 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 disabled:opacity-50 text-sm"
+                        >
+                            ⏸ Deactivate
+                        </button>
+                        <button
+                            onClick={() => handleBulkAction('delete')}
+                            disabled={bulkLoading}
+                            className="px-3 py-1 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 text-sm"
+                        >
+                            🗑 Delete Selected
+                        </button>
+                        <button
+                            onClick={() => setSelectedIds(new Set())}
+                            className="px-3 py-1 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 text-sm"
+                        >
+                            Clear
+                        </button>
+                    </div>
                 </div>
             )}
 
@@ -287,6 +390,14 @@ function StatesContent() {
                     <table className="w-full">
                         <thead className="bg-gray-50 border-b">
                             <tr>
+                                <th className="px-4 py-3 text-left">
+                                    <input
+                                        type="checkbox"
+                                        checked={isAllSelected}
+                                        onChange={toggleSelectAll}
+                                        className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                                    />
+                                </th>
                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">State</th>
                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Slug</th>
                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Country</th>
@@ -297,7 +408,18 @@ function StatesContent() {
                         </thead>
                         <tbody className="divide-y divide-gray-100">
                             {states.map((state) => (
-                                <tr key={state.id} className="hover:bg-gray-50">
+                                <tr
+                                    key={state.id}
+                                    className={`hover:bg-gray-50 ${selectedIds.has(state.id) ? 'bg-blue-50' : ''}`}
+                                >
+                                    <td className="px-4 py-4">
+                                        <input
+                                            type="checkbox"
+                                            checked={selectedIds.has(state.id)}
+                                            onChange={() => toggleSelect(state.id)}
+                                            className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                                        />
+                                    </td>
                                     <td className="px-6 py-4">
                                         <div>
                                             <p className="font-medium text-gray-900">{state.name}</p>
@@ -346,6 +468,13 @@ function StatesContent() {
                     </table>
                 )}
             </div>
+
+            {/* Count footer */}
+            {states.length > 0 && (
+                <div className="mt-4 text-sm text-gray-500 text-center">
+                    Showing {states.length} states
+                </div>
+            )}
         </div>
     );
 }
