@@ -71,7 +71,13 @@ async function processJob(job: any) {
 
             try {
                 // Build variables from mapping
-                const variables: Record<string, string> = {};
+                const variables: Record<string, string> = {
+                    // Inject context variables
+                    'insurance_type_slug': job.insuranceType?.slug || '',
+                    'insurance_type_name': job.insuranceType?.name || '',
+                    'template_slug': job.template.slug,
+                };
+
                 Object.entries(variableMapping).forEach(([varName, csvColumn]) => {
                     variables[varName] = row[csvColumn] || '';
                 });
