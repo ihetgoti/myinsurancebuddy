@@ -81,8 +81,8 @@ export async function POST(request: NextRequest) {
         }
 
         return NextResponse.json(result);
-    } catch (error) {
+    } catch (error: any) {
         console.error('Import failed:', error);
-        return NextResponse.json({ error: 'Import failed' }, { status: 500 });
+        return NextResponse.json({ error: `Import failed: ${error.message || error}` }, { status: 500 });
     }
 }
