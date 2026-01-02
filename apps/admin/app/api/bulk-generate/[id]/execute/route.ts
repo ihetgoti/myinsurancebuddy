@@ -108,6 +108,17 @@ async function processJob(job: any) {
                     }
                 }
 
+                // FAILSAFE: Auto-detect state_slug/city_slug if not mapped (critical for URLs)
+                ['state_slug', 'city_slug'].forEach(key => {
+                    if (!variables[key]) {
+                        // Find header matching key (case-insensitive)
+                        const header = Object.keys(row).find(k => k.toLowerCase().replace(/[^a-z0-9]/g, '') === key.replace(/_/g, ''));
+                        if (header && row[header]) {
+                            variables[key] = row[header];
+                        }
+                    }
+                });
+
                 // Generate slug
                 let slug = slugPattern;
                 Object.entries(variables).forEach(([key, value]) => {
