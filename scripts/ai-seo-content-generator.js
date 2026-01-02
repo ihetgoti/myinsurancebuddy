@@ -48,9 +48,9 @@ const CONFIG = {
 
     // Output files
     outputDir: './output',
-    statesOutputFile: './output/states_content.csv',
-    citiesOutputFile: './output/cities_content.csv',
-    progressFile: './output/progress.json',
+    statesOutputFile: `./output/${(process.env.INSURANCE_TYPE || 'car insurance').replace(/ /g, '-')}/states_content.csv`,
+    citiesOutputFile: `./output/${(process.env.INSURANCE_TYPE || 'car insurance').replace(/ /g, '-')}/cities_content.csv`,
+    progressFile: `./output/${(process.env.INSURANCE_TYPE || 'car insurance').replace(/ /g, '-')}/progress.json`,
 
     // Rate limiting (increased for free tier)
     requestsPerMinute: 12, // Conservative for free tier
@@ -61,7 +61,7 @@ const CONFIG = {
     retryDelay: 5000,
 
     // Insurance type (customize for your niche)
-    insuranceType: 'car insurance',
+    insuranceType: process.env.INSURANCE_TYPE || 'car insurance',
     brandName: 'MyInsuranceBuddies',
 
     // Content settings
@@ -454,7 +454,7 @@ async function main() {
     console.log(`📌 Brand: ${CONFIG.brandName}\n`);
 
     // Ensure output directory exists
-    ensureDir(CONFIG.outputDir);
+    ensureDir(path.dirname(CONFIG.statesOutputFile));
     ensureDir('./data');
 
     // Load progress
