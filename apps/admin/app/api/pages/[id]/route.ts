@@ -67,9 +67,9 @@ export async function PATCH(
         const page = await prisma.page.update({
             where: { id: params.id },
             data: {
-                ...(heroTitle !== undefined && { heroTitle }),
-                ...(heroSubtitle !== undefined && { heroSubtitle }),
-                ...(sections !== undefined && { sections }),
+                ...(heroTitle !== undefined && { title: heroTitle }),
+                ...(heroSubtitle !== undefined && { subtitle: heroSubtitle }),
+                ...(sections !== undefined && { content: sections }), // Schema uses 'content' for sections JSON
                 ...(metaTitle !== undefined && { metaTitle }),
                 ...(metaDescription !== undefined && { metaDescription }),
                 ...(isPublished !== undefined && { isPublished, publishedAt }),
@@ -91,7 +91,7 @@ export async function PATCH(
                 entityId: params.id,
                 entityName: page.title || page.slug,
                 changes: {
-                    ...(heroTitle !== undefined && { heroTitle: { old: currentPage.title, new: heroTitle } }),
+                    ...(heroTitle !== undefined && { title: { old: currentPage.title, new: heroTitle } }),
                     ...(isPublished !== undefined && { isPublished: { old: currentPage.isPublished, new: isPublished } }),
                 },
             },
