@@ -303,7 +303,7 @@ export async function seedAdvancedTemplates(prisma: PrismaClient) {
     console.log('Seeding advanced templates...');
 
     for (const t of ADVANCED_TEMPLATES) {
-        const exists = await prisma.template.findUnique({ where: { slug: t.slug } });
+        const exists = await prisma.template.findFirst({ where: { slug: t.slug } });
         if (!exists) {
             await prisma.template.create({
                 data: {
