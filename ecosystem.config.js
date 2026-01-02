@@ -7,7 +7,10 @@ module.exports = {
             cwd: '/var/www/myinsurancebuddies.com/apps/web',
             env: {
                 NODE_ENV: 'production',
-                PORT: 3000
+                PORT: 3000,
+                DATABASE_URL: 'postgresql://myinsurance:MyInsurance2024@localhost:5432/myinsurance',
+                NEXTAUTH_SECRET: 'a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v2w3x4y5z6',
+                NEXTAUTH_URL: 'https://myinsurancebuddies.com'
             },
             instances: 1,
             autorestart: true,
@@ -21,7 +24,10 @@ module.exports = {
             cwd: '/var/www/myinsurancebuddies.com/apps/admin',
             env: {
                 NODE_ENV: 'production',
-                PORT: 3001
+                PORT: 3001,
+                DATABASE_URL: 'postgresql://myinsurance:MyInsurance2024@localhost:5432/myinsurance',
+                NEXTAUTH_SECRET: 'a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v2w3x4y5z6',
+                NEXTAUTH_URL: 'https://admin.myinsurancebuddies.com'
             },
             instances: 1,
             autorestart: true,
@@ -30,3 +36,4 @@ module.exports = {
         }
     ]
 };
+
