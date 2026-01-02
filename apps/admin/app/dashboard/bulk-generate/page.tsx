@@ -56,6 +56,16 @@ export default function BulkGeneratePage() {
     const [selectedState, setSelectedState] = useState<string>('');
     const [variableMapping, setVariableMapping] = useState<Record<string, string>>({});
     const [slugPattern, setSlugPattern] = useState('{{insurance_type_slug}}/{{state_slug}}/{{city_slug}}');
+    useEffect(() => {
+        if (geoLevel === 'STATE') {
+            setSlugPattern('{{insurance_type_slug}}/{{state_slug}}');
+        } else if (geoLevel === 'CITY') {
+            setSlugPattern('{{insurance_type_slug}}/{{state_slug}}/{{city_slug}}');
+        } else if (geoLevel === 'COUNTRY') {
+            setSlugPattern('{{insurance_type_slug}}/{{country_code}}');
+        }
+    }, [geoLevel]);
+
     const [options, setOptions] = useState({
         publishOnCreate: false,
         updateExisting: false,
