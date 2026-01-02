@@ -59,13 +59,6 @@ export async function POST(request: NextRequest) {
             }, { status: 400 });
         }
 
-        // Check slug uniqueness
-        const existing = await prisma.template.findUnique({ where: { slug } });
-        if (existing) {
-            return NextResponse.json({
-                error: `Template with slug "${slug}" already exists. Please choose a different slug.`
-            }, { status: 400 });
-        }
 
         const template = await prisma.template.create({
             data: {

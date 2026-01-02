@@ -462,7 +462,7 @@ model ComponentDefinition {
 model Template {
   id              String    @id @default(uuid())
   name            String    // "City Page Template"
-  slug            String    @unique
+  slug            String    // No longer unique - allows variations
   description     String?   @db.Text
   thumbnail       String?   // Preview image URL
   
