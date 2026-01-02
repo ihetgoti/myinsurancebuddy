@@ -1,0 +1,19 @@
+{
+    "name": "insurance-seo-tools",
+    "version": "1.0.0",
+    "description": "AI-powered SEO content generation tools for insurance pages",
+    "main": "ai-seo-content-generator.js",
+    "scripts": {
+        "generate": "node ai-seo-content-generator.js",
+        "generate:openai": "AI_PROVIDER=openai node ai-seo-content-generator.js",
+        "generate:gemini": "AI_PROVIDER=gemini node ai-seo-content-generator.js",
+        "scrape": "node nenotechnology-chatbot-scraper.js"
+    },
+    "dependencies": {
+        "playwright": "^1.40.0",
+        "csv-writer": "^1.6.0",
+        "csv-parse": "^5.5.0",
+        "csv-stringify": "^6.4.0",
+        "dotenv": "^16.3.1"
+    }
+}
