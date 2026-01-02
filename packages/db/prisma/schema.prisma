@@ -367,6 +367,7 @@ model State {
   @@unique([countryId, code])
   @@index([countryId])
   @@index([isActive])
+  @@index([name])
 }
 
 model City {
@@ -407,6 +408,7 @@ model City {
   @@index([stateId])
   @@index([isActive])
   @@index([isMajorCity])
+  @@index([name])
 }
 
 // ============================================

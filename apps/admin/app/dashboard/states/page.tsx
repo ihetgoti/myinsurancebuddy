@@ -28,12 +28,16 @@ function StatesContent() {
 
     const [states, setStates] = useState<State[]>([]);
     const [countries, setCountries] = useState<Country[]>([]);
+    const [total, setTotal] = useState(0);
     const [loading, setLoading] = useState(true);
     const [showForm, setShowForm] = useState(false);
     const [editingState, setEditingState] = useState<State | null>(null);
     const [formData, setFormData] = useState({ countryId: '', name: '', slug: '', code: '' });
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState('');
+    const [search, setSearch] = useState('');
+    const [page, setPage] = useState(0);
+    const limit = 50;
 
     // Selection state
     const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -41,7 +45,7 @@ function StatesContent() {
 
     useEffect(() => {
         fetchData();
-    }, [countryIdFilter]);
+    }, [countryIdFilter, page, search]);
 
     // Clear selection when data changes
     useEffect(() => {
@@ -49,15 +53,23 @@ function StatesContent() {
     }, [states]);
 
     const fetchData = async () => {
+        setLoading(true);
         try {
+            const params = new URLSearchParams();
+            if (countryIdFilter) params.set('countryId', countryIdFilter);
+            if (search) params.set('search', search);
+            params.set('limit', limit.toString());
+            params.set('offset', (page * limit).toString());
+
             const [statesRes, countriesRes] = await Promise.all([
-                fetch(getApiUrl(`/api/states${countryIdFilter ? `?countryId=${countryIdFilter}` : ''}`)),
+                fetch(getApiUrl(`/api/states?${params}`)),
                 fetch(getApiUrl('/api/countries')),
             ]);
             const statesData = await statesRes.json();
             const countriesData = await countriesRes.json();
 
-            setStates(Array.isArray(statesData) ? statesData : []);
+            setStates(statesData.states || []);
+            setTotal(statesData.total || 0);
             setCountries(Array.isArray(countriesData) ? countriesData : []);
         } catch (error) {
             console.error('Failed to fetch:', error);
@@ -146,7 +158,6 @@ function StatesContent() {
     const handleBulkAction = async (action: string) => {
         if (selectedIds.size === 0) return;
 
-        const actionLabel = action === 'delete' ? 'delete' : action;
         const count = selectedIds.size;
 
         if (action === 'delete') {
@@ -167,7 +178,7 @@ function StatesContent() {
             if (data.error) {
                 alert(`Error: ${data.error}`);
             } else {
-                alert(data.message || `${actionLabel} completed successfully`);
+                alert(data.message || `${action} completed successfully`);
                 fetchData();
             }
         } catch (error) {
@@ -179,6 +190,7 @@ function StatesContent() {
 
     const isAllSelected = states.length > 0 && selectedIds.size === states.length;
     const isSomeSelected = selectedIds.size > 0;
+    const totalPages = Math.ceil(total / limit);
 
     return (
         <div>
@@ -186,9 +198,9 @@ function StatesContent() {
                 <div>
                     <h1 className="text-3xl font-bold text-gray-900">States</h1>
                     <p className="text-gray-600 mt-1">
-                        {countryIdFilter
-                            ? `States in ${countries.find(c => c.id === countryIdFilter)?.name || 'selected country'}`
-                            : 'Manage states across all countries'
+                        {total.toLocaleString()} states
+                        {countryIdFilter && countries.find(c => c.id === countryIdFilter) &&
+                            ` in ${countries.find(c => c.id === countryIdFilter)?.name}`
                         }
                     </p>
                 </div>
@@ -212,27 +224,38 @@ function StatesContent() {
                 </div>
             </div>
 
-            {/* Filter */}
-            {!countryIdFilter && countries.length > 0 && (
-                <div className="mb-6 flex gap-2 flex-wrap">
-                    <Link
-                        href="/dashboard/states"
-                        className={`px-3 py-1 rounded-full text-sm ${!countryIdFilter ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                            }`}
-                    >
-                        All Countries
-                    </Link>
-                    {countries.map((country) => (
-                        <Link
-                            key={country.id}
-                            href={`/dashboard/states?countryId=${country.id}`}
-                            className="px-3 py-1 rounded-full text-sm bg-gray-100 text-gray-700 hover:bg-gray-200"
-                        >
-                            {country.name}
-                        </Link>
-                    ))}
+            {/* Search & Filter */}
+            <div className="mb-6 flex gap-4">
+                <div className="flex-1">
+                    <input
+                        type="text"
+                        placeholder="Search states..."
+                        value={search}
+                        onChange={(e) => {
+                            setSearch(e.target.value);
+                            setPage(0);
+                        }}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    />
                 </div>
-            )}
+                <select
+                    value={countryIdFilter || ''}
+                    onChange={(e) => {
+                        const url = e.target.value
+                            ? `/dashboard/states?countryId=${e.target.value}`
+                            : '/dashboard/states';
+                        window.location.href = url;
+                    }}
+                    className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                >
+                    <option value="">All Countries</option>
+                    {countries.map((country) => (
+                        <option key={country.id} value={country.id}>
+                            {country.name}
+                        </option>
+                    ))}
+                </select>
+            </div>
 
             {/* Bulk Actions Bar */}
             {isSomeSelected && (
@@ -381,100 +404,127 @@ function StatesContent() {
                     <div className="p-8 text-center text-gray-500">Loading...</div>
                 ) : states.length === 0 ? (
                     <div className="p-8 text-center">
-                        <p className="text-gray-500 mb-4">No states yet</p>
-                        <Link href="/dashboard/states/import" className="text-blue-600 hover:text-blue-700">
-                            Import from CSV →
-                        </Link>
+                        <p className="text-gray-500 mb-4">
+                            {search ? 'No states found' : 'No states yet'}
+                        </p>
+                        {!search && (
+                            <Link href="/dashboard/states/import" className="text-blue-600 hover:text-blue-700">
+                                Import from CSV →
+                            </Link>
+                        )}
                     </div>
                 ) : (
-                    <table className="w-full">
-                        <thead className="bg-gray-50 border-b">
-                            <tr>
-                                <th className="px-4 py-3 text-left">
-                                    <input
-                                        type="checkbox"
-                                        checked={isAllSelected}
-                                        onChange={toggleSelectAll}
-                                        className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                                    />
-                                </th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">State</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Slug</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Country</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Cities</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Pages</th>
-                                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-100">
-                            {states.map((state) => (
-                                <tr
-                                    key={state.id}
-                                    className={`hover:bg-gray-50 ${selectedIds.has(state.id) ? 'bg-blue-50' : ''}`}
-                                >
-                                    <td className="px-4 py-4">
+                    <>
+                        <table className="w-full">
+                            <thead className="bg-gray-50 border-b">
+                                <tr>
+                                    <th className="px-4 py-3 text-left">
                                         <input
                                             type="checkbox"
-                                            checked={selectedIds.has(state.id)}
-                                            onChange={() => toggleSelect(state.id)}
+                                            checked={isAllSelected}
+                                            onChange={toggleSelectAll}
                                             className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                                         />
-                                    </td>
-                                    <td className="px-6 py-4">
-                                        <div>
-                                            <p className="font-medium text-gray-900">{state.name}</p>
-                                            {state.code && (
-                                                <p className="text-sm text-gray-500">{state.code}</p>
-                                            )}
-                                        </div>
-                                    </td>
-                                    <td className="px-6 py-4">
-                                        <code className="text-sm bg-gray-100 px-2 py-1 rounded">
-                                            {state.slug}
-                                        </code>
-                                    </td>
-                                    <td className="px-6 py-4 text-gray-600">
-                                        {state.country.name}
-                                    </td>
-                                    <td className="px-6 py-4 text-gray-600">
-                                        {state._count.cities}
-                                    </td>
-                                    <td className="px-6 py-4 text-gray-600">
-                                        {state._count.pages}
-                                    </td>
-                                    <td className="px-6 py-4 text-right">
-                                        <Link
-                                            href={`/dashboard/cities?stateId=${state.id}`}
-                                            className="text-gray-600 hover:text-gray-800 mr-3"
-                                        >
-                                            Cities
-                                        </Link>
-                                        <button
-                                            onClick={() => handleEdit(state)}
-                                            className="text-blue-600 hover:text-blue-800 mr-3"
-                                        >
-                                            Edit
-                                        </button>
-                                        <button
-                                            onClick={() => handleDelete(state.id)}
-                                            className="text-red-600 hover:text-red-800"
-                                        >
-                                            Delete
-                                        </button>
-                                    </td>
+                                    </th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">State</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Slug</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Country</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Cities</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Pages</th>
+                                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
                                 </tr>
-                            ))}
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody className="divide-y divide-gray-100">
+                                {states.map((state) => (
+                                    <tr
+                                        key={state.id}
+                                        className={`hover:bg-gray-50 ${selectedIds.has(state.id) ? 'bg-blue-50' : ''}`}
+                                    >
+                                        <td className="px-4 py-4">
+                                            <input
+                                                type="checkbox"
+                                                checked={selectedIds.has(state.id)}
+                                                onChange={() => toggleSelect(state.id)}
+                                                className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                                            />
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            <div>
+                                                <p className="font-medium text-gray-900">{state.name}</p>
+                                                {state.code && (
+                                                    <p className="text-sm text-gray-500">{state.code}</p>
+                                                )}
+                                            </div>
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            <code className="text-sm bg-gray-100 px-2 py-1 rounded">
+                                                {state.slug}
+                                            </code>
+                                        </td>
+                                        <td className="px-6 py-4 text-gray-600">
+                                            {state.country.name}
+                                        </td>
+                                        <td className="px-6 py-4 text-gray-600">
+                                            {state._count.cities}
+                                        </td>
+                                        <td className="px-6 py-4 text-gray-600">
+                                            {state._count.pages}
+                                        </td>
+                                        <td className="px-6 py-4 text-right">
+                                            <Link
+                                                href={`/dashboard/cities?stateId=${state.id}`}
+                                                className="text-gray-600 hover:text-gray-800 mr-3"
+                                            >
+                                                Cities
+                                            </Link>
+                                            <button
+                                                onClick={() => handleEdit(state)}
+                                                className="text-blue-600 hover:text-blue-800 mr-3"
+                                            >
+                                                Edit
+                                            </button>
+                                            <button
+                                                onClick={() => handleDelete(state.id)}
+                                                className="text-red-600 hover:text-red-800"
+                                            >
+                                                Delete
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+
+                        {/* Pagination */}
+                        {totalPages > 1 && (
+                            <div className="px-6 py-4 border-t flex items-center justify-between">
+                                <p className="text-sm text-gray-500">
+                                    Showing {page * limit + 1} - {Math.min((page + 1) * limit, total)} of {total.toLocaleString()}
+                                </p>
+                                <div className="flex gap-2">
+                                    <button
+                                        onClick={() => setPage(p => Math.max(0, p - 1))}
+                                        disabled={page === 0}
+                                        className="px-3 py-1 border rounded hover:bg-gray-50 disabled:opacity-50"
+                                    >
+                                        Previous
+                                    </button>
+                                    <span className="px-3 py-1 text-gray-600">
+                                        Page {page + 1} of {totalPages}
+                                    </span>
+                                    <button
+                                        onClick={() => setPage(p => Math.min(totalPages - 1, p + 1))}
+                                        disabled={page >= totalPages - 1}
+                                        className="px-3 py-1 border rounded hover:bg-gray-50 disabled:opacity-50"
+                                    >
+                                        Next
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+                    </>
                 )}
             </div>
-
-            {/* Count footer */}
-            {states.length > 0 && (
-                <div className="mt-4 text-sm text-gray-500 text-center">
-                    Showing {states.length} states
-                </div>
-            )}
         </div>
     );
 }
