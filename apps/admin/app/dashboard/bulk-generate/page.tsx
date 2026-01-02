@@ -1045,6 +1045,11 @@ export default function BulkGeneratePage() {
                                             </td>
                                             <td className="px-4 py-3 text-sm text-gray-500">
                                                 {job.createdPages} created, {job.skippedPages} skipped
+                                                {job.failedPages > 0 && (
+                                                    <span className="text-red-600 block">
+                                                        {job.failedPages} failed
+                                                    </span>
+                                                )}
                                             </td>
                                             <td className="px-4 py-3 text-sm text-gray-500">
                                                 {new Date(job.createdAt).toLocaleDateString()}
