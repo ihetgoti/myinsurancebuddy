@@ -7,6 +7,7 @@ import Link from 'next/link';
 
 interface Page {
     id: string;
+    slug: string;
     geoLevel: string;
     heroTitle: string | null;
     isPublished: boolean;
@@ -16,6 +17,8 @@ interface Page {
     state: { id: string; slug: string; name: string } | null;
     city: { id: string; slug: string; name: string } | null;
 }
+
+
 
 interface InsuranceType {
     id: string;
@@ -359,7 +362,7 @@ export default function PagesAdminPage() {
                                             </td>
                                             <td className="px-6 py-4">
                                                 <code className="text-xs bg-gray-100 px-2 py-1 rounded">
-                                                    {getPageUrl(pageDef)}
+                                                    /{pageDef.slug.replace(/^\//, '')}
                                                 </code>
                                             </td>
                                             <td className="px-6 py-4">
