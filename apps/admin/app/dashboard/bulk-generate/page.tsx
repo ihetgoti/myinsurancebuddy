@@ -11,6 +11,7 @@ interface Template {
     name: string;
     slug: string;
     customVariables: any[];
+    htmlContent?: string;
 }
 
 interface InsuranceType {
@@ -72,6 +73,15 @@ export default function BulkGeneratePage() {
         fetchData();
     }, []);
 
+    // Re-run auto-mapping when template or CSV headers change
+    useEffect(() => {
+        if (selectedTemplate && csvHeaders.length > 0) {
+            const availableVars = getAvailableVariables().map(v => v.name);
+            const mapping = generateAutoMapping(availableVars, csvHeaders);
+            setVariableMapping(prev => ({ ...prev, ...mapping }));
+        }
+    }, [selectedTemplate, csvHeaders]);
+
     const fetchData = async () => {
         try {
             const [templatesRes, typesRes, jobsRes] = await Promise.all([
@@ -129,24 +139,54 @@ export default function BulkGeneratePage() {
         });
 
         setCsvData(data);
+    };
 
-        // Auto-map common columns
-        const autoMapping: Record<string, string> = {};
-        headers.forEach(header => {
-            const normalized = header.toLowerCase().replace(/[^a-z0-9]/g, '_');
-            if (normalized.includes('title') || normalized === 'name') {
-                autoMapping.page_title = header;
-            } else if (normalized.includes('description') || normalized.includes('desc')) {
-                autoMapping.page_subtitle = header;
-            } else if (normalized.includes('state') && !normalized.includes('code')) {
-                autoMapping.state = header;
-            } else if (normalized.includes('city')) {
-                autoMapping.city = header;
-            } else if (normalized.includes('slug') || normalized.includes('url')) {
-                autoMapping.slug = header;
+    // Helper to extract variables from HTML content
+    const extractVariablesFromHtml = (html: string): string[] => {
+        const regex = /{{([^}]+)}}/g;
+        const matches = new Set<string>();
+        let match;
+        while ((match = regex.exec(html)) !== null) {
+            matches.add(match[1].trim());
+        }
+        return Array.from(matches);
+    };
+
+    const generateAutoMapping = (variables: string[], headers: string[]): Record<string, string> => {
+        const mapping: Record<string, string> = {};
+
+        variables.forEach(variable => {
+            const varClean = variable.toLowerCase().replace(/[^a-z0-9]/g, '');
+
+            // 1. Exact match (case insensitive)
+            let match = headers.find(h => h.toLowerCase() === variable.toLowerCase());
+
+            // 2. Cleaned match
+            if (!match) {
+                match = headers.find(h => h.toLowerCase().replace(/[^a-z0-9]/g, '') === varClean);
+            }
+
+            // 3. Common patterns
+            if (!match) {
+                if (varClean === 'pagetitle') match = headers.find(h => h.toLowerCase().includes('title') || h.toLowerCase() === 'name');
+                else if (varClean === 'pagesubtitle') match = headers.find(h => h.toLowerCase().includes('description') || h.toLowerCase().includes('desc'));
+                else if (varClean === 'slug') match = headers.find(h => h.toLowerCase().includes('slug') || h.toLowerCase().includes('url'));
+            }
+
+            // 4. Fuzzy / Partial match (variable checks if header contains it or vice versa)
+            if (!match) {
+                match = headers.find(h => {
+                    const hClean = h.toLowerCase().replace(/[^a-z0-9]/g, '');
+                    return hClean.includes(varClean) || varClean.includes(hClean);
+                });
+            }
+
+            if (match) {
+                mapping[variable] = match;
             }
         });
-        setVariableMapping(autoMapping);
+
+        return mapping;
     };
 
     const parseCSVLine = (line: string): string[] => {
@@ -171,6 +211,12 @@ export default function BulkGeneratePage() {
 
     const getAvailableVariables = () => {
         const template = templates.find(t => t.id === selectedTemplate);
+
+        if (template?.htmlContent) {
+            const extracted = extractVariablesFromHtml(template.htmlContent);
+            return extracted.map(name => ({ name, label: name, type: 'custom' }));
+        }
+
         const customVars = template?.customVariables || [];
 
         return [
