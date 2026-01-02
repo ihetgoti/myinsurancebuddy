@@ -71,7 +71,8 @@ async function processJob(job: any) {
 
             try {
                 // Build variables from mapping
-                const variables: Record<string, string> = {
+                // Build variables from mapping
+                const variables: Record<string, any> = {
                     // Inject context variables
                     'insurance_type_slug': job.insuranceType?.slug || '',
                     'insurance_type_name': job.insuranceType?.name || '',
@@ -79,12 +80,39 @@ async function processJob(job: any) {
                 };
 
                 Object.entries(variableMapping).forEach(([varName, csvColumn]) => {
-                    variables[varName] = row[csvColumn] || '';
+                    let value = row[csvColumn] || '';
+
+                    // Auto-parse JSON strings (arrays/objects) for Loop compatibility
+                    if (typeof value === 'string' && (value.startsWith('[') || value.startsWith('{'))) {
+                        try {
+                            value = JSON.parse(value);
+                        } catch (e) {
+                            // Keep as string if parse fails
+                        }
+                    }
+
+                    variables[varName] = value;
                 });
+
+                // Helper: derived variables
+                if (variables['state_code'] && typeof variables['state_code'] === 'string') {
+                    variables['state_code_lower'] = variables['state_code'].toLowerCase();
+                }
+
+                // Helper: Split 25/50 liability if needed
+                if (variables['min_liability_bodily'] && typeof variables['min_liability_bodily'] === 'string') {
+                    const parts = variables['min_liability_bodily'].split('/');
+                    if (parts.length === 2) {
+                        variables['bodily_injury_per_person'] = parts[0];
+                        variables['bodily_injury_per_accident'] = parts[1];
+                    }
+                }
 
                 // Generate slug
                 let slug = slugPattern;
                 Object.entries(variables).forEach(([key, value]) => {
+                    if (typeof value !== 'string') return;
+
                     const slugValue = value.toLowerCase()
                         .replace(/[^a-z0-9]+/g, '-')
                         .replace(/(^-|-$)/g, '');
