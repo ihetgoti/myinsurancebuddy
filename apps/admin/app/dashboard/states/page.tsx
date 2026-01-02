@@ -1,10 +1,12 @@
 'use client';
 
 import AdminLayout from '@/components/AdminLayout';
-import { useEffect, useState, Suspense } from 'react';
+import { useState, Suspense } from 'react';
 import { getApiUrl } from '@/lib/api';
+import { fetcher, swrConfig } from '@/lib/fetcher';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
+import useSWR from 'swr';
 
 interface State {
     id: string;
@@ -26,10 +28,6 @@ function StatesContent() {
     const searchParams = useSearchParams();
     const countryIdFilter = searchParams.get('countryId');
 
-    const [states, setStates] = useState<State[]>([]);
-    const [countries, setCountries] = useState<Country[]>([]);
-    const [total, setTotal] = useState(0);
-    const [loading, setLoading] = useState(true);
     const [showForm, setShowForm] = useState(false);
     const [editingState, setEditingState] = useState<State | null>(null);
     const [formData, setFormData] = useState({ countryId: '', name: '', slug: '', code: '' });
@@ -43,40 +41,30 @@ function StatesContent() {
     const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
     const [bulkLoading, setBulkLoading] = useState(false);
 
-    useEffect(() => {
-        fetchData();
-    }, [countryIdFilter, page, search]);
+    // Build query params for states
+    const statesParams = new URLSearchParams();
+    if (countryIdFilter) statesParams.set('countryId', countryIdFilter);
+    if (search) statesParams.set('search', search);
+    statesParams.set('limit', limit.toString());
+    statesParams.set('offset', (page * limit).toString());
 
-    // Clear selection when data changes
-    useEffect(() => {
-        setSelectedIds(new Set());
-    }, [states]);
+    // SWR for caching - data persists when switching routes
+    const { data: statesData, mutate: mutateStates, isLoading: loadingStates } = useSWR(
+        getApiUrl(`/api/states?${statesParams}`),
+        fetcher,
+        swrConfig
+    );
 
-    const fetchData = async () => {
-        setLoading(true);
-        try {
-            const params = new URLSearchParams();
-            if (countryIdFilter) params.set('countryId', countryIdFilter);
-            if (search) params.set('search', search);
-            params.set('limit', limit.toString());
-            params.set('offset', (page * limit).toString());
+    const { data: countriesData } = useSWR(
+        getApiUrl('/api/countries'),
+        fetcher,
+        swrConfig
+    );
 
-            const [statesRes, countriesRes] = await Promise.all([
-                fetch(getApiUrl(`/api/states?${params}`)),
-                fetch(getApiUrl('/api/countries')),
-            ]);
-            const statesData = await statesRes.json();
-            const countriesData = await countriesRes.json();
-
-            setStates(statesData.states || []);
-            setTotal(statesData.total || 0);
-            setCountries(Array.isArray(countriesData) ? countriesData : []);
-        } catch (error) {
-            console.error('Failed to fetch:', error);
-        } finally {
-            setLoading(false);
-        }
-    };
+    const states: State[] = statesData?.states || [];
+    const total = statesData?.total || 0;
+    const countries: Country[] = Array.isArray(countriesData) ? countriesData : [];
+    const totalPages = Math.ceil(total / limit);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -102,7 +90,7 @@ function StatesContent() {
             setShowForm(false);
             setEditingState(null);
             setFormData({ countryId: '', name: '', slug: '', code: '' });
-            fetchData();
+            mutateStates(); // Refresh the cache
         } catch (err: any) {
             setError(err.message);
         } finally {
@@ -126,7 +114,7 @@ function StatesContent() {
 
         try {
             await fetch(getApiUrl(`/api/states/${id}`), { method: 'DELETE' });
-            fetchData();
+            mutateStates(); // Refresh the cache
         } catch (error) {
             console.error('Failed to delete:', error);
         }
@@ -179,7 +167,8 @@ function StatesContent() {
                 alert(`Error: ${data.error}`);
             } else {
                 alert(data.message || `${action} completed successfully`);
-                fetchData();
+                setSelectedIds(new Set());
+                mutateStates(); // Refresh the cache
             }
         } catch (error) {
             alert('Bulk action failed');
@@ -190,7 +179,6 @@ function StatesContent() {
 
     const isAllSelected = states.length > 0 && selectedIds.size === states.length;
     const isSomeSelected = selectedIds.size > 0;
-    const totalPages = Math.ceil(total / limit);
 
     return (
         <div>
@@ -400,7 +388,7 @@ function StatesContent() {
 
             {/* States List */}
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                {loading ? (
+                {loadingStates && !states.length ? (
                     <div className="p-8 text-center text-gray-500">Loading...</div>
                 ) : states.length === 0 ? (
                     <div className="p-8 text-center">

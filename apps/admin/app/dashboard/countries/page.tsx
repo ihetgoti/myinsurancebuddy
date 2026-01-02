@@ -1,9 +1,11 @@
 'use client';
 
 import AdminLayout from '@/components/AdminLayout';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { getApiUrl } from '@/lib/api';
+import { fetcher, swrConfig } from '@/lib/fetcher';
 import Link from 'next/link';
+import useSWR from 'swr';
 
 interface Country {
     id: string;
@@ -14,8 +16,6 @@ interface Country {
 }
 
 export default function CountriesPage() {
-    const [countries, setCountries] = useState<Country[]>([]);
-    const [loading, setLoading] = useState(true);
     const [showForm, setShowForm] = useState(false);
     const [editingCountry, setEditingCountry] = useState<Country | null>(null);
     const [formData, setFormData] = useState({ code: '', name: '' });
@@ -27,26 +27,14 @@ export default function CountriesPage() {
     const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
     const [bulkLoading, setBulkLoading] = useState(false);
 
-    useEffect(() => {
-        fetchCountries();
-    }, []);
+    // SWR for caching
+    const { data: countriesData, mutate: mutateCountries, isLoading } = useSWR(
+        getApiUrl('/api/countries'),
+        fetcher,
+        swrConfig
+    );
 
-    // Clear selection when data changes
-    useEffect(() => {
-        setSelectedIds(new Set());
-    }, [countries]);
-
-    const fetchCountries = async () => {
-        try {
-            const res = await fetch(getApiUrl('/api/countries'));
-            const data = await res.json();
-            setCountries(Array.isArray(data) ? data : []);
-        } catch (error) {
-            console.error('Failed to fetch countries:', error);
-        } finally {
-            setLoading(false);
-        }
-    };
+    const countries: Country[] = Array.isArray(countriesData) ? countriesData : [];
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -72,7 +60,7 @@ export default function CountriesPage() {
             setShowForm(false);
             setEditingCountry(null);
             setFormData({ code: '', name: '' });
-            fetchCountries();
+            mutateCountries();
         } catch (err: any) {
             setError(err.message);
         } finally {
@@ -91,7 +79,7 @@ export default function CountriesPage() {
 
         try {
             await fetch(getApiUrl(`/api/countries/${id}`), { method: 'DELETE' });
-            fetchCountries();
+            mutateCountries();
         } catch (error) {
             console.error('Failed to delete:', error);
         }
@@ -140,7 +128,8 @@ export default function CountriesPage() {
                 alert(`Error: ${data.error}`);
             } else {
                 alert(data.message || `${action} completed successfully`);
-                fetchCountries();
+                setSelectedIds(new Set());
+                mutateCountries();
             }
         } catch (error) {
             alert('Bulk action failed');
@@ -305,7 +294,7 @@ export default function CountriesPage() {
 
                 {/* Countries List */}
                 <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                    {loading ? (
+                    {isLoading && !countries.length ? (
                         <div className="p-8 text-center text-gray-500">Loading...</div>
                     ) : filteredCountries.length === 0 ? (
                         <div className="p-8 text-center">

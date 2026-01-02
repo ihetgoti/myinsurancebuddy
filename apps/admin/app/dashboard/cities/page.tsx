@@ -1,10 +1,12 @@
 'use client';
 
 import AdminLayout from '@/components/AdminLayout';
-import { useEffect, useState, Suspense } from 'react';
+import { useState, Suspense } from 'react';
 import { getApiUrl } from '@/lib/api';
+import { fetcher, swrConfig } from '@/lib/fetcher';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
+import useSWR from 'swr';
 
 interface City {
     id: string;
@@ -32,10 +34,6 @@ function CitiesContent() {
     const searchParams = useSearchParams();
     const stateIdFilter = searchParams.get('stateId');
 
-    const [cities, setCities] = useState<City[]>([]);
-    const [states, setStates] = useState<State[]>([]);
-    const [total, setTotal] = useState(0);
-    const [loading, setLoading] = useState(true);
     const [showForm, setShowForm] = useState(false);
     const [editingCity, setEditingCity] = useState<City | null>(null);
     const [formData, setFormData] = useState({ stateId: '', name: '', slug: '', population: '' });
@@ -49,39 +47,30 @@ function CitiesContent() {
     const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
     const [bulkLoading, setBulkLoading] = useState(false);
 
-    useEffect(() => {
-        fetchData();
-    }, [stateIdFilter, page, search]);
+    // Build query params for cities
+    const citiesParams = new URLSearchParams();
+    if (stateIdFilter) citiesParams.set('stateId', stateIdFilter);
+    if (search) citiesParams.set('search', search);
+    citiesParams.set('limit', limit.toString());
+    citiesParams.set('offset', (page * limit).toString());
 
-    // Clear selection when data changes
-    useEffect(() => {
-        setSelectedIds(new Set());
-    }, [cities]);
+    // SWR for caching - data persists when switching routes
+    const { data: citiesData, mutate: mutateCities, isLoading: loadingCities } = useSWR(
+        getApiUrl(`/api/cities?${citiesParams}`),
+        fetcher,
+        swrConfig
+    );
 
-    const fetchData = async () => {
-        try {
-            const params = new URLSearchParams();
-            if (stateIdFilter) params.set('stateId', stateIdFilter);
-            if (search) params.set('search', search);
-            params.set('limit', limit.toString());
-            params.set('offset', (page * limit).toString());
+    const { data: statesData } = useSWR(
+        getApiUrl('/api/states?all=true'),
+        fetcher,
+        swrConfig
+    );
 
-            const [citiesRes, statesRes] = await Promise.all([
-                fetch(getApiUrl(`/api/cities?${params}`)),
-                fetch(getApiUrl('/api/states')),
-            ]);
-            const citiesData = await citiesRes.json();
-            const statesData = await statesRes.json();
-
-            setCities(citiesData.cities || []);
-            setTotal(citiesData.total || 0);
-            setStates(Array.isArray(statesData) ? statesData : []);
-        } catch (error) {
-            console.error('Failed to fetch:', error);
-        } finally {
-            setLoading(false);
-        }
-    };
+    const cities: City[] = citiesData?.cities || [];
+    const total = citiesData?.total || 0;
+    const states: State[] = Array.isArray(statesData) ? statesData : [];
+    const totalPages = Math.ceil(total / limit);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -107,7 +96,7 @@ function CitiesContent() {
             setShowForm(false);
             setEditingCity(null);
             setFormData({ stateId: '', name: '', slug: '', population: '' });
-            fetchData();
+            mutateCities();
         } catch (err: any) {
             setError(err.message);
         } finally {
@@ -131,7 +120,7 @@ function CitiesContent() {
 
         try {
             await fetch(getApiUrl(`/api/cities/${id}`), { method: 'DELETE' });
-            fetchData();
+            mutateCities();
         } catch (error) {
             console.error('Failed to delete:', error);
         }
@@ -184,7 +173,8 @@ function CitiesContent() {
                 alert(`Error: ${data.error}`);
             } else {
                 alert(data.message || `Action completed successfully`);
-                fetchData();
+                setSelectedIds(new Set());
+                mutateCities();
             }
         } catch (error) {
             alert('Bulk action failed');
@@ -195,7 +185,6 @@ function CitiesContent() {
 
     const isAllSelected = cities.length > 0 && selectedIds.size === cities.length;
     const isSomeSelected = selectedIds.size > 0;
-    const totalPages = Math.ceil(total / limit);
 
     return (
         <div>
@@ -256,7 +245,7 @@ function CitiesContent() {
                     <option value="">All States</option>
                     {states.map((state) => (
                         <option key={state.id} value={state.id}>
-                            {state.name} ({state.country.code.toUpperCase()})
+                            {state.name} ({state.country?.code?.toUpperCase() || ''})
                         </option>
                     ))}
                 </select>
@@ -329,7 +318,7 @@ function CitiesContent() {
                                     <option value="">Select state</option>
                                     {states.map((s) => (
                                         <option key={s.id} value={s.id}>
-                                            {s.name} ({s.country.code.toUpperCase()})
+                                            {s.name} ({s.country?.code?.toUpperCase() || ''})
                                         </option>
                                     ))}
                                 </select>
@@ -406,7 +395,7 @@ function CitiesContent() {
 
             {/* Cities List */}
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                {loading ? (
+                {loadingCities && !cities.length ? (
                     <div className="p-8 text-center text-gray-500">Loading...</div>
                 ) : cities.length === 0 ? (
                     <div className="p-8 text-center">
