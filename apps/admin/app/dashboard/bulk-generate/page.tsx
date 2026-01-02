@@ -155,25 +155,85 @@ export default function BulkGeneratePage() {
     const generateAutoMapping = (variables: string[], headers: string[]): Record<string, string> => {
         const mapping: Record<string, string> = {};
 
+        // Common synonyms for better auto-mapping
+        const synonyms: Record<string, string[]> = {
+            'page_title': ['h1_title', 'page_title', 'title', 'headline'],
+            'page_subtitle': ['hero_description', 'hero_tagline', 'subtitle', 'description'],
+            'h1_title': ['h1_title', 'page_title', 'title'],
+            'hero_tagline': ['hero_tagline', 'page_subtitle', 'tagline'],
+            'hero_description': ['hero_description', 'description', 'page_subtitle'],
+            'meta_title': ['meta_title', 'seo_title', 'browser_title'],
+            'meta_description': ['meta_description', 'seo_description'],
+            'insurance_type_slug': ['insurance_type', 'type_slug'],
+            'min_coverage': ['coverage_format', 'min_liability', 'liability_limits'],
+            'avg_premium': ['average_premium', 'avg_cost', 'premium_cost'],
+            'avg_savings': ['average_savings', 'savings_amount'],
+            'population': ['population', 'pop_count'],
+            'state_insights': ['state_insights', 'local_info', 'state_desc'],
+            'local_factors': ['local_factors', 'factors', 'risk_factors'],
+            'coverage_tips': ['coverage_tips', 'tips', 'advice'],
+            'discounts_list': ['discounts_list', 'discounts', 'available_discounts'],
+            'top_insurers': ['top_insurers', 'insurers', 'providers'],
+            'faqs': ['faqs', 'faq_json', 'questions'],
+            'state_name': ['state_name', 'state'],
+            'state_code': ['state_code', 'state_abbr'],
+            'state_slug': ['state_slug'],
+            'city_name': ['city_name', 'city'],
+            'city_slug': ['city_slug'],
+            'bodily_injury_per_person': ['min_liability_bodily', 'bodily_injury_person'],
+            'bodily_injury_per_accident': ['min_liability_accident'],
+            'property_damage': ['min_liability_property', 'property_damage'],
+            'coverage_format': ['coverage_format', 'min_liability'],
+            'is_no_fault': ['is_no_fault', 'no_fault'],
+            'pip_required': ['pip_required', 'pip'],
+            'um_required': ['um_required', 'um_uim'],
+            'cta_url': ['cta_url', 'link', 'url'],
+            'cta_text': ['cta_text', 'button_text'],
+            'cta_subtext': ['cta_subtext', 'button_subtext'],
+            'intro_paragraph_1': ['intro_paragraph_1', 'intro_1'],
+            'intro_paragraph_2': ['intro_paragraph_2', 'intro_2'],
+            'intro_paragraph_3': ['intro_paragraph_3', 'intro_3'],
+            'state_insights_uniquechallenge': ['uniqueChallenge', 'state_insights_unique_challenge'],
+            'state_insights_savingopportunity': ['savingOpportunity', 'state_insights_saving_opportunity'],
+            'state_insights_commonmistake': ['commonMistake', 'state_insights_common_mistake']
+        };
+
         variables.forEach(variable => {
             const varClean = variable.toLowerCase().replace(/[^a-z0-9]/g, '');
 
-            // 1. Exact match (case insensitive)
-            let match = headers.find(h => h.toLowerCase() === variable.toLowerCase());
+            // 1. Check known synonyms first
+            let match: string | undefined;
 
-            // 2. Cleaned match
+            // Check direct match or cleaned match exists in synonyms
+            const synonymList = synonyms[variable] || synonyms[varClean];
+            if (synonymList) {
+                // Try to find a header that contains one of the synonyms
+                // Prioritize exact match from synonym list
+                for (const syn of synonymList) {
+                    match = headers.find(h => h.toLowerCase() === syn.toLowerCase()) ||
+                        headers.find(h => h.toLowerCase().includes(syn.toLowerCase()));
+                    if (match) break;
+                }
+            }
+
+            // 2. Exact match (case insensitive)
+            if (!match) {
+                match = headers.find(h => h.toLowerCase() === variable.toLowerCase());
+            }
+
+            // 3. Cleaned match
             if (!match) {
                 match = headers.find(h => h.toLowerCase().replace(/[^a-z0-9]/g, '') === varClean);
             }
 
-            // 3. Common patterns
+            // 4. Common patterns (fallback)
             if (!match) {
-                if (varClean === 'pagetitle') match = headers.find(h => h.toLowerCase().includes('title') || h.toLowerCase() === 'name');
-                else if (varClean === 'pagesubtitle') match = headers.find(h => h.toLowerCase().includes('description') || h.toLowerCase().includes('desc'));
-                else if (varClean === 'slug') match = headers.find(h => h.toLowerCase().includes('slug') || h.toLowerCase().includes('url'));
+                if (variable.includes('title')) match = headers.find(h => h.toLowerCase().includes('title'));
+                else if (variable.includes('desc')) match = headers.find(h => h.toLowerCase().includes('desc') || h.toLowerCase().includes('tagline'));
+                else if (variable.includes('slug')) match = headers.find(h => h.toLowerCase().includes('slug'));
             }
 
-            // 4. Fuzzy / Partial match (variable checks if header contains it or vice versa)
+            // 5. Fuzzy Containment (Last resort)
             if (!match) {
                 match = headers.find(h => {
                     const hClean = h.toLowerCase().replace(/[^a-z0-9]/g, '');
