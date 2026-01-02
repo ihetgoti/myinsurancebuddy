@@ -99,6 +99,7 @@ function TemplateEditorContent() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     name,
+                    slug: name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, ''),
                     description,
                     category,
                     htmlContent,
