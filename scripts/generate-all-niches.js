@@ -1,12 +1,12 @@
 /**
- * Advanced Multi-Niche AI Content Generator (Parallel Optimized)
+ * Advanced Multi-Niche AI Content Generator (OpenRouter + Dual Model)
  * 
  * Features:
- * - Parallel Execution of ALL Niches simultaneously
- * - Global Rate Limiting across all parallel jobs
+ * - OpenRouter API with Free Tier Models
+ * - Dual Model: SEO Model + Content Model
+ * - Parallel Execution with Global Rate Limiting
  * - Separate CSV outputs for States and Cities
- * - Dual API Keys with Round Robin
- * - Full Variable Generation
+ * - Load Balancing across 2 API Keys
  */
 
 require('dotenv').config();
@@ -20,19 +20,17 @@ const { stringify } = require('csv-stringify/sync');
 // ============================================
 
 const CONFIG = {
-    // API Keys (Round Robin)
+    // OpenRouter API Keys (Round Robin)
     apiKeys: [
-        process.env.OPENAI_API_KEY_1,
-        process.env.OPENAI_API_KEY_2
+        process.env.OPENROUTER_API_KEY_1,
+        process.env.OPENROUTER_API_KEY_2
     ].filter(k => k),
 
-    // Models
-    seoModel: process.env.SEO_MODEL || 'gpt-4o-mini',
-    contentModel: process.env.CONTENT_MODEL || 'gpt-4o',
+    // Models (OpenRouter format)
+    seoModel: process.env.SEO_MODEL || 'kwaipilot/kat-coder-pro:free',
+    contentModel: process.env.CONTENT_MODEL || 'xiaomi/mimo-v2-flash:free',
 
     // Concurrency (Global Limit)
-    // Running multiple niches parallel means high influx of jobs.
-    // Keep this safe to avoid 429 errors.
     maxConcurrentRequests: parseInt(process.env.MAX_CONCURRENT_REQUESTS || '5'),
 
     // Data Sources
@@ -40,37 +38,41 @@ const CONFIG = {
     citiesFile: './data/cities.csv',
     outputBaseDir: './output-all-niches',
 
+    // Site Info
+    siteUrl: 'https://myinsurancebuddies.com',
+    siteName: 'MyInsuranceBuddies',
+
     // Niches to Generate
     niches: [
         {
             slug: 'health-insurance',
             name: 'Health Insurance',
-            description: 'Essential coverage for medical expenses, from routine check-ups to surgeries and hospital stays.'
+            description: 'Essential coverage for medical expenses, from routine check-ups to surgeries and hospital stays. Most Americans have coverage through an employer, the federal Health Insurance Marketplace (found at HealthCare.gov), or government programs like Medicare and Medicaid. The most common plan types are Preferred Provider Organization (PPO) and Health Maintenance Organization (HMO) plans.'
         },
         {
             slug: 'auto-insurance',
             name: 'Auto Insurance',
-            description: 'Mandatory financial protection against accidents, theft, and damage to your vehicle.'
+            description: 'Mandatory in almost every state, this provides financial protection against accidents, theft, and damage to your vehicle or property and injuries you cause to others.'
         },
         {
             slug: 'homeowners-insurance',
             name: 'Homeowners Insurance',
-            description: 'Protects your home and personal belongings from damage or loss due to fire, natural disasters, theft.'
+            description: 'Protects your home and personal belongings from damage or loss due to fire, natural disasters, theft, or vandalism. Homeowners insurance is typically required by mortgage lenders.'
         },
         {
             slug: 'life-insurance',
             name: 'Life Insurance',
-            description: 'Provides a lump sum death benefit to beneficiaries. Includes Term and Permanent/Whole life.'
+            description: 'A contract that provides a lump sum of money (death benefit) to designated beneficiaries upon the insured person\'s death. The two primary types are Term life insurance (specific period) and Permanent life insurance (whole life with cash value).'
         },
         {
             slug: 'disability-insurance',
             name: 'Disability Insurance',
-            description: 'Replaces income if you become unable to work due to illness or injury.'
+            description: 'Replaces a portion of your income if you become temporarily or permanently unable to work due to illness or injury.'
         },
         {
             slug: 'long-term-care-insurance',
             name: 'Long-Term Care Insurance',
-            description: 'Covers services like nursing homes, assisted living, and home health care.'
+            description: 'Helps cover the costs of services like in-home assistance, assisted living, or nursing home stays, which can be very expensive and are typically not covered by standard health insurance.'
         }
     ]
 };
@@ -84,7 +86,7 @@ let activeRequests = 0;
 const queue = [];
 
 function getNextApiKey() {
-    if (CONFIG.apiKeys.length === 0) throw new Error('No API Keys provided! Set OPENAI_API_KEY_1 and _2 in .env');
+    if (CONFIG.apiKeys.length === 0) throw new Error('No API Keys! Set OPENROUTER_API_KEY_1 and _2 in .env');
     const key = CONFIG.apiKeys[apiKeyIndex];
     apiKeyIndex = (apiKeyIndex + 1) % CONFIG.apiKeys.length;
     return key;
@@ -126,102 +128,142 @@ async function runWithLimit(fn) {
 }
 
 // ============================================
-// PROMPT ENGINEERING
+// PROMPT ENGINEERING (RICH CONTEXT)
 // ============================================
 
-function generatePrompt(niche, location, isCity) {
+function getSeoPrompt(niche, location, isCity) {
     const context = isCity
         ? `City: ${location.name}, State: ${location.state_name}`
         : `State: ${location.name}`;
 
-    return `
-You are an expert Insurance Copywriter. 
-Topic: ${niche.name} (${niche.description}).
-Target Location: ${context}.
+    return `You are an expert SEO specialist for insurance websites.
+Topic: ${niche.name}
+Description: ${niche.description}
+Target Location: ${context}
 
-Generate a complete, data-rich dataset for a landing page.
-Output MUST be valid JSON matching exactly the structure below. Do not include markdown formatting.
+Generate SEO metadata for a landing page. Output valid JSON only (no markdown).
 
-Keys required:
-- page_title (SEO title, max 60 chars)
-- page_subtitle (Compelling hero tagline)
-- h1_title (Main heading)
-- meta_title (Same as page_title)
-- meta_description (SEO desc, max 155 chars)
-- hero_tagline (Short punchy text)
-- hero_description (1-2 sentences)
-- intro_paragraph_1 (Hook)
-- intro_paragraph_2 (Value prop)
-- intro_paragraph_3 (Local context/Call to match)
-- avg_premium (Estimated monthly cost string, e.g. "$120/mo")
-- avg_savings (Estimated savings, e.g. "$450/year")
-- min_coverage (State minimum requirements text)
-- coverage_format (Same as min_coverage)
-- bodily_injury_per_person (e.g. "$25,000")
-- bodily_injury_per_accident (e.g. "$50,000")
-- property_damage (e.g. "$25,000")
-- is_no_fault (boolean)
-- pip_required (boolean)
-- um_required (boolean)
-- state_insights_uniqueChallenge (Specific local risk)
-- state_insights_savingOpportunity (How to save locally)
-- state_insights_commonMistake (What not to do)
-- cta_text (Button text)
-- cta_subtext (Below button text)
-- faqs (Array of objects: {question, answer}) - Generate 5 relevant FAQs
-- local_factors (Array of objects: {factor: "Traffic/Weather/Crime", factor_slug, impact: "High/Med/Low", tip: "Advice"})
-- coverage_tips (Array of strings)
-- discounts_list (Array of objects: {name, description, savings})
-- top_insurers (Array of objects: {rating: "4.8", bestFor: "Students/Families", neighborhood_guide: "Optional text"})
+Required keys:
+{
+  "page_title": "SEO title, max 60 chars, include location and insurance type",
+  "meta_title": "Same as page_title",
+  "meta_description": "Compelling 155 char max description with CTA",
+  "h1_title": "Main heading for the page",
+  "page_subtitle": "Hero tagline, 1 sentence",
+  "hero_tagline": "Short punchy text",
+  "hero_description": "1-2 sentences value proposition"
+}
 
-Make the content specific to ${location.name}. Mention local landmarks or laws if known.
-`;
+Make it specific to ${location.name}. Be compelling and SEO-optimized.`;
+}
+
+function getContentPrompt(niche, location, isCity) {
+    const context = isCity
+        ? `City: ${location.name}, State: ${location.state_name}, Population: ${location.population || 'Unknown'}`
+        : `State: ${location.name}`;
+
+    return `You are an expert insurance copywriter creating detailed, helpful content.
+Topic: ${niche.name}
+Description: ${niche.description}
+Target Location: ${context}
+
+Generate comprehensive content for a landing page. Output valid JSON only (no markdown).
+
+Required keys:
+{
+  "intro_paragraph_1": "Hook paragraph about ${niche.name} in ${location.name}",
+  "intro_paragraph_2": "Value proposition paragraph",
+  "intro_paragraph_3": "Local context and call to action",
+  "avg_premium": "Estimated monthly cost (e.g. '$120/mo')",
+  "avg_savings": "Potential savings (e.g. '$450/year')",
+  "min_coverage": "State minimum requirements summary",
+  "coverage_format": "Same as min_coverage",
+  "bodily_injury_per_person": "e.g. '$25,000'",
+  "bodily_injury_per_accident": "e.g. '$50,000'",
+  "property_damage": "e.g. '$25,000'",
+  "is_no_fault": true/false,
+  "pip_required": true/false,
+  "um_required": true/false,
+  "state_insights_uniqueChallenge": "Specific risk or challenge in this location",
+  "state_insights_savingOpportunity": "How to save money locally",
+  "state_insights_commonMistake": "What people do wrong",
+  "cta_text": "Button text like 'Get Free Quotes'",
+  "cta_subtext": "Text below button",
+  "faqs": [
+    {"question": "Question 1 about ${niche.name} in ${location.name}?", "answer": "Detailed answer"},
+    {"question": "Question 2?", "answer": "Answer"},
+    {"question": "Question 3?", "answer": "Answer"},
+    {"question": "Question 4?", "answer": "Answer"},
+    {"question": "Question 5?", "answer": "Answer"}
+  ],
+  "local_factors": [
+    {"factor": "Traffic", "factor_slug": "traffic", "impact": "High/Med/Low", "tip": "Advice"},
+    {"factor": "Weather", "factor_slug": "weather", "impact": "High/Med/Low", "tip": "Advice"},
+    {"factor": "Crime Rate", "factor_slug": "crime-rate", "impact": "High/Med/Low", "tip": "Advice"}
+  ],
+  "coverage_tips": ["Tip 1", "Tip 2", "Tip 3"],
+  "discounts_list": [
+    {"name": "Bundle Discount", "description": "Combine policies", "savings": "Up to 25%"},
+    {"name": "Good Driver", "description": "Clean record", "savings": "Up to 20%"}
+  ],
+  "top_insurers": [
+    {"name": "State Farm", "rating": "4.8", "bestFor": "Families"},
+    {"name": "Geico", "rating": "4.7", "bestFor": "Budget-conscious"},
+    {"name": "Progressive", "rating": "4.6", "bestFor": "Online experience"}
+  ]
+}
+
+Be specific to ${location.name}. Include local laws, weather patterns, and demographics if known.`;
 }
 
 // ============================================
-// API CALLS
+// API CALLS (OpenRouter)
 // ============================================
 
-async function callOpenAI(prompt, model) {
+async function callOpenRouter(prompt, model) {
     const apiKey = getNextApiKey();
 
-    // Retry logic
     for (let i = 0; i < 3; i++) {
         try {
-            const response = await fetch('https://api.openai.com/v1/chat/completions', {
+            const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${apiKey}`,
+                    'HTTP-Referer': CONFIG.siteUrl,
+                    'X-Title': 'Insurance Content Generator'
                 },
                 body: JSON.stringify({
                     model: model,
                     messages: [
-                        { role: 'system', content: 'You are a JSON generator. Output valid JSON only.' },
+                        { role: 'system', content: 'You are a JSON generator. Output valid JSON only. No markdown, no code blocks.' },
                         { role: 'user', content: prompt }
                     ],
                     temperature: 0.7,
+                    max_tokens: 4000, // Use more context
                 }),
             });
 
             if (!response.ok) {
                 if (response.status === 429) {
-                    console.log('⏳ Rate limited, waiting...');
-                    await sleep(5000);
+                    console.log('⏳ Rate limited, waiting 10s...');
+                    await sleep(10000);
                     continue;
                 }
-                throw new Error(`API Error: ${response.status} ${await response.text()}`);
+                const errorText = await response.text();
+                throw new Error(`API Error: ${response.status} ${errorText}`);
             }
 
             const data = await response.json();
             let content = data.choices[0].message.content.trim();
-            content = content.replace(/^```json/, '').replace(/```$/, '').trim();
+            // Clean markdown if present
+            content = content.replace(/^```json\n?/, '').replace(/\n?```$/, '').trim();
             return JSON.parse(content);
 
         } catch (error) {
-            console.error(`Attempt ${i + 1} failed:`, error.message);
+            console.error(`Attempt ${i + 1} failed for ${model}:`, error.message);
             if (i === 2) throw error;
-            await sleep(2000);
+            await sleep(3000);
         }
     }
 }
@@ -234,11 +276,16 @@ async function generateRow(niche, location, isCity) {
     return runWithLimit(async () => {
         console.log(`Generating [${niche.slug}] for ${location.name}...`);
 
-        const prompt = generatePrompt(niche, location, isCity);
-        const data = await callOpenAI(prompt, CONFIG.contentModel);
+        // Call SEO Model
+        const seoPrompt = getSeoPrompt(niche, location, isCity);
+        const seoData = await callOpenRouter(seoPrompt, CONFIG.seoModel);
 
+        // Call Content Model
+        const contentPrompt = getContentPrompt(niche, location, isCity);
+        const contentData = await callOpenRouter(contentPrompt, CONFIG.contentModel);
+
+        // Build Row
         const now = new Date();
-        const siteUrl = 'https://myinsurancebuddies.com';
         const slug = isCity
             ? `${niche.slug}/us/${location.state_slug}/${location.slug}`
             : `${niche.slug}/us/${location.state_slug}`;
@@ -263,25 +310,28 @@ async function generateRow(niche, location, isCity) {
             // System
             current_year: now.getFullYear(),
             current_month: now.toLocaleString('default', { month: 'long' }),
-            site_name: 'MyInsuranceBuddies',
-            site_url: siteUrl,
-            canonical_url: `${siteUrl}/${slug}`,
+            site_name: CONFIG.siteName,
+            site_url: CONFIG.siteUrl,
+            canonical_url: `${CONFIG.siteUrl}/${slug}`,
             cta_url: '/get-quote',
             population: location.population || '',
 
             generated_at: now.toISOString(),
             status: 'success',
 
-            // AI Generated
-            ...data,
-            is_tort: !data.is_no_fault,
+            // SEO Data
+            ...seoData,
 
-            // Stringify JSON arrays for CSV
-            faqs: JSON.stringify(data.faqs || []),
-            local_factors: JSON.stringify(data.local_factors || []),
-            coverage_tips: JSON.stringify(data.coverage_tips || []),
-            discounts_list: JSON.stringify(data.discounts_list || []),
-            top_insurers: JSON.stringify(data.top_insurers || [])
+            // Content Data
+            ...contentData,
+            is_tort: !contentData.is_no_fault,
+
+            // Stringify JSON arrays
+            faqs: JSON.stringify(contentData.faqs || []),
+            local_factors: JSON.stringify(contentData.local_factors || []),
+            coverage_tips: JSON.stringify(contentData.coverage_tips || []),
+            discounts_list: JSON.stringify(contentData.discounts_list || []),
+            top_insurers: JSON.stringify(contentData.top_insurers || [])
         };
 
         return row;
@@ -318,17 +368,16 @@ async function processNiche(niche, states, rawCities, stateMap) {
     statesStream.write(stringify([headers]));
     citiesStream.write(stringify([headers]));
 
-    // Generate State Jobs
-    // We launch them all, but global semaphore restricts concurrency
+    // State Jobs
     const stateJobs = states.map(state => generateRow(niche, state, false)
         .then(row => {
-            const csvRow = headers.map(outputKey => row[outputKey] || '');
+            const csvRow = headers.map(k => row[k] || '');
             statesStream.write(stringify([csvRow]));
         })
         .catch(err => console.error(`Failed [State] ${niche.slug}/${state.name}:`, err.message))
     );
 
-    // Generate City Jobs
+    // City Jobs
     const cityJobs = rawCities.map(city => {
         const stateInfo = stateMap.get(city.state_slug) || { name: city.state_name || 'Unknown', code: city.state_code || '' };
         const standardizedCity = {
@@ -342,13 +391,12 @@ async function processNiche(niche, states, rawCities, stateMap) {
 
         return generateRow(niche, standardizedCity, true)
             .then(row => {
-                const csvRow = headers.map(outputKey => row[outputKey] || '');
+                const csvRow = headers.map(k => row[k] || '');
                 citiesStream.write(stringify([csvRow]));
             })
             .catch(err => console.error(`Failed [City] ${niche.slug}/${city.name}:`, err.message));
     });
 
-    // Wait for all to finish
     await Promise.all([...stateJobs, ...cityJobs]);
 
     statesStream.end();
@@ -357,7 +405,10 @@ async function processNiche(niche, states, rawCities, stateMap) {
 }
 
 async function main() {
-    console.log('🚀 Starting Parallel Multi-Niche Generator...');
+    console.log('🚀 Starting OpenRouter Multi-Niche Generator...');
+    console.log(`📌 SEO Model: ${CONFIG.seoModel}`);
+    console.log(`📌 Content Model: ${CONFIG.contentModel}`);
+    console.log(`📌 Concurrency: ${CONFIG.maxConcurrentRequests}`);
     ensureDir(CONFIG.outputBaseDir);
 
     // Load Data
@@ -369,7 +420,6 @@ async function main() {
         country_code: 'US'
     }));
 
-    // City Data
     let rawCities = [];
     if (fs.existsSync(CONFIG.citiesFile)) {
         rawCities = parse(fs.readFileSync(CONFIG.citiesFile, 'utf8'), { columns: true });
@@ -377,7 +427,6 @@ async function main() {
         console.warn('⚠️ No cities.csv found, skipping cities.');
     }
 
-    // State Map
     const stateMap = new Map();
     states.forEach(s => stateMap.set(s.slug, s));
 
