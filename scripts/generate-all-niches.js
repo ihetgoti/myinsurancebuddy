@@ -27,8 +27,10 @@ const CONFIG = {
     ].filter(k => k),
 
     // Models (OpenRouter format)
-    seoModel: process.env.SEO_MODEL || 'kwaipilot/kat-coder-pro:free',
-    contentModel: process.env.CONTENT_MODEL || 'xiaomi/mimo-v2-flash:free',
+    // SEO Model: Fast, lightweight for metadata
+    seoModel: process.env.SEO_MODEL || 'mistralai/mistral-7b-instruct:free',
+    // Content Model: Google Gemini - reliable JSON output
+    contentModel: process.env.CONTENT_MODEL || 'google/gemini-2.0-flash-exp:free',
 
     // Concurrency (Global Limit)
     maxConcurrentRequests: parseInt(process.env.MAX_CONCURRENT_REQUESTS || '5'),
@@ -127,9 +129,9 @@ async function runWithLimit(fn) {
     });
 }
 
-// Rate Limiting: 50 requests per minute per key = 100 total with 2 keys
-// Add delay between API calls to stay under limit
-const RATE_LIMIT_DELAY = 1200; // 1.2 seconds between calls = 50/min
+// Rate Limiting: 30 requests per minute per key = 60 total with 2 keys
+// Google Gemini free tier: 15 req/min, with 2 keys = 30 req/min
+const RATE_LIMIT_DELAY = 2000; // 2 seconds between calls = 30/min
 let lastRequestTime = 0;
 
 async function rateLimitedRequest(fn) {
