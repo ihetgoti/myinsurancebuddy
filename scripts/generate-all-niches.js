@@ -276,23 +276,37 @@ async function callOpenRouter(prompt, model) {
 
             const data = await response.json();
             let content = data.choices[0].message.content.trim();
+
             // Clean markdown if present
             content = content.replace(/^```json\n?/, '').replace(/\n?```$/, '').trim();
             content = content.replace(/^```\n?/, '').replace(/\n?```$/, '').trim();
 
-            // JSON Repair: Fix common issues from free models
-            // 1. Remove trailing commas before } or ]
-            content = content.replace(/,\s*([\}\]])/g, '$1');
-            // 2. Fix unquoted keys
-            content = content.replace(/([{,]\s*)([a-zA-Z_][a-zA-Z0-9_]*)\s*:/g, '$1"$2":');
-            // 3. Fix single quotes to double quotes
-            content = content.replace(/'/g, '"');
-            // 4. Remove any text before first { or after last }
+            // JSON Repair: Comprehensive fixes for free model outputs
+            // 1. Extract just the JSON object
             const firstBrace = content.indexOf('{');
             const lastBrace = content.lastIndexOf('}');
             if (firstBrace !== -1 && lastBrace !== -1) {
                 content = content.substring(firstBrace, lastBrace + 1);
             }
+
+            // 2. Convert to single line (remove real newlines that break JSON strings)
+            content = content.replace(/\n/g, ' ').replace(/\r/g, ' ');
+
+            // 3. Remove trailing commas before } or ]
+            content = content.replace(/,\s*([\}\]])/g, '$1');
+
+            // 4. Fix unquoted keys
+            content = content.replace(/([{,]\s*)([a-zA-Z_][a-zA-Z0-9_]*)\s*:/g, '$1"$2":');
+
+            // 5. Fix single quotes to double quotes (carefully)
+            // Only replace single quotes that are likely string delimiters
+            content = content.replace(/:\s*'([^']*?)'/g, ': "$1"');
+
+            // 6. Remove control characters
+            content = content.replace(/[\x00-\x1F\x7F]/g, ' ');
+
+            // 7. Collapse multiple spaces
+            content = content.replace(/\s+/g, ' ');
 
             return JSON.parse(content);
 
