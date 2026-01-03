@@ -127,6 +127,23 @@ async function runWithLimit(fn) {
     });
 }
 
+// Rate Limiting: 50 requests per minute per key = 100 total with 2 keys
+// Add delay between API calls to stay under limit
+const RATE_LIMIT_DELAY = 1200; // 1.2 seconds between calls = 50/min
+let lastRequestTime = 0;
+
+async function rateLimitedRequest(fn) {
+    const now = Date.now();
+    const timeSinceLastRequest = now - lastRequestTime;
+
+    if (timeSinceLastRequest < RATE_LIMIT_DELAY) {
+        await sleep(RATE_LIMIT_DELAY - timeSinceLastRequest);
+    }
+
+    lastRequestTime = Date.now();
+    return fn();
+}
+
 // ============================================
 // PROMPT ENGINEERING (RICH CONTEXT)
 // ============================================
@@ -276,13 +293,13 @@ async function generateRow(niche, location, isCity) {
     return runWithLimit(async () => {
         console.log(`Generating [${niche.slug}] for ${location.name}...`);
 
-        // Call SEO Model
+        // Call SEO Model (with rate limiting)
         const seoPrompt = getSeoPrompt(niche, location, isCity);
-        const seoData = await callOpenRouter(seoPrompt, CONFIG.seoModel);
+        const seoData = await rateLimitedRequest(() => callOpenRouter(seoPrompt, CONFIG.seoModel));
 
-        // Call Content Model
+        // Call Content Model (with rate limiting)
         const contentPrompt = getContentPrompt(niche, location, isCity);
-        const contentData = await callOpenRouter(contentPrompt, CONFIG.contentModel);
+        const contentData = await rateLimitedRequest(() => callOpenRouter(contentPrompt, CONFIG.contentModel));
 
         // Build Row
         const now = new Date();
