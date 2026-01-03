@@ -27,13 +27,14 @@ const CONFIG = {
     ].filter(k => k),
 
     // Models (OpenRouter format)
-    // SEO Model: Fast, lightweight for metadata
-    seoModel: process.env.SEO_MODEL || 'mistralai/mistral-7b-instruct:free',
-    // Content Model: Google Gemini - reliable JSON output
-    contentModel: process.env.CONTENT_MODEL || 'google/gemini-2.0-flash-exp:free',
+    // SEO Model: Fast for metadata
+    seoModel: process.env.SEO_MODEL || 'kwaipilot/kat-coder-pro:free',
+    // Content Model: Creative for paragraphs/FAQs
+    contentModel: process.env.CONTENT_MODEL || 'xiaomi/mimo-v2-flash:free',
 
     // Concurrency (Global Limit)
-    maxConcurrentRequests: parseInt(process.env.MAX_CONCURRENT_REQUESTS || '5'),
+    // Gemini free tier: 15 req/min per key, sequential is safest
+    maxConcurrentRequests: parseInt(process.env.MAX_CONCURRENT_REQUESTS || '1'),
 
     // Data Sources
     statesFile: './data/states.csv',
@@ -129,9 +130,9 @@ async function runWithLimit(fn) {
     });
 }
 
-// Rate Limiting: 30 requests per minute per key = 60 total with 2 keys
-// Google Gemini free tier: 15 req/min, with 2 keys = 30 req/min
-const RATE_LIMIT_DELAY = 2000; // 2 seconds between calls = 30/min
+// Rate Limiting: 15 requests per minute per key (Gemini free tier)
+// With 2 keys = 30 req/min, but sequential is safer
+const RATE_LIMIT_DELAY = 4000; // 4 seconds between calls = 15/min safe
 let lastRequestTime = 0;
 
 async function rateLimitedRequest(fn) {
@@ -277,6 +278,22 @@ async function callOpenRouter(prompt, model) {
             let content = data.choices[0].message.content.trim();
             // Clean markdown if present
             content = content.replace(/^```json\n?/, '').replace(/\n?```$/, '').trim();
+            content = content.replace(/^```\n?/, '').replace(/\n?```$/, '').trim();
+
+            // JSON Repair: Fix common issues from free models
+            // 1. Remove trailing commas before } or ]
+            content = content.replace(/,\s*([\}\]])/g, '$1');
+            // 2. Fix unquoted keys
+            content = content.replace(/([{,]\s*)([a-zA-Z_][a-zA-Z0-9_]*)\s*:/g, '$1"$2":');
+            // 3. Fix single quotes to double quotes
+            content = content.replace(/'/g, '"');
+            // 4. Remove any text before first { or after last }
+            const firstBrace = content.indexOf('{');
+            const lastBrace = content.lastIndexOf('}');
+            if (firstBrace !== -1 && lastBrace !== -1) {
+                content = content.substring(firstBrace, lastBrace + 1);
+            }
+
             return JSON.parse(content);
 
         } catch (error) {
