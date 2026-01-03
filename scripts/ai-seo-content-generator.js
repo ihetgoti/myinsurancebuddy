@@ -74,33 +74,43 @@ const CONFIG = {
 
 const PROMPTS = {
     stateContent: (stateName, stateCode) => `
-You are an SEO content expert for ${CONFIG.insuranceType}. Generate unique, helpful content for a ${CONFIG.insuranceType} page targeting ${stateName} (${stateCode}).
+You are an SEO content expert for ${CONFIG.insuranceType}. Generate unique content for a ${CONFIG.insuranceType} page targeting ${stateName} (${stateCode}).
 
 Generate the following in JSON format:
 {
-  "metaTitle": "60 character max SEO title including '${stateName}' and '${CONFIG.insuranceType}'",
-  "metaDescription": "155 character max compelling meta description with CTA",
-  "h1Title": "Engaging H1 heading for the page",
-  "heroSubtitle": "Short 1-2 sentence subtitle explaining value proposition",
-  "introContent": "2-3 paragraph introduction about ${CONFIG.insuranceType} in ${stateName}, including state-specific insights",
-  "keyPoints": ["Array of 4-5 key points about ${CONFIG.insuranceType} in ${stateName}"],
-  "localFactors": ["Array of 3-4 local factors that affect ${CONFIG.insuranceType} rates in ${stateName}"],
-  "ctaText": "Compelling call-to-action text",
-  "faqQuestions": [
-    {"question": "FAQ question 1 about ${CONFIG.insuranceType} in ${stateName}", "answer": "Detailed answer"},
-    {"question": "FAQ question 2", "answer": "Detailed answer"},
-    {"question": "FAQ question 3", "answer": "Detailed answer"}
-  ]
+  "meta_title": "60 char max SEO title",
+  "meta_description": "155 char max with CTA",
+  "h1_title": "Main heading",
+  "hero_tagline": "Short punchy text",
+  "hero_description": "1-2 sentence value prop",
+  "intro_paragraph_1": "Hook paragraph",
+  "intro_paragraph_2": "Value proposition",
+  "intro_paragraph_3": "Local context and CTA",
+  "avg_premium": "Monthly cost estimate like $120/mo",
+  "avg_savings": "Potential savings like $450/year",
+  "min_coverage": "State minimum requirements summary",
+  "coverage_format": "Same as min_coverage",
+  "bodily_injury_per_person": "Like $25,000",
+  "bodily_injury_per_accident": "Like $50,000",
+  "property_damage": "Like $25,000",
+  "is_no_fault": true or false,
+  "pip_required": true or false,
+  "um_required": true or false,
+  "state_insights": {
+    "uniqueChallenge": "Local risk",
+    "savingOpportunity": "How to save",
+    "commonMistake": "What not to do"
+  },
+  "cta_text": "Button text",
+  "cta_subtext": "Text below button",
+  "faqs": [{"question": "Q1", "answer": "A1"}, {"question": "Q2", "answer": "A2"}, {"question": "Q3", "answer": "A3"}, {"question": "Q4", "answer": "A4"}, {"question": "Q5", "answer": "A5"}],
+  "local_factors": [{"factor": "Traffic", "factor_slug": "traffic", "impact": "High", "tip": "Advice"}],
+  "coverage_tips": ["Tip 1", "Tip 2", "Tip 3"],
+  "discounts_list": [{"name": "Bundle", "description": "Combine policies", "savings": "25%"}],
+  "top_insurers": [{"name": "State Farm", "rating": "4.8", "bestFor": "Families"}]
 }
 
-Guidelines:
-- Make content unique and specific to ${stateName}
-- Include local context (weather, traffic, regulations if known)
-- Use natural language, avoid keyword stuffing
-- Make it helpful for users looking for ${CONFIG.insuranceType}
-- Include actionable advice
-
-Return ONLY valid JSON, no markdown formatting.
+Make content specific to ${stateName}. Return ONLY valid JSON.
 `,
 
     cityContent: (cityName, stateName, stateCode, population) => `
@@ -331,21 +341,57 @@ async function generateStateContent(state, retryCount = 0) {
         const response = await generateContent(prompt);
         const content = parseJSON(response);
 
+        const stateSlug = state.slug || stateName.toLowerCase().replace(/\s+/g, '-');
+        const insuranceSlug = CONFIG.insuranceType.toLowerCase().replace(/\s+/g, '-');
+        const now = new Date();
+
         return {
             state_name: stateName,
             state_code: stateCode,
-            state_slug: state.slug || stateName.toLowerCase().replace(/\s+/g, '-'),
+            state_slug: stateSlug,
             country_code: state.country_code || 'us',
-            meta_title: content.metaTitle || '',
-            meta_description: content.metaDescription || '',
-            h1_title: content.h1Title || '',
-            hero_subtitle: content.heroSubtitle || '',
-            intro_content: content.introContent || '',
-            key_points: JSON.stringify(content.keyPoints || []),
-            local_factors: JSON.stringify(content.localFactors || []),
-            cta_text: content.ctaText || '',
-            faq_questions: JSON.stringify(content.faqQuestions || []),
-            generated_at: new Date().toISOString(),
+            insurance_type: CONFIG.insuranceType,
+            insurance_type_slug: insuranceSlug,
+            slug: `${insuranceSlug}/us/${stateSlug}`,
+            location: stateName,
+            current_year: now.getFullYear(),
+            current_month: now.toLocaleString('default', { month: 'long' }),
+            site_name: CONFIG.brandName,
+            site_url: 'https://myinsurancebuddies.com',
+            canonical_url: `https://myinsurancebuddies.com/${insuranceSlug}/us/${stateSlug}`,
+            cta_url: '/get-quote',
+            meta_title: content.meta_title || '',
+            meta_description: content.meta_description || '',
+            h1_title: content.h1_title || '',
+            page_title: content.meta_title || '',
+            page_subtitle: content.hero_tagline || '',
+            hero_tagline: content.hero_tagline || '',
+            hero_description: content.hero_description || '',
+            intro_paragraph_1: content.intro_paragraph_1 || '',
+            intro_paragraph_2: content.intro_paragraph_2 || '',
+            intro_paragraph_3: content.intro_paragraph_3 || '',
+            avg_premium: content.avg_premium || '',
+            avg_savings: content.avg_savings || '',
+            min_coverage: content.min_coverage || '',
+            coverage_format: content.coverage_format || content.min_coverage || '',
+            bodily_injury_per_person: content.bodily_injury_per_person || '',
+            bodily_injury_per_accident: content.bodily_injury_per_accident || '',
+            property_damage: content.property_damage || '',
+            is_no_fault: content.is_no_fault || false,
+            pip_required: content.pip_required || false,
+            um_required: content.um_required || false,
+            is_tort: !content.is_no_fault,
+            state_insights_uniqueChallenge: content.state_insights?.uniqueChallenge || '',
+            state_insights_savingOpportunity: content.state_insights?.savingOpportunity || '',
+            state_insights_commonMistake: content.state_insights?.commonMistake || '',
+            cta_text: content.cta_text || 'Get Free Quotes',
+            cta_subtext: content.cta_subtext || '',
+            faqs: JSON.stringify(content.faqs || []),
+            local_factors: JSON.stringify(content.local_factors || []),
+            coverage_tips: JSON.stringify(content.coverage_tips || []),
+            discounts_list: JSON.stringify(content.discounts_list || []),
+            top_insurers: JSON.stringify(content.top_insurers || []),
+            generated_at: now.toISOString(),
             status: 'success',
         };
     } catch (error) {
@@ -461,12 +507,18 @@ async function main() {
     const progress = loadProgress();
     console.log(`📊 Progress: ${progress.completedStates.length} states, ${progress.completedCities.length} cities completed\n`);
 
-    // Define CSV headers
+    // Define CSV headers - EXPANDED for all template variables
     const stateHeaders = [
-        'state_name', 'state_code', 'state_slug', 'country_code',
-        'meta_title', 'meta_description', 'h1_title', 'hero_subtitle',
-        'intro_content', 'key_points', 'local_factors', 'cta_text',
-        'faq_questions', 'generated_at', 'status'
+        'state_name', 'state_code', 'state_slug', 'country_code', 'insurance_type', 'insurance_type_slug',
+        'slug', 'location', 'current_year', 'current_month', 'site_name', 'site_url', 'canonical_url', 'cta_url',
+        'meta_title', 'meta_description', 'h1_title', 'page_title', 'page_subtitle',
+        'hero_tagline', 'hero_description', 'intro_paragraph_1', 'intro_paragraph_2', 'intro_paragraph_3',
+        'avg_premium', 'avg_savings', 'min_coverage', 'coverage_format',
+        'bodily_injury_per_person', 'bodily_injury_per_accident', 'property_damage',
+        'is_no_fault', 'pip_required', 'um_required', 'is_tort',
+        'state_insights_uniqueChallenge', 'state_insights_savingOpportunity', 'state_insights_commonMistake',
+        'cta_text', 'cta_subtext', 'faqs', 'local_factors', 'coverage_tips', 'discounts_list', 'top_insurers',
+        'generated_at', 'status'
     ];
 
     const cityHeaders = [
