@@ -28,7 +28,11 @@ export interface RenderOptions {
  * Inject variables into template HTML
  * Supports: {{variable}}, {{variable|filter}}
  */
-function injectVariables(html: string, context: RenderContext): string {
+/**
+ * Inject variables into template HTML
+ * Supports: {{variable}}, {{variable|filter}}
+ */
+export function injectVariables(html: string, context: RenderContext): string {
     // Match {{variable}} or {{variable|filter}}
     return html.replace(/\{\{(\w+)(?:\|(\w+))?\}\}/g, (match, variable, filter) => {
         let value = context[variable];
@@ -64,6 +68,9 @@ function injectVariables(html: string, context: RenderContext): string {
         return result;
     });
 }
+
+// Alias for compatibility
+export const replaceVariables = injectVariables;
 
 /**
  * Replace ad slot placeholders with actual ad code

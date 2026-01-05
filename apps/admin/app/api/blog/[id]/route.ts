@@ -1,70 +1,74 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { prisma } from '@/lib/prisma';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
-import { prisma } from '@/lib/prisma';
+import { revalidateWebPath } from '@/lib/revalidate';
 
-// GET single post
 export async function GET(
-    request: NextRequest,
-    { params }: { params: { id: string } }
-) {
-    try {
-        const post = await prisma.blogPost.findUnique({
-            where: { id: params.id },
-            include: {
-                category: true,
-                author: { select: { id: true, name: true, email: true } },
-            },
-        });
-
-        if (!post) {
-            return NextResponse.json({ error: 'Not found' }, { status: 404 });
-        }
-
-        return NextResponse.json(post);
-    } catch (error) {
-        console.error('GET /api/blog/[id] error:', error);
-        return NextResponse.json({ error: 'Failed to fetch post' }, { status: 500 });
-    }
-}
-
-// PATCH update post
-export async function PATCH(
-    request: NextRequest,
+    req: NextRequest,
     { params }: { params: { id: string } }
 ) {
     try {
         const session = await getServerSession(authOptions);
-        if (!session) {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-        }
+        if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-        const body = await request.json();
+        const post = await prisma.blogPost.findUnique({
+            where: { id: params.id },
+            include: { category: true }
+        });
+
+        if (!post) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+
+        return NextResponse.json(post);
+    } catch (error) {
+        return NextResponse.json({ error: 'Error' }, { status: 500 });
+    }
+}
+
+export async function PATCH(
+    req: NextRequest,
+    { params }: { params: { id: string } }
+) {
+    try {
+        const session = await getServerSession(authOptions);
+        if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+        const body = await req.json();
+        const {
+            title,
+            content,
+            slug,
+            categoryId,
+            featuredImage,
+            tags,
+            metaTitle,
+            metaDescription,
+            isPublished
+        } = body;
+
         const currentPost = await prisma.blogPost.findUnique({ where: { id: params.id } });
-
-        if (!currentPost) {
-            return NextResponse.json({ error: 'Not found' }, { status: 404 });
-        }
-
-        // Handle publishing
-        let publishedAt = currentPost.publishedAt;
-        if (body.isPublished && !currentPost.isPublished) {
-            publishedAt = new Date();
-        }
+        if (!currentPost) return NextResponse.json({ error: 'Not found' }, { status: 404 });
 
         const post = await prisma.blogPost.update({
             where: { id: params.id },
             data: {
-                ...body,
-                publishedAt,
-            },
-            include: {
-                category: true,
-                author: { select: { id: true, name: true, email: true } },
-            },
+                title,
+                content,
+                slug,
+                categoryId,
+                featuredImage,
+                tags,
+                metaTitle,
+                metaDescription,
+                isPublished,
+                publishedAt: (isPublished && !currentPost.isPublished) ? new Date() : undefined,
+            }
         });
 
-        // Audit log
+        // Trigger reval
+        await revalidateWebPath(`/blog/${post.slug}`);
+        await revalidateWebPath('/blog'); // Lists
+
         await prisma.auditLog.create({
             data: {
                 userId: session.user.id,
@@ -72,39 +76,33 @@ export async function PATCH(
                 entityType: 'BlogPost',
                 entityId: post.id,
                 entityName: post.title,
-            },
+            }
         });
 
         return NextResponse.json(post);
     } catch (error) {
-        console.error('PATCH /api/blog/[id] error:', error);
-        return NextResponse.json({ error: 'Failed to update post' }, { status: 500 });
+        console.error('Update error:', error);
+        return NextResponse.json({ error: 'Update failed' }, { status: 500 });
     }
 }
 
-// DELETE post
 export async function DELETE(
-    request: NextRequest,
+    req: NextRequest,
     { params }: { params: { id: string } }
 ) {
     try {
         const session = await getServerSession(authOptions);
-        if (!session) {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-        }
+        if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-        const post = await prisma.blogPost.findUnique({
-            where: { id: params.id },
-            select: { id: true, title: true },
-        });
-
-        if (!post) {
-            return NextResponse.json({ error: 'Not found' }, { status: 404 });
-        }
+        const post = await prisma.blogPost.findUnique({ where: { id: params.id } });
+        if (!post) return NextResponse.json({ error: 'Not found' }, { status: 404 });
 
         await prisma.blogPost.delete({ where: { id: params.id } });
 
-        // Audit log
+        // Trigger reval
+        await revalidateWebPath(`/blog/${post.slug}`);
+        await revalidateWebPath('/blog');
+
         await prisma.auditLog.create({
             data: {
                 userId: session.user.id,
@@ -112,12 +110,11 @@ export async function DELETE(
                 entityType: 'BlogPost',
                 entityId: params.id,
                 entityName: post.title,
-            },
+            }
         });
 
         return NextResponse.json({ success: true });
     } catch (error) {
-        console.error('DELETE /api/blog/[id] error:', error);
-        return NextResponse.json({ error: 'Failed to delete post' }, { status: 500 });
+        return NextResponse.json({ error: 'Delete failed' }, { status: 500 });
     }
 }

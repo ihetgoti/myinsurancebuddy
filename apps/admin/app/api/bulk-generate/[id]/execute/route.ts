@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { revalidateWebPath } from '@/lib/revalidate';
+import { replaceVariables } from '@/lib/templates/renderer';
 import { prisma } from '@/lib/prisma';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
@@ -70,17 +72,47 @@ async function processJob(job: any) {
             const row = csvData[i];
 
             try {
-                // Build variables from mapping
-                // Build variables from mapping
+                // Build variables with PRIORITY ORDER:
+                // 1. Context variables (always available)
+                // 2. Auto-match: CSV columns that match template variable names exactly
+                // 3. Custom mapping: Override with user-defined mappings
+
                 const variables: Record<string, any> = {
-                    // Inject context variables
+                    // Priority 1: Inject context variables
                     'insurance_type_slug': job.insuranceType?.slug || '',
                     'insurance_type_name': job.insuranceType?.name || '',
                     'template_slug': job.template.slug,
                 };
 
+                // Priority 2: AUTO-MATCH - Copy all CSV columns directly as variables
+                // This means if CSV has "city_name" column, {{city_name}} will work automatically!
+                Object.keys(row).forEach((csvColumn) => {
+                    let value = row[csvColumn];
+
+                    // Skip empty values
+                    if (value === undefined || value === null || value === '') return;
+
+                    // Auto-parse JSON strings (arrays/objects) for Loop compatibility
+                    if (typeof value === 'string' && (value.startsWith('[') || value.startsWith('{'))) {
+                        try {
+                            value = JSON.parse(value);
+                        } catch (e) {
+                            // Keep as string if parse fails
+                        }
+                    }
+
+                    // Use the CSV column name directly as the variable name
+                    variables[csvColumn] = value;
+                });
+
+                // Priority 3: CUSTOM MAPPING - Override with user-defined variable mappings
+                // This allows renaming: CSV "my_col" → template "{{different_name}}"
                 Object.entries(variableMapping).forEach(([varName, csvColumn]) => {
-                    let value = row[csvColumn] || '';
+                    let value = row[csvColumn];
+
+                    if (value === undefined || value === null) {
+                        value = '';
+                    }
 
                     // Auto-parse JSON strings (arrays/objects) for Loop compatibility
                     if (typeof value === 'string' && (value.startsWith('[') || value.startsWith('{'))) {
@@ -119,6 +151,84 @@ async function processJob(job: any) {
                     }
                 });
 
+                // ========================================
+                // GEO HIERARCHY RESOLUTION
+                // Auto-link to Country → State → City
+                // ========================================
+                let countryId: string | null = null;
+                let stateId: string | null = null;
+                let cityId: string | null = null;
+                let geoLevel: 'COUNTRY' | 'STATE' | 'CITY' | null = null;
+
+                // 1. Find State (by slug or code) - this also gives us the country
+                if (variables['state_slug'] || variables['state_code']) {
+                    const state = await prisma.state.findFirst({
+                        where: {
+                            OR: [
+                                { slug: String(variables['state_slug'] || '').toLowerCase() },
+                                { code: String(variables['state_code'] || '').toUpperCase() },
+                            ],
+                        },
+                        include: { country: true },
+                    });
+                    if (state) {
+                        stateId = state.id;
+                        countryId = state.countryId;
+                        geoLevel = 'STATE';
+                        // Auto-populate geo variables for URL and template
+                        variables['state_name'] = state.name;
+                        variables['state_code'] = state.code;
+                        variables['state_slug'] = state.slug;
+                        variables['country_name'] = state.country.name;
+                        variables['country_code'] = state.country.code;
+                        if (state.avgPremium) variables['avg_premium'] = `$${state.avgPremium}`;
+                        if (state.population) variables['state_population'] = state.population.toLocaleString();
+                    }
+                }
+
+                // 2. Find City (by slug or name)
+                if (variables['city_slug'] || variables['city_name']) {
+                    const city = await prisma.city.findFirst({
+                        where: {
+                            OR: [
+                                { slug: String(variables['city_slug'] || '').toLowerCase() },
+                                { name: { equals: String(variables['city_name'] || ''), mode: 'insensitive' } },
+                            ],
+                            ...(stateId ? { stateId } : {}),
+                        },
+                        include: { state: { include: { country: true } } },
+                    });
+                    if (city) {
+                        cityId = city.id;
+                        stateId = city.stateId;
+                        countryId = city.state.countryId;
+                        geoLevel = 'CITY';
+                        // Auto-populate geo variables
+                        variables['city_name'] = city.name;
+                        variables['city_slug'] = city.slug;
+                        variables['state_name'] = city.state.name;
+                        variables['state_code'] = city.state.code;
+                        variables['state_slug'] = city.state.slug;
+                        variables['country_name'] = city.state.country.name;
+                        variables['country_code'] = city.state.country.code;
+                        if (city.population) variables['population'] = city.population.toLocaleString();
+                        if (city.avgPremium) variables['avg_premium'] = `$${city.avgPremium}`;
+                    }
+                }
+
+                // 3. Find Country if only country_code provided
+                if (!countryId && variables['country_code']) {
+                    const country = await prisma.country.findFirst({
+                        where: { code: String(variables['country_code']).toLowerCase() },
+                    });
+                    if (country) {
+                        countryId = country.id;
+                        geoLevel = 'COUNTRY';
+                        variables['country_name'] = country.name;
+                        variables['country_code'] = country.code;
+                    }
+                }
+
                 // Generate slug
                 let slug = slugPattern;
                 Object.entries(variables).forEach(([key, value]) => {
@@ -154,27 +264,44 @@ async function processJob(job: any) {
                             await prisma.page.update({
                                 where: { id: existingPage.id },
                                 data: {
-                                    title: variables.page_title || existingPage.title,
-                                    subtitle: variables.page_subtitle || existingPage.subtitle,
+                                    title: variables.h1_title || variables.page_title || existingPage.title,
+                                    subtitle: variables.hero_tagline || variables.page_subtitle || existingPage.subtitle,
+                                    metaTitle: variables.meta_title || existingPage.metaTitle,
+                                    metaDescription: variables.meta_description || existingPage.metaDescription,
                                     customData: { ...((existingPage.customData as any) || {}), ...variables },
+                                    // Update geo hierarchy if resolved
+                                    countryId: countryId || existingPage.countryId,
+                                    stateId: stateId || existingPage.stateId,
+                                    cityId: cityId || existingPage.cityId,
+                                    geoLevel: geoLevel || existingPage.geoLevel,
                                     updatedAt: new Date(),
                                 },
                             });
+                            // Trigger revalidation
+                            const path = slug.startsWith('/') ? slug : `/${slug}`;
+                            await revalidateWebPath(path).catch(console.error);
                         }
                         updatedPages++;
                         continue;
                     }
                 }
 
-                // Create new page
+                // Create new page with geo hierarchy
                 if (!job.dryRun) {
                     await prisma.page.create({
                         data: {
                             slug,
-                            title: variables.page_title || null,
-                            subtitle: variables.page_subtitle || null,
+                            title: variables.h1_title || variables.page_title || null,
+                            subtitle: variables.hero_tagline || variables.page_subtitle || null,
+                            metaTitle: variables.meta_title || null,
+                            metaDescription: variables.meta_description || null,
                             templateId: job.templateId,
                             insuranceTypeId: job.insuranceTypeId,
+                            // Geo hierarchy
+                            countryId,
+                            stateId,
+                            cityId,
+                            geoLevel,
                             content: job.template?.sections || [],
                             customData: variables,
                             status: job.publishOnCreate ? 'PUBLISHED' : 'DRAFT',

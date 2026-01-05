@@ -1,41 +1,41 @@
 # TODO - MyInsuranceBuddies Remaining Tasks
 
-## Current Status: ~60% Complete
+## ⚠️ URGENT ACTION REQUIRED (Environment)
+To enable the new 1M-page scalable content pipeline, set these secrets in `.env.local`:
 
-**What's Done**: Backend APIs, authentication, database schema, state/city pages, backup scripts, documentation
-**What's Needed**: Admin UI interfaces, tests, rate limiting, sample content
+**`apps/web/.env`**:
+`REVALIDATION_SECRET="[secure-random-string]"`
 
-## Priority 1: Admin User Interfaces (Critical)
+**`apps/admin/.env`**:
+`REVALIDATION_SECRET="[same-string-as-web]"`
+`WEB_URL="http://localhost:3000"` (or production URL)
 
-### Blog Admin (`apps/admin/app/blog/`)
-- [ ] Post list page with filters
-- [ ] TipTap WYSIWYG editor
-- [ ] Media library browser
-- [ ] Auto-save drafts
-- [ ] SEO metadata panel
-- [ ] Preview mode
+---
 
-### Super Admin (`apps/admin/app/super/`)
-- [ ] Template manager (create/edit with CodeMirror)
-- [ ] Region import/export (CSV/JSON)
-- [ ] Page generation UI
-- [ ] User management
-- [ ] Audit log viewer
-- [ ] Site settings panel
+## Current Status: Scalability Phase 1 Complete
 
-## Priority 2: Security & Tests
+**Recently Completed**:
+- [x] Template Manager (with HTML/Handlebars)
+- [x] Page Generation UI & Bulk API
+- [x] Shared Config Workspace (`packages/config`)
+- [x] Shared UI Workspace (`packages/ui`)
+- [x] On-Demand ISR Pipeline
+
+## Priority 1: Architecture Scaling (Billion Dollar Roadmap)
+- [ ] **Infrastructure**: Move to Cloudflare + Docker/Serverless (Phase 2)
+- [x] **Shared UI**: Extract generic components to `packages/ui` (Phase 1 Part 2)
+- [ ] **Auth**: Unified SSO between Admin and Web
+
+## Priority 2: Admin Features
+- [ ] Blog Admin (TipTap Editor, Media Library)
+- [ ] Region Import/Export
+- [ ] Audit Log Viewer
+
+## Priority 3: Security & Tests
 - [ ] CSRF protection
-- [ ] Rate limiting (API + login)
-- [ ] Unit tests (Jest)
-- [ ] Integration tests (Supertest)
-- [ ] E2E tests (Cypress)
+- [ ] Rate limiting
+- [ ] E2E tests (Playwright recommended over Cypress)
 
-## Priority 3: Content & Polish
-- [ ] Create 20 sample blog posts
-- [ ] Generate all state/city pages
-- [ ] Enhanced sitemaps (gzipped)
-- [ ] OpenAPI documentation
-
-## Estimated Time: 80 hours remaining
-
-See full details in project documentation.
+## Priority 4: Content
+- [ ] Generate all state/city pages (using Bulk Gen)
+- [ ] Blog Content

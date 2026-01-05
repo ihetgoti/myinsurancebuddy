@@ -22,6 +22,7 @@ function TemplateEditorContent() {
     const [htmlContent, setHtmlContent] = useState('');
     const [cssContent, setCssContent] = useState('');
     const [saving, setSaving] = useState(false);
+    const [showAffiliates, setShowAffiliates] = useState(true);
     const [showMediaPicker, setShowMediaPicker] = useState(false);
     const [mediaItems, setMediaItems] = useState<MediaItem[]>([]);
     const [activeTab, setActiveTab] = useState<'html' | 'css' | 'preview'>('html');
@@ -44,6 +45,7 @@ function TemplateEditorContent() {
                 setCategory(data.category || 'custom');
                 setHtmlContent(data.htmlContent || '');
                 setCssContent(data.customCss || '');
+                setShowAffiliates(data.showAffiliates !== false);
             }
         } catch (error) {
             console.error('Failed to fetch template:', error);
@@ -104,6 +106,7 @@ function TemplateEditorContent() {
                     category,
                     htmlContent,
                     customCss: cssContent,
+                    showAffiliates,
                     type: 'html',
                 }),
             });
@@ -191,6 +194,18 @@ function TemplateEditorContent() {
                                     <option value="guide">Guide</option>
                                     <option value="landing">Landing</option>
                                 </select>
+                            </div>
+
+                            <div>
+                                <label className="flex items-center gap-2 cursor-pointer">
+                                    <input
+                                        type="checkbox"
+                                        checked={showAffiliates}
+                                        onChange={(e) => setShowAffiliates(e.target.checked)}
+                                        className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+                                    />
+                                    <span className="text-sm font-medium text-gray-700">Show Affiliate Buttons</span>
+                                </label>
                             </div>
 
                             <div>

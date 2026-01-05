@@ -52,6 +52,7 @@ export async function POST(request: NextRequest) {
             customJs,
             layout,
             htmlContent,
+            showAffiliates,
         } = body;
 
         if (!name) {
@@ -81,6 +82,7 @@ export async function POST(request: NextRequest) {
                 customCss,
                 customJs,
                 layout: layout || 'default',
+                showAffiliates,
             },
         });
 

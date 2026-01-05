@@ -49,13 +49,13 @@ export async function PATCH(
         }
 
         const body = await request.json();
-        const { 
-            name, 
-            slug, 
-            description, 
-            thumbnail, 
-            sections, 
-            variables, 
+        const {
+            name,
+            slug,
+            description,
+            thumbnail,
+            sections,
+            variables,
             customVariables,
             type,
             category,
@@ -64,7 +64,9 @@ export async function PATCH(
             customCss,
             customJs,
             layout,
-            isActive 
+            isActive,
+            htmlContent,
+            showAffiliates
         } = body;
 
         // Check if slug is taken by another template
@@ -107,6 +109,8 @@ export async function PATCH(
                 ...(customJs !== undefined && { customJs }),
                 ...(layout !== undefined && { layout }),
                 ...(isActive !== undefined && { isActive }),
+                ...(htmlContent !== undefined && { htmlContent }),
+                ...(showAffiliates !== undefined && { showAffiliates }),
                 version: newVersion,
             },
         });
@@ -117,6 +121,8 @@ export async function PATCH(
         return NextResponse.json({ error: 'Failed to update template' }, { status: 500 });
     }
 }
+
+export const PUT = PATCH;
 
 // DELETE /api/templates/[id] - Delete template
 export async function DELETE(

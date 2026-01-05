@@ -6,6 +6,7 @@ import { Metadata } from 'next';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import DynamicPageRenderer from '@/components/DynamicPageRenderer';
+import HtmlTemplateRenderer from '@/components/HtmlTemplateRenderer';
 import { Building2, MapPin, FileText, Shield, ArrowRight, ChevronDown } from 'lucide-react';
 
 /**
@@ -14,7 +15,7 @@ import { Building2, MapPin, FileText, Shield, ArrowRight, ChevronDown } from 'lu
  * - This allows serving cached pages while updating in background
  * - For 100k+ pages, this prevents DB overload on high traffic
  */
-export const revalidate = 3600; // ISR: revalidate every hour
+export const revalidate = false; // ISR: On-Demand revalidation only (infinite cache)
 export const dynamicParams = true; // Allow dynamic routes not in generateStaticParams
 
 interface PageProps {
@@ -172,34 +173,87 @@ async function resolveRoute(segments: string[]) {
     return { insuranceType, country, state, city, page, geoLevel };
 }
 
-function buildVariables(insuranceType: any, country: any, state: any, city: any, page: any): Record<string, string> {
+function buildVariables(insuranceType: any, country: any, state: any, city: any, page: any): Record<string, any> {
     const currentDate = new Date();
+    const location = city?.name || state?.name || country?.name || '';
 
-    return {
+    // Base variables from geo hierarchy
+    const baseVars: Record<string, any> = {
+        // Page-level
         page_title: page?.title || buildTitle(insuranceType, country, state, city).replace(' | MyInsuranceBuddies', ''),
         page_subtitle: page?.subtitle || buildDescription(insuranceType, country, state, city),
+
+        // Insurance type
         insurance_type: insuranceType?.name || 'Insurance',
+        insurance_type_name: insuranceType?.name || 'Insurance',
         insurance_type_slug: insuranceType?.slug || 'insurance',
+
+        // Country
         country: country?.name || '',
+        country_name: country?.name || '',
         country_code: country?.code?.toUpperCase() || '',
+
+        // State (multiple alias names for flexibility)
         state: state?.name || '',
+        state_name: state?.name || '',
         state_code: state?.code || '',
+        state_code_lower: state?.code?.toLowerCase() || '',
         state_slug: state?.slug || '',
+
+        // City
         city: city?.name || '',
+        city_name: city?.name || '',
         city_slug: city?.slug || '',
-        location: city?.name || state?.name || country?.name || '',
+
+        // Combined location
+        location: location,
+        location_name: location,
+
+        // Insurance data from state
         avg_premium: state?.avgPremium ? `$${state.avgPremium}` : '$150',
         avg_savings: '$500',
-        min_coverage: JSON.stringify(state?.minCoverage || {}),
+        min_coverage: state?.minCoverage || {},
         population: city?.population?.toLocaleString() || state?.population?.toLocaleString() || '',
+
+        // Date/time
         current_year: currentDate.getFullYear().toString(),
         current_month: currentDate.toLocaleString('default', { month: 'long' }),
+        year: currentDate.getFullYear().toString(),
+
+        // Site info
         site_name: 'MyInsuranceBuddies',
         site_url: 'https://myinsurancebuddies.com',
-        // Custom data from page
-        ...((page?.customData as Record<string, string>) || {}),
+
+        // Template-friendly aliases (commonly used in HTML templates)
+        h1_title: page?.title || buildTitle(insuranceType, country, state, city).replace(' | MyInsuranceBuddies', ''),
+        meta_title: page?.metaTitle || buildTitle(insuranceType, country, state, city),
+        meta_description: page?.metaDescription || buildDescription(insuranceType, country, state, city),
+        hero_title: page?.title || buildTitle(insuranceType, country, state, city).replace(' | MyInsuranceBuddies', ''),
+        hero_tagline: page?.subtitle || `Compare ${insuranceType?.name || 'insurance'} quotes in ${location}`,
+        hero_description: page?.metaDescription || buildDescription(insuranceType, country, state, city),
+    };
+
+    // Parse min_coverage for individual fields
+    if (state?.minCoverage && typeof state.minCoverage === 'object') {
+        const coverage = state.minCoverage as any;
+        baseVars.bodily_injury_per_person = coverage.bodilyInjuryPerPerson || coverage.bodily_injury_per_person || '';
+        baseVars.bodily_injury_per_accident = coverage.bodilyInjuryPerAccident || coverage.bodily_injury_per_accident || '';
+        baseVars.property_damage = coverage.propertyDamage || coverage.property_damage || '';
+        baseVars.coverage_format = coverage.format || `${baseVars.bodily_injury_per_person}/${baseVars.bodily_injury_per_accident}/${baseVars.property_damage}`;
+        baseVars.is_no_fault = coverage.isNoFault || coverage.no_fault || false;
+        baseVars.pip_required = coverage.pipRequired || coverage.pip_required || false;
+        baseVars.um_required = coverage.umRequired || coverage.um_required || false;
+    }
+
+    // Merge custom data from page (overrides base vars)
+    const customData = (page?.customData as Record<string, any>) || {};
+
+    return {
+        ...baseVars,
+        ...customData,
     };
 }
+
 
 /**
  * Replace template variables with actual values
@@ -208,7 +262,7 @@ function buildVariables(insuranceType: any, country: any, state: any, city: any,
  * @param variables - Key-value map of variable replacements
  * @returns Processed string with variables replaced
  */
-function replaceVariables(template: string, variables: Record<string, string>): string {
+function replaceVariables(template: string, variables: Record<string, any>): string {
     if (!template) return '';
 
     let result = template;
@@ -217,7 +271,13 @@ function replaceVariables(template: string, variables: Record<string, string>): 
     Object.entries(variables).forEach(([key, value]) => {
         // Escape special regex characters in key
         const escapedKey = key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        result = result.replace(new RegExp(`{{${escapedKey}}}`, 'g'), value || '');
+        // Convert value to string, handling objects/arrays
+        const stringValue = value === null || value === undefined
+            ? ''
+            : typeof value === 'object'
+                ? JSON.stringify(value)
+                : String(value);
+        result = result.replace(new RegExp(`{{${escapedKey}}}`, 'g'), stringValue);
     });
 
     // SECURITY: Remove any remaining unreplaced variables to prevent raw token display
@@ -230,6 +290,7 @@ function replaceVariables(template: string, variables: Record<string, string>): 
 
     return result;
 }
+
 
 function buildTitle(insuranceType: any, country: any, state: any, city: any): string {
     const parts = [insuranceType?.name || 'Insurance'];
@@ -450,7 +511,7 @@ export default async function DynamicPage({ params }: PageProps) {
     }
 
     // Fetch data for header navigation and stats
-    const [allInsuranceTypes, allStates, totalPages, totalStates, totalCities] = await Promise.all([
+    const [allInsuranceTypes, allStates, totalPages, totalStates, totalCities, affiliatePartners] = await Promise.all([
         prisma.insuranceType.findMany({
             where: { isActive: true },
             orderBy: { sortOrder: 'asc' },
@@ -464,13 +525,42 @@ export default async function DynamicPage({ params }: PageProps) {
         prisma.page.count({ where: { isPublished: true } }),
         prisma.state.count({ where: { isActive: true } }),
         prisma.city.count({ where: { isActive: true } }),
+        // Fetch affiliates filtered by insurance type (niche)
+        prisma.affiliatePartner.findMany({
+            where: {
+                isActive: true,
+                // Filter by insurance type if we have one
+                ...(insuranceType?.slug ? {
+                    insuranceTypes: { has: insuranceType.slug.replace('-insurance', '') }
+                } : {}),
+            },
+            orderBy: [{ isFeatured: 'desc' }, { displayOrder: 'asc' }],
+            take: 6,
+        }),
     ]);
+
+    // Check if template allows affiliates
+    const showAffiliates = page?.template?.showAffiliates !== false && affiliatePartners.length > 0;
+
+    // Check layout settings (Bridge Page support)
+    const showHeader = page?.template?.includeHeader !== false;
+    const showFooter = page?.template?.includeFooter !== false;
+
+    // Get primary offer for Bridge Pages
+    const primaryOffer = affiliatePartners[0];
 
     // Get related links for internal linking
     const relatedLinks = await getRelatedLinks(insuranceType, country, state, city);
 
     // Build variables
     const variables = buildVariables(insuranceType, country, state, city, page);
+
+    // Inject Affiliate Offers
+    if (primaryOffer) {
+        variables.primary_offer_link = primaryOffer.affiliateUrl || '#';
+        variables.primary_offer_name = primaryOffer.name;
+        variables.primary_offer_cta = primaryOffer.ctaText || 'Get Quote';
+    }
 
     // Generate schema
     const schemas = generateSchema(insuranceType, country, state, city, page);
@@ -483,7 +573,141 @@ export default async function DynamicPage({ params }: PageProps) {
             ? `${state.name}, ${country?.name}`
             : country?.name;
 
-    // If page has template with sections, render dynamically
+    // PRIORITY 1: If template has HTML content, render with Handlebars-style substitution
+    if (page?.template?.htmlContent) {
+        return (
+            <div className="min-h-screen bg-white">
+                {/* Schema.org JSON-LD */}
+                <script
+                    type="application/ld+json"
+                    dangerouslySetInnerHTML={{ __html: JSON.stringify(schemas) }}
+                />
+
+                {showHeader && <Header insuranceTypes={allInsuranceTypes} states={allStates} />}
+
+                <HtmlTemplateRenderer
+                    htmlContent={page.template.htmlContent}
+                    cssContent={page.template.customCss}
+                    variables={variables}
+                />
+
+                {/* Interlinking Section */}
+                <section className="bg-slate-50 border-t border-slate-200 py-12">
+                    <div className="container mx-auto px-4">
+                        <div className="grid md:grid-cols-3 gap-8">
+                            {/* Nearby Cities */}
+                            {relatedLinks.nearbyCities.length > 0 && (
+                                <div>
+                                    <h3 className="font-bold text-slate-900 mb-4 text-lg">Nearby Cities</h3>
+                                    <ul className="space-y-2">
+                                        {relatedLinks.nearbyCities.slice(0, 8).map((link: any, i: number) => (
+                                            <li key={i}>
+                                                <Link href={link.href} className="text-slate-600 hover:text-blue-600 transition-colors text-sm">
+                                                    → {link.label}
+                                                </Link>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </div>
+                            )}
+
+                            {/* Other Insurance Types */}
+                            {relatedLinks.otherNiches.length > 0 && (
+                                <div>
+                                    <h3 className="font-bold text-slate-900 mb-4 text-lg">Other Insurance Types</h3>
+                                    <ul className="space-y-2">
+                                        {relatedLinks.otherNiches.slice(0, 6).map((link: any, i: number) => (
+                                            <li key={i}>
+                                                <Link href={link.href} className="text-slate-600 hover:text-blue-600 transition-colors text-sm flex items-center gap-2">
+                                                    <span>{link.icon}</span> {link.label}
+                                                </Link>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </div>
+                            )}
+
+                            {/* Parent Locations */}
+                            {relatedLinks.parentLocations.length > 0 && (
+                                <div>
+                                    <h3 className="font-bold text-slate-900 mb-4 text-lg">Browse More</h3>
+                                    <ul className="space-y-2">
+                                        {relatedLinks.parentLocations.map((link: any, i: number) => (
+                                            <li key={i}>
+                                                <Link href={link.href} className="text-slate-600 hover:text-blue-600 transition-colors text-sm">
+                                                    → {link.label}
+                                                </Link>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </section>
+
+                {/* Affiliate Partners Section */}
+                {showAffiliates && (
+                    <section className="py-12 bg-white border-t border-slate-200">
+                        <div className="container mx-auto px-4">
+                            <div className="text-center mb-8">
+                                <h2 className="text-xl font-bold text-slate-900 mb-2">Compare Top {insuranceType?.name || 'Insurance'} Providers</h2>
+                                <p className="text-slate-500 text-sm">Get quotes from trusted insurance carriers</p>
+                            </div>
+                            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 max-w-4xl mx-auto">
+                                {affiliatePartners.map((partner: any) => (
+                                    <a
+                                        key={partner.id}
+                                        href={partner.affiliateUrl || '#'}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className={`group flex items-center gap-4 p-5 bg-white rounded-lg border hover:shadow-lg transition-all ${partner.affiliateUrl
+                                            ? 'border-slate-200 hover:border-blue-500'
+                                            : 'border-dashed border-slate-300 opacity-60'
+                                            }`}
+                                    >
+                                        <div className="w-12 h-12 bg-slate-100 rounded-lg flex items-center justify-center overflow-hidden flex-shrink-0">
+                                            {partner.logo ? (
+                                                <img src={partner.logo} alt={partner.name} className="w-full h-full object-contain p-1" />
+                                            ) : (
+                                                <span className="text-xl font-bold text-slate-400">{partner.name[0]}</span>
+                                            )}
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                            <h3 className="font-semibold text-slate-900 group-hover:text-blue-600 transition-colors truncate">
+                                                {partner.name}
+                                            </h3>
+                                            <p className="text-xs text-slate-400 truncate">
+                                                {partner.description || `${insuranceType?.name || 'Insurance'} provider`}
+                                            </p>
+                                        </div>
+                                        <span className={`text-sm font-semibold px-3 py-1.5 rounded-lg flex-shrink-0 ${partner.affiliateUrl
+                                            ? 'bg-blue-600 text-white group-hover:bg-blue-700'
+                                            : 'bg-slate-200 text-slate-500'
+                                            }`}>
+                                            {partner.ctaText || 'Get Quote'}
+                                        </span>
+                                    </a>
+                                ))}
+                            </div>
+                            <p className="text-center text-xs text-slate-400 mt-6">
+                                Clicking these links may take you to partner websites. We may earn a commission at no extra cost to you.
+                            </p>
+                        </div>
+                    </section>
+                )}
+
+                {showFooter && <Footer insuranceTypes={allInsuranceTypes} />}
+
+                {/* Custom JS from template */}
+                {page.template.customJs && (
+                    <script dangerouslySetInnerHTML={{ __html: page.template.customJs }} />
+                )}
+            </div>
+        );
+    }
+
+    // PRIORITY 2: If page has template with component sections, render dynamically
     if (page?.template?.sections && Array.isArray(page.template.sections) && page.template.sections.length > 0) {
         return (
             <div className="min-h-screen bg-white">
@@ -498,7 +722,7 @@ export default async function DynamicPage({ params }: PageProps) {
                     <style dangerouslySetInnerHTML={{ __html: page.template.customCss }} />
                 )}
 
-                <Header insuranceTypes={allInsuranceTypes} states={allStates} />
+                {showHeader && <Header insuranceTypes={allInsuranceTypes} states={allStates} />}
 
                 <DynamicPageRenderer
                     sections={page.template.sections as any[]}
@@ -506,7 +730,113 @@ export default async function DynamicPage({ params }: PageProps) {
                     variables={variables}
                 />
 
-                <Footer insuranceTypes={allInsuranceTypes} />
+                {/* Interlinking Section */}
+                <section className="bg-slate-50 border-t border-slate-200 py-12">
+                    <div className="container mx-auto px-4">
+                        <div className="grid md:grid-cols-3 gap-8">
+                            {/* Nearby Cities */}
+                            {relatedLinks.nearbyCities.length > 0 && (
+                                <div>
+                                    <h3 className="font-bold text-slate-900 mb-4 text-lg">Nearby Cities</h3>
+                                    <ul className="space-y-2">
+                                        {relatedLinks.nearbyCities.slice(0, 8).map((link: any, i: number) => (
+                                            <li key={i}>
+                                                <Link href={link.href} className="text-slate-600 hover:text-blue-600 transition-colors text-sm">
+                                                    → {link.label}
+                                                </Link>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </div>
+                            )}
+
+                            {/* Other Insurance Types */}
+                            {relatedLinks.otherNiches.length > 0 && (
+                                <div>
+                                    <h3 className="font-bold text-slate-900 mb-4 text-lg">Other Insurance Types</h3>
+                                    <ul className="space-y-2">
+                                        {relatedLinks.otherNiches.slice(0, 6).map((link: any, i: number) => (
+                                            <li key={i}>
+                                                <Link href={link.href} className="text-slate-600 hover:text-blue-600 transition-colors text-sm flex items-center gap-2">
+                                                    <span>{link.icon}</span> {link.label}
+                                                </Link>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </div>
+                            )}
+
+                            {/* Parent Locations */}
+                            {relatedLinks.parentLocations.length > 0 && (
+                                <div>
+                                    <h3 className="font-bold text-slate-900 mb-4 text-lg">Browse More</h3>
+                                    <ul className="space-y-2">
+                                        {relatedLinks.parentLocations.map((link: any, i: number) => (
+                                            <li key={i}>
+                                                <Link href={link.href} className="text-slate-600 hover:text-blue-600 transition-colors text-sm">
+                                                    → {link.label}
+                                                </Link>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </section>
+
+                {/* Affiliate Partners Section */}
+                {showAffiliates && (
+                    <section className="py-12 bg-white border-t border-slate-200">
+                        <div className="container mx-auto px-4">
+                            <div className="text-center mb-8">
+                                <h2 className="text-xl font-bold text-slate-900 mb-2">Compare Top {insuranceType?.name || 'Insurance'} Providers</h2>
+                                <p className="text-slate-500 text-sm">Get quotes from trusted insurance carriers</p>
+                            </div>
+                            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 max-w-4xl mx-auto">
+                                {affiliatePartners.map((partner: any) => (
+                                    <a
+                                        key={partner.id}
+                                        href={partner.affiliateUrl || '#'}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className={`group flex items-center gap-4 p-5 bg-white rounded-lg border hover:shadow-lg transition-all ${partner.affiliateUrl
+                                            ? 'border-slate-200 hover:border-blue-500'
+                                            : 'border-dashed border-slate-300 opacity-60'
+                                            }`}
+                                    >
+                                        <div className="w-12 h-12 bg-slate-100 rounded-lg flex items-center justify-center overflow-hidden flex-shrink-0">
+                                            {partner.logo ? (
+                                                <img src={partner.logo} alt={partner.name} className="w-full h-full object-contain p-1" />
+                                            ) : (
+                                                <span className="text-xl font-bold text-slate-400">{partner.name[0]}</span>
+                                            )}
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                            <h3 className="font-semibold text-slate-900 group-hover:text-blue-600 transition-colors truncate">
+                                                {partner.name}
+                                            </h3>
+                                            <p className="text-xs text-slate-400 truncate">
+                                                {partner.description || `${insuranceType?.name || 'Insurance'} provider`}
+                                            </p>
+                                        </div>
+                                        <span className={`text-sm font-semibold px-3 py-1.5 rounded-lg flex-shrink-0 ${partner.affiliateUrl
+                                            ? 'bg-blue-600 text-white group-hover:bg-blue-700'
+                                            : 'bg-slate-200 text-slate-500'
+                                            }`}>
+                                            {partner.ctaText || 'Get Quote'}
+                                        </span>
+                                    </a>
+                                ))}
+                            </div>
+                            <p className="text-center text-xs text-slate-400 mt-6">
+                                Clicking these links may take you to partner websites. We may earn a commission at no extra cost to you.
+                            </p>
+                        </div>
+                    </section>
+                )}
+
+                {showFooter && <Footer insuranceTypes={allInsuranceTypes} />}
 
                 {/* Custom JS from template */}
                 {page.template.customJs && (

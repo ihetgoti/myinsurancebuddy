@@ -505,6 +505,9 @@ model Template {
   isActive        Boolean   @default(true)
   isDefault       Boolean   @default(false) // Default for new pages
   isLocked        Boolean   @default(false) // Cannot be deleted
+  showAffiliates  Boolean   @default(true)  // Show affiliate partner buttons
+  includeHeader   Boolean   @default(true)  // Show global header
+  includeFooter   Boolean   @default(true)  // Show global footer
   
   // Creator
   createdById     String?

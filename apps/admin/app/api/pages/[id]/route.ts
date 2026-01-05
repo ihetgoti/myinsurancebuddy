@@ -32,6 +32,10 @@ export async function GET(
     }
 }
 
+import { revalidateWebPath } from '@/lib/revalidate';
+
+// ... (GET omitted)
+
 // PATCH update page
 export async function PATCH(
     request: NextRequest,
@@ -82,6 +86,10 @@ export async function PATCH(
             }
         });
 
+        // Trigger web revalidation
+        const path = page.slug.startsWith('/') ? page.slug : `/${page.slug}`;
+        await revalidateWebPath(path);
+
         // Create audit log for update
         await prisma.auditLog.create({
             data: {
@@ -126,6 +134,10 @@ export async function DELETE(
         }
 
         await prisma.page.delete({ where: { id: params.id } });
+
+        // Trigger web revalidation (invalidate the deleted page URL)
+        const path = page.slug.startsWith('/') ? page.slug : `/${page.slug}`;
+        await revalidateWebPath(path);
 
         // Create audit log for delete
         await prisma.auditLog.create({
