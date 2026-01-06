@@ -139,6 +139,12 @@ model SiteSettings {
   enableRelatedPages    Boolean  @default(true)
   enableSocialShare     Boolean  @default(true)
   
+  // Ads Configuration
+  adsEnabled            Boolean  @default(true)  // Master switch for all ads
+  adsenseId             String?  // Google AdSense Publisher ID (ca-pub-xxx)
+  adSlots               Json?    // {"header": "slot-id", "sidebar": "slot-id"}
+  customAdCode          String?  @db.Text // Custom ad script if not AdSense
+  
   // Maintenance
   maintenanceMode       Boolean  @default(false)
   maintenanceMessage    String?
@@ -638,6 +644,9 @@ model Page {
   rating          Float?
   ratingCount     Int           @default(0)
   shareCount      Int           @default(0)
+  
+  // Ads Control
+  showAds         Boolean       @default(true) // Whether to show ads on this page
   
   // Audit
   createdById     String?

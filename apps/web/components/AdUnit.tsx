@@ -4,12 +4,61 @@ interface AdUnitProps {
     slot: string;
     className?: string;
     format?: 'horizontal' | 'rectangle' | 'vertical' | 'responsive';
+    adsenseId?: string | null;
+    adSlotId?: string | null;
+    showAds?: boolean;
 }
 
-export default function AdUnit({ slot, className = '', format = 'horizontal' }: AdUnitProps) {
-    // This is where you'd conditionally render AdSense invalidation logic or just a slot div
-    // For now, we render a visible placeholder in dev.
+export default function AdUnit({
+    slot,
+    className = '',
+    format = 'horizontal',
+    adsenseId,
+    adSlotId,
+    showAds = true
+}: AdUnitProps) {
+    // Don't render if ads are disabled
+    if (!showAds) {
+        return null;
+    }
 
+    // If we have AdSense configuration, render real ad
+    if (adsenseId && adSlotId) {
+        const getAdSize = () => {
+            switch (format) {
+                case 'horizontal':
+                    return { width: 728, height: 90 };
+                case 'rectangle':
+                    return { width: 300, height: 250 };
+                case 'vertical':
+                    return { width: 160, height: 600 };
+                default:
+                    return { width: 'auto', height: 'auto' };
+            }
+        };
+
+        const size = getAdSize();
+        const isResponsive = format === 'responsive' || size.width === 'auto';
+
+        return (
+            <div className={`ad-unit ${className}`}>
+                <ins
+                    className="adsbygoogle"
+                    style={{
+                        display: 'block',
+                        width: isResponsive ? '100%' : `${size.width}px`,
+                        height: isResponsive ? 'auto' : `${size.height}px`,
+                    }}
+                    data-ad-client={adsenseId}
+                    data-ad-slot={adSlotId}
+                    data-ad-format={isResponsive ? 'auto' : undefined}
+                    data-full-width-responsive={isResponsive ? 'true' : undefined}
+                />
+            </div>
+        );
+    }
+
+    // Fallback: Render placeholder in development
     return (
         <div className={`ad-unit group relative overflow-hidden bg-gray-50 border border-gray-200 flex flex-col items-center justify-center text-gray-400 text-xs text-center p-4 ${className}`}>
             <div className="absolute top-0 right-0 bg-gray-200 text-gray-500 text-[10px] px-1">AD</div>

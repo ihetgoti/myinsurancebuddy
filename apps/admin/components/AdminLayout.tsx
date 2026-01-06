@@ -206,6 +206,8 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
             title: 'Marketing',
             items: [
                 { href: '/dashboard/affiliates', label: 'Affiliate Partners', icon: <Handshake size={18} strokeWidth={1.5} /> },
+                { href: '/dashboard/ads', label: 'Manage Ads', icon: <LayoutTemplate size={18} strokeWidth={1.5} /> },
+                { href: '/dashboard/settings/ads', label: 'Ad Settings', icon: <Settings size={18} strokeWidth={1.5} /> },
             ],
         },
         {
