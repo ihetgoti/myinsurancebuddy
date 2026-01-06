@@ -35,9 +35,7 @@ export default function JobProgressBar({ collapsed = false }: JobProgressBarProp
         // Poll each running job
         for (const job of runningJobs) {
             try {
-                const endpoint = job.type === 'quick'
-                    ? `/api/quick-generate/status/${job.id}`
-                    : `/api/bulk-generate/${job.id}/status`;
+                const endpoint = `/api/bulk-generate/${job.id}/status`;
 
                 const res = await fetch(getApiUrl(endpoint));
                 if (res.ok) {

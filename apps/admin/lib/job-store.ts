@@ -1,14 +1,11 @@
-'use client';
-
 /**
- * Global Job Store
- * Persists active job IDs to localStorage and provides polling mechanism
- * for tracking job progress across page navigation
+ * Simple in-memory job store for tracking bulk generation progress
+ * Note: This is client-side state, not persisted
  */
 
 export interface JobProgress {
     id: string;
-    type: 'quick' | 'bulk';
+    type: 'bulk';
     name: string;
     status: 'QUEUED' | 'PROCESSING' | 'COMPLETED' | 'FAILED';
     total: number;
@@ -18,73 +15,45 @@ export interface JobProgress {
     skipped: number;
     failed: number;
     startedAt: string;
-    error?: string;
+    completedAt?: string;
 }
 
-const STORAGE_KEY = 'admin_active_jobs';
+// In-memory store (browser only)
+let activeJobs: JobProgress[] = [];
 
-// Get active jobs from localStorage
 export function getActiveJobs(): JobProgress[] {
-    if (typeof window === 'undefined') return [];
-    try {
-        const stored = localStorage.getItem(STORAGE_KEY);
-        return stored ? JSON.parse(stored) : [];
-    } catch {
-        return [];
-    }
+    return [...activeJobs];
 }
 
-// Save active jobs to localStorage
-export function saveActiveJobs(jobs: JobProgress[]): void {
-    if (typeof window === 'undefined') return;
-    try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(jobs));
-    } catch {
-        // Ignore storage errors
-    }
-}
-
-// Add a new job to track
 export function addActiveJob(job: JobProgress): void {
-    const jobs = getActiveJobs();
-    // Remove if already exists (update case)
-    const filtered = jobs.filter(j => j.id !== job.id);
-    filtered.unshift(job);
+    // Remove any existing job with the same ID
+    activeJobs = activeJobs.filter(j => j.id !== job.id);
+    activeJobs.unshift(job);
     // Keep only last 10 jobs
-    saveActiveJobs(filtered.slice(0, 10));
-}
-
-// Update job progress
-export function updateJobProgress(id: string, updates: Partial<JobProgress>): void {
-    const jobs = getActiveJobs();
-    const index = jobs.findIndex(j => j.id === id);
-    if (index !== -1) {
-        jobs[index] = { ...jobs[index], ...updates };
-        saveActiveJobs(jobs);
+    if (activeJobs.length > 10) {
+        activeJobs = activeJobs.slice(0, 10);
     }
 }
 
-// Remove completed/failed jobs older than 1 hour
+export function updateJobProgress(jobId: string, update: Partial<JobProgress>): void {
+    const job = activeJobs.find(j => j.id === jobId);
+    if (job) {
+        Object.assign(job, update);
+        if (update.status === 'COMPLETED' || update.status === 'FAILED') {
+            job.completedAt = new Date().toISOString();
+        }
+    }
+}
+
+export function removeJob(jobId: string): void {
+    activeJobs = activeJobs.filter(j => j.id !== jobId);
+}
+
 export function cleanupOldJobs(): void {
-    const jobs = getActiveJobs();
     const oneHourAgo = Date.now() - 60 * 60 * 1000;
-    const active = jobs.filter(job => {
+    activeJobs = activeJobs.filter(job => {
         if (job.status === 'QUEUED' || job.status === 'PROCESSING') return true;
-        const startTime = new Date(job.startedAt).getTime();
-        return startTime > oneHourAgo;
+        const completedAt = job.completedAt ? new Date(job.completedAt).getTime() : 0;
+        return completedAt > oneHourAgo;
     });
-    saveActiveJobs(active);
-}
-
-// Get only actively running jobs
-export function getRunningJobs(): JobProgress[] {
-    return getActiveJobs().filter(
-        job => job.status === 'QUEUED' || job.status === 'PROCESSING'
-    );
-}
-
-// Clear all jobs
-export function clearAllJobs(): void {
-    if (typeof window === 'undefined') return;
-    localStorage.removeItem(STORAGE_KEY);
 }

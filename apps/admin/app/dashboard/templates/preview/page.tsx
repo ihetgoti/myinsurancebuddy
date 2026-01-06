@@ -111,8 +111,8 @@ function PreviewContent() {
                                     key={d}
                                     onClick={() => setDevice(d)}
                                     className={`px-3 py-1.5 text-sm ${device === d
-                                            ? 'bg-gray-900 text-white'
-                                            : 'bg-white text-gray-700 hover:bg-gray-50'
+                                        ? 'bg-gray-900 text-white'
+                                        : 'bg-white text-gray-700 hover:bg-gray-50'
                                         }`}
                                 >
                                     {d === 'desktop' ? '🖥️' : d === 'tablet' ? '📱' : '📱'}
@@ -121,7 +121,7 @@ function PreviewContent() {
                         </div>
 
                         <button
-                            onClick={() => router.push(`/dashboard/quick-generate?template=${templateId}`)}
+                            onClick={() => router.push(`/dashboard/bulk-generate?template=${templateId}`)}
                             className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
                         >
                             Use This Template

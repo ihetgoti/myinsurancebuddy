@@ -201,7 +201,7 @@ export default function TemplatesPage() {
                                             Preview
                                         </button>
                                         <button
-                                            onClick={() => router.push(`/dashboard/quick-generate?template=${template.id}`)}
+                                            onClick={() => router.push(`/dashboard/bulk-generate?template=${template.id}`)}
                                             className="flex-1 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
                                         >
                                             Use
@@ -246,7 +246,7 @@ export default function TemplatesPage() {
                         <li>• <strong>State templates</strong> work best for targeting state-level keywords</li>
                         <li>• <strong>City templates</strong> are optimized for local SEO with location schema</li>
                         <li>• <strong>All templates</strong> include strategic ad placements for maximum revenue</li>
-                        <li>• Use <strong>Quick Generate</strong> to create thousands of pages instantly</li>
+                        <li>• Use <strong>Bulk Generate</strong> or the <strong>External API</strong> to create pages at scale</li>
                     </ul>
                 </div>
             </div>

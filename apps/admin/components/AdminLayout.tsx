@@ -191,7 +191,6 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                 { href: '/dashboard/pages', label: 'Pages', icon: <FileText size={18} strokeWidth={1.5} /> },
                 { href: '/dashboard/blog', label: 'Blog Posts', icon: <FileText size={18} strokeWidth={1.5} /> },
                 { href: '/dashboard/templates', label: 'Templates', icon: <LayoutTemplate size={18} strokeWidth={1.5} /> },
-                { href: '/dashboard/quick-generate', label: 'Quick Generate', icon: <Zap size={18} strokeWidth={1.5} /> },
                 { href: '/dashboard/bulk-generate', label: 'Bulk Generate', icon: <Database size={18} strokeWidth={1.5} /> },
                 { href: '/dashboard/media', label: 'Media Library', icon: <ImageIcon size={18} strokeWidth={1.5} /> },
             ],
