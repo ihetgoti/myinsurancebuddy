@@ -78,7 +78,7 @@ async function resolveGeoEntities(data: any) {
                 OR: [
                     { slug: data.state },
                     { name: { contains: data.state, mode: 'insensitive' } },
-                    { abbreviation: data.state.toUpperCase() }
+                    { code: data.state.toUpperCase() }
                 ]
             },
             include: { country: true }
