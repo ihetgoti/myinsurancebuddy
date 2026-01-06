@@ -12,6 +12,8 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { GeoLevel } from '@myinsurancebuddy/db';
 
+export const dynamic = 'force-dynamic';
+
 // Slugify helper
 function slugify(text: string): string {
     return text

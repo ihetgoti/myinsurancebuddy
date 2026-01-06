@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 
+export const dynamic = 'force-dynamic';
+
 /**
  * Submit sitemaps to Google using their ping endpoint
  * Google ping endpoint: https://www.google.com/ping?sitemap=<sitemap_url>

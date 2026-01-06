@@ -6,6 +6,8 @@ import { GENERATION_PRESETS, SEO_TEMPLATES, SLUG_PATTERNS, PresetAction } from '
 import { autoMapColumns, applyMapping, slugify } from '@/lib/auto-mapper';
 import { processJobInBatches } from '@/lib/job-queue';
 
+export const dynamic = 'force-dynamic';
+
 /**
  * Get or create a default template for quick generation
  */

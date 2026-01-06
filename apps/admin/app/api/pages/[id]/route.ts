@@ -34,6 +34,8 @@ export async function GET(
 
 import { revalidateWebPath } from '@/lib/revalidate';
 
+export const dynamic = 'force-dynamic';
+
 // ... (GET omitted)
 
 // PATCH update page

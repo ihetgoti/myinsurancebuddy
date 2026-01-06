@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
+export const dynamic = 'force-dynamic';
+
 const DEFAULT_OG_IMAGE = 'https://myinsurancebuddies.com/og-default.jpg';
 const SITE_URL = 'https://myinsurancebuddies.com';
 

@@ -7,6 +7,8 @@ import { join } from "path";
 import sharp from "sharp";
 import { v4 as uuidv4 } from "uuid";
 
+export const dynamic = 'force-dynamic';
+
 const UPLOAD_DIR = process.env.UPLOAD_DIR || "/var/www/myinsurancebuddies.com/uploads";
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];

@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getJobProgress } from '@/lib/job-queue';
 
+export const dynamic = 'force-dynamic';
+
 /**
  * GET /api/quick-generate/status/[id]
  * Get job progress status

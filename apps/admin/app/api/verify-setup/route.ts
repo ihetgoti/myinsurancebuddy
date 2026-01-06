@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma'; // Make sure this path is correct for admin (usually same)
 
+export const dynamic = 'force-dynamic';
+
 export async function GET() {
     try {
         console.log('Starting verification setup...');
