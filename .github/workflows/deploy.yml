@@ -64,7 +64,7 @@ jobs:
           username: ${{ secrets.VPS_USERNAME }}
           key: ${{ secrets.VPS_SSH_KEY }}
           port: ${{ secrets.VPS_PORT }}
-          envs: NEXTAUTH_SECRET,NEXTAUTH_URL,NEXTAUTH_URL_ADMIN
+          envs: NEXTAUTH_SECRET,NEXTAUTH_URL,NEXTAUTH_URL_ADMIN,PAGES_API_KEY
           script: |
             set -e
             PROJECT_DIR="/var/www/myinsurancebuddies.com"
@@ -90,6 +90,7 @@ jobs:
             NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
             NEXTAUTH_URL=${NEXTAUTH_URL}
             NEXTAUTH_URL_ADMIN=${NEXTAUTH_URL_ADMIN}
+            PAGES_API_KEY=${PAGES_API_KEY}
             EOF
             else
               echo "Updating .env file (preserving DATABASE_URL)..."
@@ -98,6 +99,7 @@ jobs:
               grep -q "NEXTAUTH_SECRET" .env || echo "NEXTAUTH_SECRET=${NEXTAUTH_SECRET}" >> .env
               grep -q "NEXTAUTH_URL" .env || echo "NEXTAUTH_URL=${NEXTAUTH_URL}" >> .env
               grep -q "NEXTAUTH_URL_ADMIN" .env || echo "NEXTAUTH_URL_ADMIN=${NEXTAUTH_URL_ADMIN}" >> .env
+              grep -q "PAGES_API_KEY" .env || echo "PAGES_API_KEY=${PAGES_API_KEY}" >> .env
             fi
             
             # Pull latest code
