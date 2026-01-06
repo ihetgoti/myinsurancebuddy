@@ -11,6 +11,8 @@ export const metadata: Metadata = {
     keywords: ['insurance calculator', 'auto insurance estimate', 'home insurance calculator', 'life insurance calculator', 'health insurance estimate'],
 };
 
+export const dynamic = 'force-dynamic'; // Prevent build-time static generation
+
 async function getData() {
     const [insuranceTypes, states] = await Promise.all([
         prisma.insuranceType.findMany({

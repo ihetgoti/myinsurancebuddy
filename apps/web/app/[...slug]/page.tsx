@@ -464,42 +464,9 @@ function generateSchema(insuranceType: any, country: any, state: any, city: any,
  * Limited to prevent excessive build times with 100k+ pages
  */
 export async function generateStaticParams() {
-    try {
-        // Get high-priority pages: niche homepages and state-level pages
-        const [insuranceTypes, topPages] = await Promise.all([
-            prisma.insuranceType.findMany({
-                where: { isActive: true },
-                select: { slug: true },
-            }),
-            prisma.page.findMany({
-                where: {
-                    isPublished: true,
-                    geoLevel: { in: ['NICHE', 'STATE'] },
-                },
-                select: { slug: true },
-                take: 500, // Limit to prevent long builds
-            }),
-        ]);
-
-        const params: { slug: string[] }[] = [];
-
-        // Add insurance type homepages
-        for (const type of insuranceTypes) {
-            params.push({ slug: [type.slug] });
-        }
-
-        // Add top pages from DB
-        for (const page of topPages) {
-            if (page.slug) {
-                params.push({ slug: page.slug.split('/') });
-            }
-        }
-
-        return params;
-    } catch (error) {
-        console.error('generateStaticParams error:', error);
-        return [];
-    }
+    // Return empty array - pages are generated on-demand via ISR
+    // This prevents build failures when DATABASE_URL is not accessible from CI/CD
+    return [];
 }
 
 export default async function DynamicPage({ params }: PageProps) {

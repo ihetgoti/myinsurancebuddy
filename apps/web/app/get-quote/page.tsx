@@ -9,6 +9,8 @@ export const metadata = {
     description: 'Compare insurance quotes from top providers. Free, fast, and no obligation.',
 };
 
+export const dynamic = 'force-dynamic'; // Prevent build-time static generation
+
 async function getHeaderData() {
     const [insuranceTypes, states] = await Promise.all([
         prisma.insuranceType.findMany({

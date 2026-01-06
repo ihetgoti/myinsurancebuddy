@@ -10,6 +10,7 @@ export const metadata = {
 };
 
 export const revalidate = 3600;
+export const dynamic = 'force-dynamic'; // Prevent build-time static generation
 
 export default async function BlogIndex() {
     const posts = await getPublishedPosts();
