@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { prisma } from '@myinsurancebuddy/db';
+import { prisma } from '@/lib/prisma';
 
 export async function GET() {
     try {
@@ -106,6 +106,7 @@ export async function GET() {
             data: {
                 id: 'bridge-page-v1',
                 name: templateName,
+                slug: 'bridge-page-lead-gen',
                 htmlContent,
                 includeHeader: false,
                 includeFooter: false,
