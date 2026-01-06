@@ -7,7 +7,7 @@ export async function GET() {
         const createdItems = [];
 
         // 1. Create a Test Blog Post
-        const post = await prisma.post.upsert({
+        const post = await prisma.blogPost.upsert({
             where: { slug: 'verification-post' },
             update: {},
             create: {
