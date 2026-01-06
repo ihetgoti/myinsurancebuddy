@@ -349,7 +349,14 @@ async function getRelatedLinks(insuranceType: any, country: any, state: any, cit
             where: {
                 stateId: state.id,
                 isActive: true,
-                NOT: { id: city.id }
+                NOT: { id: city.id },
+                // Only show cities that have a published page for this insurance type
+                pages: {
+                    some: {
+                        insuranceTypeId: insuranceType.id,
+                        isPublished: true
+                    }
+                }
             },
             take: 5,
         });
