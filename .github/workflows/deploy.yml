@@ -56,7 +56,6 @@ jobs:
       - name: Deploy to VPS
         uses: appleboy/ssh-action@v1.0.3
         env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
           NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}
           NEXTAUTH_URL: ${{ secrets.NEXTAUTH_URL }}
           NEXTAUTH_URL_ADMIN: ${{ secrets.NEXTAUTH_URL_ADMIN }}
@@ -65,7 +64,7 @@ jobs:
           username: ${{ secrets.VPS_USERNAME }}
           key: ${{ secrets.VPS_SSH_KEY }}
           port: ${{ secrets.VPS_PORT }}
-          envs: DATABASE_URL,NEXTAUTH_SECRET,NEXTAUTH_URL,NEXTAUTH_URL_ADMIN
+          envs: NEXTAUTH_SECRET,NEXTAUTH_URL,NEXTAUTH_URL_ADMIN
           script: |
             set -e
             PROJECT_DIR="/var/www/myinsurancebuddies.com"
@@ -83,14 +82,23 @@ jobs:
               cd $PROJECT_DIR
             fi
             
-            # Create .env file
-            echo "Creating .env file..."
-            cat > .env << EOF
-            DATABASE_URL=${DATABASE_URL}
+            # Create .env file (if not exists or update specific vars)
+            # DATABASE_URL is managed manually on VPS as requested
+            if [ ! -f .env ]; then
+              echo "Creating .env file..."
+              cat > .env << EOF
             NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
             NEXTAUTH_URL=${NEXTAUTH_URL}
             NEXTAUTH_URL_ADMIN=${NEXTAUTH_URL_ADMIN}
             EOF
+            else
+              echo "Updating .env file (preserving DATABASE_URL)..."
+              # Update or append other vars, keep DATABASE_URL
+              # Simple append for now or just ensure these exist
+              grep -q "NEXTAUTH_SECRET" .env || echo "NEXTAUTH_SECRET=${NEXTAUTH_SECRET}" >> .env
+              grep -q "NEXTAUTH_URL" .env || echo "NEXTAUTH_URL=${NEXTAUTH_URL}" >> .env
+              grep -q "NEXTAUTH_URL_ADMIN" .env || echo "NEXTAUTH_URL_ADMIN=${NEXTAUTH_URL_ADMIN}" >> .env
+            fi
             
             # Pull latest code
             git fetch origin main

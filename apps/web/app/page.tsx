@@ -23,58 +23,73 @@ const getIconForType = (slug: string, className?: string) => {
 export const dynamic = 'force-dynamic';
 
 async function getHomeData() {
-    const [insuranceTypes, states, recentPages, totalPages, totalStates, totalCities, affiliates, allStates, blogPosts] = await Promise.all([
-        prisma.insuranceType.findMany({
-            where: { isActive: true },
-            orderBy: { sortOrder: 'asc' },
-        }),
-        prisma.state.findMany({
-            where: { isActive: true },
-            include: { country: true },
-            orderBy: { name: 'asc' },
-            take: 12,
-        }),
-        prisma.page.findMany({
-            where: { isPublished: true },
-            include: {
-                insuranceType: true,
-                country: true,
-                state: true,
-                city: true,
-            },
-            orderBy: { publishedAt: 'desc' },
-            take: 6,
-        }),
-        prisma.page.count({ where: { isPublished: true } }),
-        prisma.state.count({ where: { isActive: true } }),
-        prisma.city.count({ where: { isActive: true } }),
-        prisma.affiliatePartner.findMany({
-            where: { isActive: true },
-            orderBy: [{ isFeatured: 'desc' }, { displayOrder: 'asc' }],
-            take: 6,
-        }),
-        prisma.state.findMany({
-            where: { isActive: true },
-            select: { id: true, name: true, slug: true, country: { select: { code: true } } },
-            orderBy: { name: 'asc' },
-        }),
-        prisma.blogPost.findMany({
-            where: { isPublished: true },
-            orderBy: { publishedAt: 'desc' },
-            take: 3,
-            select: {
-                id: true,
-                title: true,
-                slug: true,
-                excerpt: true,
-                featuredImage: true,
-                publishedAt: true,
-                category: { select: { name: true, color: true } },
-            },
-        }),
-    ]);
+    try {
+        const [insuranceTypes, states, recentPages, totalPages, totalStates, totalCities, affiliates, allStates, blogPosts] = await Promise.all([
+            prisma.insuranceType.findMany({
+                where: { isActive: true },
+                orderBy: { sortOrder: 'asc' },
+            }).catch(() => []),
+            prisma.state.findMany({
+                where: { isActive: true },
+                include: { country: true },
+                orderBy: { name: 'asc' },
+                take: 12,
+            }).catch(() => []),
+            prisma.page.findMany({
+                where: { isPublished: true },
+                include: {
+                    insuranceType: true,
+                    country: true,
+                    state: true,
+                    city: true,
+                },
+                orderBy: { publishedAt: 'desc' },
+                take: 6,
+            }).catch(() => []),
+            prisma.page.count({ where: { isPublished: true } }).catch(() => 0),
+            prisma.state.count({ where: { isActive: true } }).catch(() => 0),
+            prisma.city.count({ where: { isActive: true } }).catch(() => 0),
+            prisma.affiliatePartner.findMany({
+                where: { isActive: true },
+                orderBy: [{ isFeatured: 'desc' }, { displayOrder: 'asc' }],
+                take: 6,
+            }).catch(() => []),
+            prisma.state.findMany({
+                where: { isActive: true },
+                select: { id: true, name: true, slug: true, country: { select: { code: true } } },
+                orderBy: { name: 'asc' },
+            }).catch(() => []),
+            prisma.blogPost.findMany({
+                where: { isPublished: true },
+                orderBy: { publishedAt: 'desc' },
+                take: 3,
+                select: {
+                    id: true,
+                    title: true,
+                    slug: true,
+                    excerpt: true,
+                    featuredImage: true,
+                    publishedAt: true,
+                    category: { select: { name: true, color: true } },
+                },
+            }).catch(() => []),
+        ]);
 
-    return { insuranceTypes, states, recentPages, totalPages, totalStates, totalCities, affiliates, allStates, blogPosts };
+        return { insuranceTypes, states, recentPages, totalPages, totalStates, totalCities, affiliates, allStates, blogPosts };
+    } catch (error) {
+        console.error('Error fetching home data:', error);
+        return {
+            insuranceTypes: [],
+            states: [],
+            recentPages: [],
+            totalPages: 0,
+            totalStates: 0,
+            totalCities: 0,
+            affiliates: [],
+            allStates: [],
+            blogPosts: []
+        };
+    }
 }
 
 export default async function HomePage() {
