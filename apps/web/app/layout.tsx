@@ -3,6 +3,8 @@ import { Inter } from 'next/font/google'
 import './globals.css'
 import { OrganizationSchema, WebsiteSchema } from '@/components/SchemaMarkup'
 import Providers from '@/components/Providers'
+import { prisma } from '@/lib/prisma'
+import GoogleAnalytics from '@/components/GoogleAnalytics'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -59,15 +61,28 @@ export const metadata: Metadata = {
     },
 }
 
-export default function RootLayout({
+async function getAnalyticsId() {
+    try {
+        const settings = await prisma.siteSettings.findFirst();
+        return settings?.googleAnalyticsId || null;
+    } catch (error) {
+        console.error('Failed to fetch analytics ID:', error);
+        return null;
+    }
+}
+
+export default async function RootLayout({
     children,
 }: {
     children: React.ReactNode
 }) {
+    const gaId = await getAnalyticsId();
+
     return (
         <html lang="en">
             <body className={`${inter.className} bg-slate-50 text-slate-900 antialiased`}>
                 <Providers>
+                    <GoogleAnalytics gaId={gaId} />
                     <OrganizationSchema />
                     <WebsiteSchema />
                     {children}
