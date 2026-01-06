@@ -4,13 +4,13 @@ import AdminLayout from '@/components/AdminLayout';
 import { useEffect, useState, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { getApiUrl } from '@/lib/api';
-import { 
-    allComponents, 
-    componentCategories, 
+import {
+    allComponents,
+    componentCategories,
     getComponentById,
     systemVariables,
     ComponentDefinition,
-    ComponentProp 
+    ComponentProp
 } from '@/lib/component-definitions';
 
 interface Section {
@@ -94,7 +94,7 @@ export default function TemplateBuilderPage() {
         setSaving(true);
 
         try {
-            const url = template.id 
+            const url = template.id
                 ? getApiUrl(`/api/templates/${template.id}`)
                 : getApiUrl('/api/templates');
 
@@ -123,7 +123,7 @@ export default function TemplateBuilderPage() {
 
     const addSection = (componentId: string, index?: number) => {
         if (!template) return;
-        
+
         const component = getComponentById(componentId);
         if (!component) return;
 
@@ -148,7 +148,7 @@ export default function TemplateBuilderPage() {
         if (!template) return;
         setTemplate({
             ...template,
-            sections: template.sections.map(s => 
+            sections: template.sections.map(s =>
                 s.id === sectionId ? { ...s, ...updates } : s
             ),
         });
@@ -213,18 +213,18 @@ export default function TemplateBuilderPage() {
     };
 
     const filteredComponents = allComponents.filter(c => {
-        const matchesSearch = !componentSearch || 
+        const matchesSearch = !componentSearch ||
             c.name.toLowerCase().includes(componentSearch.toLowerCase()) ||
             c.description.toLowerCase().includes(componentSearch.toLowerCase());
         const matchesCategory = !selectedCategory || c.category === selectedCategory;
         return matchesSearch && matchesCategory;
     });
 
-    const selectedSectionData = selectedSection 
+    const selectedSectionData = selectedSection
         ? template?.sections.find(s => s.id === selectedSection)
         : null;
-    
-    const selectedComponent = selectedSectionData 
+
+    const selectedComponent = selectedSectionData
         ? getComponentById(selectedSectionData.componentId)
         : null;
 
@@ -269,9 +269,8 @@ export default function TemplateBuilderPage() {
                         {/* Preview Toggle */}
                         <button
                             onClick={() => setShowPreview(!showPreview)}
-                            className={`px-3 py-1.5 rounded-lg text-sm ${
-                                showPreview ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-700'
-                            }`}
+                            className={`px-3 py-1.5 rounded-lg text-sm ${showPreview ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-700'
+                                }`}
                         >
                             {showPreview ? '👁 Preview' : '👁 Preview'}
                         </button>
@@ -283,9 +282,8 @@ export default function TemplateBuilderPage() {
                                     <button
                                         key={device}
                                         onClick={() => setPreviewDevice(device)}
-                                        className={`px-2 py-1 rounded text-sm ${
-                                            previewDevice === device ? 'bg-white shadow' : ''
-                                        }`}
+                                        className={`px-2 py-1 rounded text-sm ${previewDevice === device ? 'bg-white shadow' : ''
+                                            }`}
                                     >
                                         {device === 'desktop' ? '🖥' : device === 'tablet' ? '📱' : '📱'}
                                     </button>
@@ -322,11 +320,10 @@ export default function TemplateBuilderPage() {
                             <button
                                 key={tab.id}
                                 onClick={() => setActiveTab(tab.id as any)}
-                                className={`py-3 border-b-2 transition ${
-                                    activeTab === tab.id
+                                className={`py-3 border-b-2 transition ${activeTab === tab.id
                                         ? 'border-blue-600 text-blue-600'
                                         : 'border-transparent text-gray-500 hover:text-gray-700'
-                                }`}
+                                    }`}
                             >
                                 {tab.icon} {tab.label}
                             </button>
@@ -354,9 +351,8 @@ export default function TemplateBuilderPage() {
                                 <div className="p-2 border-b bg-white flex flex-wrap gap-1">
                                     <button
                                         onClick={() => setSelectedCategory(null)}
-                                        className={`px-2 py-1 text-xs rounded ${
-                                            !selectedCategory ? 'bg-blue-100 text-blue-700' : 'bg-gray-100'
-                                        }`}
+                                        className={`px-2 py-1 text-xs rounded ${!selectedCategory ? 'bg-blue-100 text-blue-700' : 'bg-gray-100'
+                                            }`}
                                     >
                                         All
                                     </button>
@@ -364,9 +360,8 @@ export default function TemplateBuilderPage() {
                                         <button
                                             key={cat.id}
                                             onClick={() => setSelectedCategory(cat.id)}
-                                            className={`px-2 py-1 text-xs rounded ${
-                                                selectedCategory === cat.id ? 'bg-blue-100 text-blue-700' : 'bg-gray-100'
-                                            }`}
+                                            className={`px-2 py-1 text-xs rounded ${selectedCategory === cat.id ? 'bg-blue-100 text-blue-700' : 'bg-gray-100'
+                                                }`}
                                         >
                                             {cat.icon}
                                         </button>
@@ -402,16 +397,15 @@ export default function TemplateBuilderPage() {
 
                             {/* Canvas */}
                             <div className="flex-1 bg-gray-100 overflow-y-auto p-6">
-                                <div 
-                                    className={`mx-auto bg-white rounded-xl shadow-lg min-h-[600px] ${
-                                        showPreview 
-                                            ? previewDevice === 'mobile' 
-                                                ? 'w-[375px]' 
-                                                : previewDevice === 'tablet' 
-                                                    ? 'w-[768px]' 
+                                <div
+                                    className={`mx-auto bg-white rounded-xl shadow-lg min-h-[600px] ${showPreview
+                                            ? previewDevice === 'mobile'
+                                                ? 'w-[375px]'
+                                                : previewDevice === 'tablet'
+                                                    ? 'w-[768px]'
                                                     : 'w-full max-w-5xl'
                                             : 'max-w-4xl'
-                                    }`}
+                                        }`}
                                     onDragOver={handleDragOver}
                                     onDrop={(e) => handleDrop(e)}
                                 >
@@ -431,16 +425,14 @@ export default function TemplateBuilderPage() {
                                                     <div
                                                         key={section.id}
                                                         onClick={() => setSelectedSection(section.id)}
-                                                        className={`relative group ${
-                                                            selectedSection === section.id
+                                                        className={`relative group ${selectedSection === section.id
                                                                 ? 'ring-2 ring-blue-500 ring-inset'
                                                                 : ''
-                                                        } ${section.isHidden ? 'opacity-50' : ''}`}
+                                                            } ${section.isHidden ? 'opacity-50' : ''}`}
                                                     >
                                                         {/* Section Controls */}
-                                                        <div className={`absolute top-2 right-2 flex gap-1 z-10 ${
-                                                            selectedSection === section.id ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
-                                                        } transition`}>
+                                                        <div className={`absolute top-2 right-2 flex gap-1 z-10 ${selectedSection === section.id ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
+                                                            } transition`}>
                                                             <button
                                                                 onClick={(e) => { e.stopPropagation(); moveSection(section.id, 'up'); }}
                                                                 disabled={index === 0}
@@ -462,9 +454,9 @@ export default function TemplateBuilderPage() {
                                                                 📋
                                                             </button>
                                                             <button
-                                                                onClick={(e) => { 
-                                                                    e.stopPropagation(); 
-                                                                    updateSection(section.id, { isHidden: !section.isHidden }); 
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    updateSection(section.id, { isHidden: !section.isHidden });
                                                                 }}
                                                                 className="p-1 bg-white rounded shadow hover:bg-gray-50"
                                                             >
@@ -479,16 +471,15 @@ export default function TemplateBuilderPage() {
                                                         </div>
 
                                                         {/* Section Label */}
-                                                        <div className={`absolute top-2 left-2 bg-black/70 text-white text-xs px-2 py-1 rounded ${
-                                                            selectedSection === section.id ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
-                                                        } transition`}>
+                                                        <div className={`absolute top-2 left-2 bg-black/70 text-white text-xs px-2 py-1 rounded ${selectedSection === section.id ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
+                                                            } transition`}>
                                                             {component.icon} {component.name}
                                                         </div>
 
                                                         {/* Section Preview */}
-                                                        <SectionPreview 
-                                                            component={component} 
-                                                            props={section.props} 
+                                                        <SectionPreview
+                                                            component={component}
+                                                            props={section.props}
                                                             showPreview={showPreview}
                                                         />
 
@@ -708,7 +699,7 @@ export default function TemplateBuilderPage() {
                             <div className="max-w-3xl mx-auto space-y-6">
                                 <div className="bg-white rounded-xl p-6 shadow-sm">
                                     <h3 className="font-semibold mb-4">Template Settings</h3>
-                                    
+
                                     <div className="space-y-4">
                                         <div>
                                             <label className="block text-sm font-medium mb-1">Slug</label>
@@ -806,12 +797,12 @@ export default function TemplateBuilderPage() {
 }
 
 // Property Editor Component
-function PropertyEditor({ 
-    props, 
-    values, 
+function PropertyEditor({
+    props,
+    values,
     onChange,
-    supportedVariables 
-}: { 
+    supportedVariables
+}: {
     props: ComponentProp[];
     values: Record<string, any>;
     onChange: (values: Record<string, any>) => void;
@@ -845,7 +836,7 @@ function PropertyEditor({
                                     {prop.label}
                                     {prop.required && <span className="text-red-500">*</span>}
                                 </label>
-                                
+
                                 {prop.type === 'text' && (
                                     <input
                                         type="text"
@@ -939,9 +930,9 @@ function PropertyEditor({
                                             className="w-full px-3 py-1.5 border rounded-lg text-sm"
                                         />
                                         {values[prop.name] && (
-                                            <img 
-                                                src={values[prop.name]} 
-                                                alt="" 
+                                            <img
+                                                src={values[prop.name]}
+                                                alt=""
                                                 className="w-full h-20 object-cover rounded"
                                             />
                                         )}
@@ -960,8 +951,8 @@ function PropertyEditor({
 
                                 {prop.type === 'json' && (
                                     <textarea
-                                        value={typeof values[prop.name] === 'object' 
-                                            ? JSON.stringify(values[prop.name], null, 2) 
+                                        value={typeof values[prop.name] === 'object'
+                                            ? JSON.stringify(values[prop.name], null, 2)
                                             : values[prop.name] || ''}
                                         onChange={(e) => {
                                             try {
@@ -1132,11 +1123,11 @@ function ArrayEditor({
 }
 
 // Section Preview Component
-function SectionPreview({ 
-    component, 
+function SectionPreview({
+    component,
     props,
-    showPreview 
-}: { 
+    showPreview
+}: {
     component: ComponentDefinition;
     props: Record<string, any>;
     showPreview: boolean;
@@ -1146,10 +1137,10 @@ function SectionPreview({
         switch (component.category) {
             case 'hero':
                 return (
-                    <div 
+                    <div
                         className="py-16 px-8 text-center"
                         style={{
-                            background: props.backgroundType === 'gradient' 
+                            background: props.backgroundType === 'gradient'
                                 ? `linear-gradient(135deg, ${props.gradientFrom || '#0f172a'}, ${props.gradientTo || '#1e3a5f'})`
                                 : props.backgroundColor || '#0f172a',
                             color: props.textColor || '#ffffff',
@@ -1190,7 +1181,7 @@ function SectionPreview({
 
             case 'cta':
                 return (
-                    <div 
+                    <div
                         className="py-12 px-8 text-center"
                         style={{
                             backgroundColor: props.backgroundColor || '#0f172a',
@@ -1240,7 +1231,7 @@ function SectionPreview({
                         <div className="grid grid-cols-3 gap-4">
                             {(props.testimonials || []).slice(0, 3).map((t: any, i: number) => (
                                 <div key={i} className="bg-gray-50 p-4 rounded-lg">
-                                    <p className="text-sm italic mb-2">"{t.quote || 'Great service!'}"</p>
+                                    <p className="text-sm italic mb-2">&quot;{t.quote || 'Great service!'}&quot;</p>
                                     <p className="text-xs text-gray-500">- {t.author || 'Customer'}</p>
                                 </div>
                             ))}
@@ -1268,7 +1259,7 @@ function SectionPreview({
                 if (component.id === 'spacer') {
                     const heights = { xs: 8, sm: 16, md: 32, lg: 48, xl: 64 };
                     return (
-                        <div 
+                        <div
                             className="bg-gray-100 flex items-center justify-center text-gray-400 text-xs"
                             style={{ height: heights[props.height as keyof typeof heights] || 32 }}
                         >
@@ -1279,7 +1270,7 @@ function SectionPreview({
                 if (component.id === 'divider') {
                     return (
                         <div className="py-4 px-8">
-                            <hr style={{ 
+                            <hr style={{
                                 borderStyle: props.style || 'solid',
                                 borderColor: props.color || '#e5e7eb',
                                 borderWidth: `${props.thickness || 1}px 0 0 0`,

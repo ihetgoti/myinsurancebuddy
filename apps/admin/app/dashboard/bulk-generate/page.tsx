@@ -1026,7 +1026,7 @@ export default function BulkGeneratePage() {
                                 </div>
                             ) : (
                                 <div className="text-center py-12 text-gray-500">
-                                    Click "Generate Preview" to see what pages will be created
+                                    Click &quot;Generate Preview&quot; to see what pages will be created
                                 </div>
                             )}
 

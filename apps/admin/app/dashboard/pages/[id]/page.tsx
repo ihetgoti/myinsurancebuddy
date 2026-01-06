@@ -249,7 +249,7 @@ export default function EditPagePage() {
                         </div>
 
                         {formData.sections.length === 0 ? (
-                            <p className="text-slate-500 text-center py-8">No content sections. Click "Add Section" to create one.</p>
+                            <p className="text-slate-500 text-center py-8">No content sections. Click &quot;Add Section&quot; to create one.</p>
                         ) : (
                             <div className="space-y-6">
                                 {formData.sections.map((section, index) => (

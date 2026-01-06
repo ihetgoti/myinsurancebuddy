@@ -184,9 +184,9 @@ export default function AffiliatesPage() {
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
                     <h3 className="font-semibold text-blue-900 mb-1">💡 How Affiliate Links Work</h3>
                     <p className="text-sm text-blue-700">
-                        Add your affiliate partners here. Leave the "Affiliate URL" empty as a placeholder,
+                        Add your affiliate partners here. Leave the &quot;Affiliate URL&quot; empty as a placeholder,
                         then update it when you sign up for their affiliate program. The links will appear
-                        on your website's comparison pages.
+                        on your website&apos;s comparison pages.
                     </p>
                 </div>
 
@@ -308,8 +308,8 @@ export default function AffiliatesPage() {
                                                 type="button"
                                                 onClick={() => toggleInsuranceType(option.value)}
                                                 className={`px-3 py-1.5 text-sm rounded-full border transition ${formData.insuranceTypes.includes(option.value)
-                                                        ? 'bg-blue-600 text-white border-blue-600'
-                                                        : 'bg-white text-gray-700 border-gray-300 hover:border-blue-400'
+                                                    ? 'bg-blue-600 text-white border-blue-600'
+                                                    : 'bg-white text-gray-700 border-gray-300 hover:border-blue-400'
                                                     }`}
                                             >
                                                 {option.label}
@@ -439,8 +439,8 @@ export default function AffiliatesPage() {
                                         </td>
                                         <td className="px-6 py-4">
                                             <span className={`px-2 py-1 text-xs rounded-full ${affiliate.isActive
-                                                    ? 'bg-green-100 text-green-700'
-                                                    : 'bg-gray-100 text-gray-600'
+                                                ? 'bg-green-100 text-green-700'
+                                                : 'bg-gray-100 text-gray-600'
                                                 }`}>
                                                 {affiliate.isActive ? 'Active' : 'Inactive'}
                                             </span>

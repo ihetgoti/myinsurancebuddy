@@ -304,7 +304,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                                 </div>
                             ) : (
                                 <div className="p-8 text-center text-slate-400 text-sm">
-                                    No results found for "{searchQuery}"
+                                    No results found for &quot;{searchQuery}&quot;
                                 </div>
                             )}
                         </div>

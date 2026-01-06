@@ -184,7 +184,7 @@ export default function SEODashboardPage() {
                 <div className="flex justify-between items-center mb-8">
                     <div>
                         <h1 className="text-3xl font-bold text-gray-900">SEO Dashboard</h1>
-                        <p className="text-gray-600 mt-1">Monitor and optimize your site's SEO performance</p>
+                        <p className="text-gray-600 mt-1">Monitor and optimize your site&apos;s SEO performance</p>
                     </div>
                     <div className="flex gap-2">
                         <button
