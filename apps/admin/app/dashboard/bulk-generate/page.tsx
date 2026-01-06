@@ -628,8 +628,135 @@ export default function BulkGeneratePage() {
                             )}
 
                             {dataSource === 'api' && (
-                                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                                    <p className="text-yellow-800">API data source coming soon. Please use CSV upload for now.</p>
+                                <div className="space-y-6">
+                                    <div className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white rounded-xl p-6">
+                                        <h3 className="text-lg font-bold mb-2">🔗 External API Integration</h3>
+                                        <p className="text-blue-100 text-sm">
+                                            Connect your microservice to automatically create pages. Perfect for 1000+ pages/day at scale.
+                                        </p>
+                                    </div>
+
+                                    {/* API Endpoint */}
+                                    <div className="bg-gray-900 rounded-xl p-6 text-white">
+                                        <div className="flex items-center justify-between mb-4">
+                                            <span className="text-xs font-mono bg-green-600 px-2 py-1 rounded">POST</span>
+                                            <button
+                                                onClick={() => navigator.clipboard.writeText('/api/external/pages')}
+                                                className="text-xs text-gray-400 hover:text-white"
+                                            >
+                                                📋 Copy
+                                            </button>
+                                        </div>
+                                        <code className="font-mono text-green-400 text-sm">
+                                            https://admin.myinsurancebuddies.com/api/external/pages
+                                        </code>
+                                    </div>
+
+                                    {/* Authentication */}
+                                    <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
+                                        <h4 className="font-semibold text-amber-900 mb-2">🔐 Authentication</h4>
+                                        <p className="text-sm text-amber-800 mb-3">
+                                            Add this header to all requests:
+                                        </p>
+                                        <code className="block bg-amber-100 px-3 py-2 rounded font-mono text-sm text-amber-900">
+                                            X-API-Key: YOUR_PAGES_API_KEY
+                                        </code>
+                                        <p className="text-xs text-amber-700 mt-2">
+                                            Set <code className="bg-amber-200 px-1 rounded">PAGES_API_KEY</code> in your VPS .env file
+                                        </p>
+                                    </div>
+
+                                    {/* JSON Structure */}
+                                    <div>
+                                        <h4 className="font-semibold mb-3">📝 Request Body (JSON)</h4>
+                                        <div className="bg-gray-900 rounded-xl p-4 text-white overflow-x-auto">
+                                            <pre className="font-mono text-sm text-green-400">{`{
+  "slug": "car-insurance/us/texas/houston",
+  "title": "Car Insurance in Houston, TX",
+  "metaTitle": "Best Car Insurance Houston TX | Compare Quotes",
+  "metaDescription": "Find affordable car insurance...",
+  "insuranceType": "car-insurance",
+  "state": "texas",
+  "city": "houston",
+  "templateId": "your-template-id",
+  "isPublished": true,
+  "showAds": true,
+  "customData": {
+    "h1_title": "Your Custom H1",
+    "intro_content": "Your intro paragraph...",
+    "faq_questions": "[{...}]",
+    "any_template_var": "value"
+  }
+}`}</pre>
+                                        </div>
+                                    </div>
+
+                                    {/* Bulk Request */}
+                                    <div>
+                                        <h4 className="font-semibold mb-3">📦 Bulk Create (Multiple Pages)</h4>
+                                        <div className="bg-gray-900 rounded-xl p-4 text-white overflow-x-auto">
+                                            <pre className="font-mono text-sm text-green-400">{`{
+  "pages": [
+    { "slug": "...", "title": "...", "customData": {...} },
+    { "slug": "...", "title": "...", "customData": {...} },
+    // Up to 100 pages per request
+  ]
+}`}</pre>
+                                        </div>
+                                    </div>
+
+                                    {/* cURL Example */}
+                                    <div>
+                                        <h4 className="font-semibold mb-3">🖥️ cURL Example</h4>
+                                        <div className="bg-gray-900 rounded-xl p-4 text-white overflow-x-auto">
+                                            <pre className="font-mono text-xs text-gray-300">{`curl -X POST https://admin.myinsurancebuddies.com/api/external/pages \\
+  -H "X-API-Key: your-api-key" \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "slug": "car-insurance/us/texas/houston",
+    "title": "Car Insurance in Houston",
+    "insuranceType": "car-insurance",
+    "state": "texas",
+    "city": "houston",
+    "isPublished": true,
+    "customData": { "population": 2300000 }
+  }'`}</pre>
+                                        </div>
+                                    </div>
+
+                                    {/* Response */}
+                                    <div>
+                                        <h4 className="font-semibold mb-3">✅ Response</h4>
+                                        <div className="bg-gray-900 rounded-xl p-4 text-white overflow-x-auto">
+                                            <pre className="font-mono text-sm text-blue-400">{`{
+  "success": true,
+  "created": 1,
+  "updated": 0,
+  "errors": 0,
+  "results": [
+    { "action": "created", "id": "uuid", "slug": "..." }
+  ]
+}`}</pre>
+                                        </div>
+                                    </div>
+
+                                    {/* Best Practices */}
+                                    <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+                                        <h4 className="font-semibold text-blue-900 mb-3">💡 Best Practices for 1000 pages/day</h4>
+                                        <ul className="text-sm text-blue-800 space-y-2">
+                                            <li>• <strong>Batch requests:</strong> Send 50-100 pages per API call</li>
+                                            <li>• <strong>Rate limiting:</strong> Space requests 1-2 seconds apart</li>
+                                            <li>• <strong>Unique content:</strong> Always use different customData per page</li>
+                                            <li>• <strong>Validate first:</strong> Test with 5-10 pages before bulk</li>
+                                            <li>• <strong>Monitor:</strong> Check created pages in Pages dashboard</li>
+                                        </ul>
+                                    </div>
+
+                                    <div className="text-center pt-4">
+                                        <p className="text-sm text-gray-500">
+                                            Your microservice → This API → Pages are created & published automatically
+                                        </p>
+                                    </div>
                                 </div>
                             )}
                         </div>
