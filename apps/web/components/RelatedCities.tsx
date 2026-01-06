@@ -17,6 +17,7 @@ interface RelatedCitiesProps {
     cities: City[];
     currentCityId?: string;
     state: State;
+    insuranceTypeSlug?: string; // e.g., "car-insurance"
     title?: string;
     maxDisplay?: number;
 }
@@ -25,6 +26,7 @@ export default function RelatedCities({
     cities,
     currentCityId,
     state,
+    insuranceTypeSlug,
     title = "Explore Nearby Cities",
     maxDisplay = 12
 }: RelatedCitiesProps) {
@@ -34,6 +36,22 @@ export default function RelatedCities({
         .slice(0, maxDisplay);
 
     if (displayCities.length === 0) return null;
+
+    // Build URL based on whether we have insurance type or using fallback
+    const buildCityUrl = (citySlug: string) => {
+        if (insuranceTypeSlug) {
+            return `/${insuranceTypeSlug}/${state.country.code.toLowerCase()}/${state.slug}/${citySlug}`;
+        }
+        // Fallback for non-insurance pages
+        return `/states/${state.country.code.toLowerCase()}/${state.slug}/${citySlug}`;
+    };
+
+    const buildStateUrl = () => {
+        if (insuranceTypeSlug) {
+            return `/${insuranceTypeSlug}/${state.country.code.toLowerCase()}/${state.slug}`;
+        }
+        return `/states/${state.country.code.toLowerCase()}/${state.slug}`;
+    };
 
     return (
         <section className="py-12 bg-slate-50 border-t border-slate-200">
@@ -47,7 +65,7 @@ export default function RelatedCities({
                     {displayCities.map(city => (
                         <Link
                             key={city.id}
-                            href={`/states/${state.country.code.toLowerCase()}/${state.slug}/${city.slug}`}
+                            href={buildCityUrl(city.slug)}
                             className="group flex items-center justify-between p-3 bg-white rounded-lg border border-slate-200 hover:border-blue-500 hover:shadow-sm transition-all"
                         >
                             <span className="text-sm font-medium text-slate-700 group-hover:text-blue-600 truncate">
@@ -61,7 +79,7 @@ export default function RelatedCities({
                 {cities.length > maxDisplay && (
                     <div className="mt-4 text-center">
                         <Link
-                            href={`/states/${state.country.code.toLowerCase()}/${state.slug}`}
+                            href={buildStateUrl()}
                             className="text-sm font-medium text-blue-600 hover:text-blue-700"
                         >
                             View all cities in {state.name} →
@@ -72,3 +90,4 @@ export default function RelatedCities({
         </section>
     );
 }
+
