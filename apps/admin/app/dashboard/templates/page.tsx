@@ -98,6 +98,11 @@ export default function TemplatesPage() {
         }
     };
 
+    const handleCopyId = (id: string, name: string) => {
+        navigator.clipboard.writeText(id);
+        alert(`Template ID for "${name}" copied to clipboard:\n${id}`);
+    };
+
     const filteredTemplates = selectedCategory === 'all'
         ? templates
         : templates.filter(t => t.category === selectedCategory);
@@ -225,6 +230,13 @@ export default function TemplatesPage() {
                                                 </button>
                                             </>
                                         )}
+                                        <button
+                                            onClick={() => handleCopyId(template.id, template.name)}
+                                            className="px-3 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors text-sm"
+                                            title="Copy Template ID"
+                                        >
+                                            📋
+                                        </button>
                                     </div>
                                 </div>
                             </div>
@@ -250,6 +262,6 @@ export default function TemplatesPage() {
                     </ul>
                 </div>
             </div>
-        </AdminLayout>
+        </AdminLayout >
     );
 }
