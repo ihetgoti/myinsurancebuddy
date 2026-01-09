@@ -120,7 +120,7 @@ export async function PATCH(
         return NextResponse.json(template);
     } catch (error) {
         console.error('PATCH /api/templates/[id] error:', error);
-        return NextResponse.json({ error: 'Failed to update template' }, { status: 500 });
+        return NextResponse.json({ error: 'Failed to update template', details: error instanceof Error ? error.message : String(error) }, { status: 500 });
     }
 }
 
