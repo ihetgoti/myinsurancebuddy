@@ -24,7 +24,16 @@ export async function POST(req: NextRequest) {
                 // Build variables from mapping
                 const variables: Record<string, string> = {};
                 Object.entries(variableMapping || {}).forEach(([varName, csvColumn]) => {
-                    variables[varName] = row[csvColumn as string] || '';
+                    let value = row[csvColumn as string] || '';
+                    // Try parsing JSON if it looks like an array or object
+                    if (typeof value === 'string' && (value.startsWith('[') || value.startsWith('{'))) {
+                        try {
+                            value = JSON.parse(value);
+                        } catch (e) {
+                            // Keep as string if parse fails
+                        }
+                    }
+                    variables[varName] = value;
                 });
 
                 // Generate slug
