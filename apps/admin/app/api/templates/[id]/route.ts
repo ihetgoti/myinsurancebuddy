@@ -71,6 +71,9 @@ export async function PATCH(
             showAffiliates
         } = body;
 
+        // Normalize type to uppercase to match Prisma enum (HTML, PAGE, etc)
+        const normalizedType = type ? type.toUpperCase() : undefined;
+
         // Check if slug is taken by another template
         if (slug) {
             const existing = await prisma.template.findFirst({
@@ -103,7 +106,7 @@ export async function PATCH(
                 ...(sections !== undefined && { sections }),
                 ...(variables !== undefined && { variables }),
                 ...(customVariables !== undefined && { customVariables }),
-                ...(type !== undefined && { type }),
+                ...(normalizedType !== undefined && { type: normalizedType }),
                 ...(category !== undefined && { category }),
                 ...(seoTitleTemplate !== undefined && { seoTitleTemplate }),
                 ...(seoDescTemplate !== undefined && { seoDescTemplate }),

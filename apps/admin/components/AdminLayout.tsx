@@ -189,9 +189,11 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
             title: 'Content',
             items: [
                 { href: '/dashboard/pages', label: 'Pages', icon: <FileText size={18} strokeWidth={1.5} /> },
+                { href: '/dashboard/page-data', label: 'Page Data', icon: <Database size={18} strokeWidth={1.5} /> },
                 { href: '/dashboard/blog', label: 'Blog Posts', icon: <FileText size={18} strokeWidth={1.5} /> },
                 { href: '/dashboard/templates', label: 'Templates', icon: <LayoutTemplate size={18} strokeWidth={1.5} /> },
                 { href: '/dashboard/bulk-generate', label: 'Bulk Generate', icon: <Database size={18} strokeWidth={1.5} /> },
+                { href: '/dashboard/bulk-edit', label: 'Bulk Edit', icon: <RefreshCw size={18} strokeWidth={1.5} /> },
                 { href: '/dashboard/media', label: 'Media Library', icon: <ImageIcon size={18} strokeWidth={1.5} /> },
             ],
         },
@@ -204,6 +206,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
         {
             title: 'Marketing',
             items: [
+                { href: '/dashboard/call-offers', label: 'Call Offers', icon: <Zap size={18} strokeWidth={1.5} /> },
                 { href: '/dashboard/affiliates', label: 'Affiliate Partners', icon: <Handshake size={18} strokeWidth={1.5} /> },
                 { href: '/dashboard/ads', label: 'Manage Ads', icon: <LayoutTemplate size={18} strokeWidth={1.5} /> },
                 { href: '/dashboard/settings/ads', label: 'Ad Settings', icon: <Settings size={18} strokeWidth={1.5} /> },

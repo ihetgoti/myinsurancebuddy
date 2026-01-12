@@ -210,6 +210,7 @@ model InsuranceType {
   bulkJobs        BulkJob[]
   carriers        Carrier[]
   faqs            FAQ[]
+  callOffers      CallOffer[]
   
   @@index([isActive])
   @@index([sortOrder])
@@ -1257,4 +1258,50 @@ model AffiliatePartner {
   @@index([isActive])
   @@index([isFeatured])
   @@index([displayOrder])
+}
+
+// ============================================
+// MARKETCALL / PAY-PER-CALL OFFERS
+// ============================================
+
+model CallOffer {
+  id              String    @id @default(uuid())
+  name            String    // "Auto Insurance - California"
+  
+  // Marketcall campaign settings
+  campaignId      String    // Marketcall campaign ID e.g. "330575"
+  subId           String?   // Optional subid for tracking
+  phoneMask       String    @default("(xxx) xxx-xx-xx")
+  
+  // Targeting
+  insuranceTypeId String?
+  insuranceType   InsuranceType? @relation(fields: [insuranceTypeId], references: [id])
+  geoLevel        GeoLevel?      // STATE, CITY, etc.
+  stateIds        String[]       // Specific state IDs (empty = all)
+  
+  // Control
+  isActive        Boolean   @default(true)
+  priority        Int       @default(0)  // Higher = preferred when multiple match
+  
+  // Notes
+  notes           String?   @db.Text
+  
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  @@index([insuranceTypeId])
+  @@index([isActive])
+  @@index([geoLevel])
+}
+
+// Global Marketcall settings
+model CallTrackingSettings {
+  id              String    @id @default(uuid())
+  provider        String    @default("marketcall")
+  siteId          String    // Marketcall site ID e.g. "2477"
+  serviceBaseUrl  String    @default("//www.marketcall.com")
+  isEnabled       Boolean   @default(true)
+  
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
 }

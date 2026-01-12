@@ -361,9 +361,17 @@ export default function PagesAdminPage() {
                                                 </span>
                                             </td>
                                             <td className="px-6 py-4">
-                                                <code className="text-xs bg-gray-100 px-2 py-1 rounded">
+                                                <a
+                                                    href={`https://myinsurancebuddies.com/${pageDef.slug.replace(/^\//, '')}`}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="text-xs bg-gray-100 px-2 py-1 rounded hover:bg-blue-100 hover:text-blue-700 transition inline-flex items-center gap-1"
+                                                >
                                                     /{pageDef.slug.replace(/^\//, '')}
-                                                </code>
+                                                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                                                    </svg>
+                                                </a>
                                             </td>
                                             <td className="px-6 py-4">
                                                 <span className={`px-2 py-1 text-xs rounded-full ${pageDef.isPublished
