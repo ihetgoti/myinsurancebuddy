@@ -8,6 +8,7 @@ import Footer from '@/components/Footer';
 import DynamicPageRenderer from '@/components/DynamicPageRenderer';
 import HtmlTemplateRenderer from '@/components/HtmlTemplateRenderer';
 import { Building2, MapPin, FileText, Shield, ArrowRight, ChevronDown } from 'lucide-react';
+import { AutoInsuranceTemplate, HealthInsuranceTemplate, HomeInsuranceTemplate } from '@/components/templates';
 
 /**
  * ISR Configuration for optimal performance at scale
@@ -546,6 +547,69 @@ export default async function DynamicPage({ params }: PageProps) {
         : state
             ? `${state.name}, ${country?.name}`
             : country?.name;
+
+    // PRIORITY 0: Use niche-specific React templates for Auto, Health, Home insurance
+    const nicheSlug = insuranceType?.slug;
+
+    if (nicheSlug === 'car-insurance') {
+        return (
+            <div className="min-h-screen bg-white">
+                <script
+                    type="application/ld+json"
+                    dangerouslySetInnerHTML={{ __html: JSON.stringify(schemas) }}
+                />
+                {showHeader && <Header insuranceTypes={allInsuranceTypes} states={allStates} />}
+                <AutoInsuranceTemplate
+                    variables={variables}
+                    affiliates={affiliatePartners}
+                    relatedLinks={relatedLinks}
+                    insuranceTypeId={insuranceType?.id}
+                    stateId={state?.id}
+                />
+                {showFooter && <Footer insuranceTypes={allInsuranceTypes} />}
+            </div>
+        );
+    }
+
+    if (nicheSlug === 'health-insurance') {
+        return (
+            <div className="min-h-screen bg-white">
+                <script
+                    type="application/ld+json"
+                    dangerouslySetInnerHTML={{ __html: JSON.stringify(schemas) }}
+                />
+                {showHeader && <Header insuranceTypes={allInsuranceTypes} states={allStates} />}
+                <HealthInsuranceTemplate
+                    variables={variables}
+                    affiliates={affiliatePartners}
+                    relatedLinks={relatedLinks}
+                    insuranceTypeId={insuranceType?.id}
+                    stateId={state?.id}
+                />
+                {showFooter && <Footer insuranceTypes={allInsuranceTypes} />}
+            </div>
+        );
+    }
+
+    if (nicheSlug === 'home-insurance' || nicheSlug === 'homeowners-insurance') {
+        return (
+            <div className="min-h-screen bg-white">
+                <script
+                    type="application/ld+json"
+                    dangerouslySetInnerHTML={{ __html: JSON.stringify(schemas) }}
+                />
+                {showHeader && <Header insuranceTypes={allInsuranceTypes} states={allStates} />}
+                <HomeInsuranceTemplate
+                    variables={variables}
+                    affiliates={affiliatePartners}
+                    relatedLinks={relatedLinks}
+                    insuranceTypeId={insuranceType?.id}
+                    stateId={state?.id}
+                />
+                {showFooter && <Footer insuranceTypes={allInsuranceTypes} />}
+            </div>
+        );
+    }
 
     // PRIORITY 1: If template has HTML content, render with Handlebars-style substitution
     if (page?.template?.htmlContent) {
