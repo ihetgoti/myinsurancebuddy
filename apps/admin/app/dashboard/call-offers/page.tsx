@@ -10,6 +10,7 @@ interface CallOffer {
     campaignId: string;
     subId: string | null;
     phoneMask: string;
+    formRedirectUrl: string | null;
     insuranceTypeId: string | null;
     insuranceType: { id: string; name: string; slug: string } | null;
     geoLevel: string | null;
@@ -47,6 +48,7 @@ export default function CallOffersPage() {
         campaignId: '',
         subId: '',
         phoneMask: '(xxx) xxx-xx-xx',
+        formRedirectUrl: '',
         insuranceTypeId: '',
         stateIds: [] as string[],
         priority: 0,
@@ -86,6 +88,7 @@ export default function CallOffersPage() {
             campaignId: '',
             subId: '',
             phoneMask: '(xxx) xxx-xx-xx',
+            formRedirectUrl: '',
             insuranceTypeId: '',
             stateIds: [],
             priority: 0,
@@ -101,6 +104,7 @@ export default function CallOffersPage() {
             campaignId: offer.campaignId,
             subId: offer.subId || '',
             phoneMask: offer.phoneMask,
+            formRedirectUrl: offer.formRedirectUrl || '',
             insuranceTypeId: offer.insuranceTypeId || '',
             stateIds: offer.stateIds || [],
             priority: offer.priority,
@@ -188,8 +192,8 @@ export default function CallOffersPage() {
             <div>
                 <div className="flex justify-between items-center mb-6">
                     <div>
-                        <h1 className="text-3xl font-bold text-gray-900">Call Offers</h1>
-                        <p className="text-gray-600 mt-1">Manage Marketcall pay-per-call campaigns</p>
+                        <h1 className="text-3xl font-bold text-gray-900">MarketCall Offers</h1>
+                        <p className="text-gray-600 mt-1">Manage MarketCall campaigns (phone calls + form leads)</p>
                     </div>
                     <button
                         onClick={openCreateModal}
@@ -201,11 +205,24 @@ export default function CallOffersPage() {
 
                 {/* Info Box */}
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-                    <h3 className="font-medium text-blue-900 mb-1">📞 How It Works</h3>
-                    <p className="text-sm text-blue-700">
-                        Add your Marketcall campaign IDs and select states. The offer will show on all STATE pages
-                        and CITY pages within those states. Phone numbers update dynamically via Marketcall.
-                    </p>
+                    <h3 className="font-medium text-blue-900 mb-2">💰 How MarketCall Offers Work</h3>
+                    <div className="space-y-2 text-sm text-blue-700">
+                        <p>
+                            <strong>📞 Phone Calls:</strong> Add your MarketCall campaign ID and phone number.
+                            Tracked phone numbers automatically appear on matching pages and popups.
+                        </p>
+                        <p>
+                            <strong>📝 Form Leads:</strong> Add your MarketCall form redirect URL.
+                            When users click "Get Quote" buttons, they'll be redirected to your MarketCall form.
+                        </p>
+                        <p>
+                            <strong>🎯 Auto-Targeting:</strong> Select insurance type and states.
+                            The system automatically shows offers on STATE pages + all CITY pages within selected states.
+                        </p>
+                        <p className="text-xs text-blue-600 mt-2">
+                            💡 You can use both phone + form in the same offer, or create separate offers for each.
+                        </p>
+                    </div>
                 </div>
 
                 {/* Offers Table */}
@@ -413,6 +430,22 @@ export default function CallOffersPage() {
                                         className="w-full px-4 py-2 border rounded-lg"
                                     />
                                 </div>
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium mb-1">
+                                    📝 Form Redirect URL (Optional)
+                                </label>
+                                <input
+                                    type="url"
+                                    value={formData.formRedirectUrl}
+                                    onChange={(e) => setFormData({ ...formData, formRedirectUrl: e.target.value })}
+                                    placeholder="https://example.marketcall.com/form/12345"
+                                    className="w-full px-4 py-2 border rounded-lg"
+                                />
+                                <p className="text-xs text-gray-500 mt-1">
+                                    MarketCall form URL for lead generation (redirects users to external form)
+                                </p>
                             </div>
 
                             <div>
