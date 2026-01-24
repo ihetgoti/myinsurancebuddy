@@ -323,14 +323,14 @@ export default function AITemplatesPage() {
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Introduction Prompt <span className="text-xs text-gray-500">(Use {{'{'}variable{'}'}} placeholders)</span>
+                      Introduction Prompt <span className="text-xs text-gray-500">(Use {'{{variable}}'} placeholders)</span>
                     </label>
                     <textarea
                       value={formData.introPrompt}
                       onChange={(e) => setFormData({ ...formData, introPrompt: e.target.value })}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg font-mono text-sm"
                       rows={3}
-                      placeholder="Write a 2-3 paragraph introduction about {{'{'}insurance_type{'}'}} in {{'{'}location{'}'}}"
+                      placeholder="Write a 2-3 paragraph introduction about {{insurance_type}} in {{location}}"
                     />
                   </div>
 
@@ -343,7 +343,7 @@ export default function AITemplatesPage() {
                       onChange={(e) => setFormData({ ...formData, requirementsPrompt: e.target.value })}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg font-mono text-sm"
                       rows={3}
-                      placeholder="Explain the legal requirements for {{'{'}insurance_type{'}'}} in {{'{'}state{'}'}}"
+                      placeholder="Explain the legal requirements for {{insurance_type}} in {{state}}"
                     />
                   </div>
 
@@ -356,7 +356,7 @@ export default function AITemplatesPage() {
                       onChange={(e) => setFormData({ ...formData, faqsPrompt: e.target.value })}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg font-mono text-sm"
                       rows={3}
-                      placeholder="Generate 5-7 location-specific FAQs for {{'{'}insurance_type{'}'}} in {{'{'}location{'}'}}"
+                      placeholder="Generate 5-7 location-specific FAQs for {{insurance_type}} in {{location}}"
                     />
                   </div>
 
@@ -369,7 +369,7 @@ export default function AITemplatesPage() {
                       onChange={(e) => setFormData({ ...formData, tipsPrompt: e.target.value })}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg font-mono text-sm"
                       rows={3}
-                      placeholder="Provide 5-8 practical tips for getting the best {{'{'}insurance_type{'}'}} in {{'{'}location{'}'}}"
+                      placeholder="Provide 5-8 practical tips for getting the best {{insurance_type}} in {{location}}"
                     />
                   </div>
                 </div>
@@ -593,7 +593,7 @@ export default function AITemplatesPage() {
           <h3 className="font-medium text-blue-900 mb-2">How AI Templates Work:</h3>
           <ul className="list-disc list-inside text-sm text-blue-800 space-y-1">
             <li>Templates control the AI prompts used for content generation</li>
-            <li>Use <code className="bg-blue-100 px-1 rounded">{{'{'}variable{'}'}} </code> placeholders like <code className="bg-blue-100 px-1 rounded">{{'{'}state{'}'}}</code>, <code className="bg-blue-100 px-1 rounded">{{'{'}city{'}'}}</code>, <code className="bg-blue-100 px-1 rounded">{{'{'}insurance_type{'}'}} </code></li>
+            <li>Use <code className="bg-blue-100 px-1 rounded">{'{{variable}}'}</code> placeholders like <code className="bg-blue-100 px-1 rounded">{'{{state}}'}</code>, <code className="bg-blue-100 px-1 rounded">{'{{city}}'}</code>, <code className="bg-blue-100 px-1 rounded">{'{{insurance_type}}'}</code></li>
             <li>Target specific insurance types, geo levels, or major cities</li>
             <li>Higher priority templates are preferred when multiple match</li>
             <li>Default templates are used when no specific match is found</li>
