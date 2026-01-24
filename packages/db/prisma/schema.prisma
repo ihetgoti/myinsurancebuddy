@@ -1531,3 +1531,59 @@ model Popup {
   @@index([type])
   @@index([priority])
 }
+
+// ============================================
+// LEAD GENERATION & CONVERSION TRACKING
+// ============================================
+
+enum LeadStatus {
+  NEW           // Freshly captured
+  CONTACTED     // Reached out to
+  QUALIFIED     // Verified as legitimate lead
+  CONVERTED     // Purchased policy
+  DISQUALIFIED  // Not a valid lead
+  DUPLICATE     // Duplicate submission
+}
+
+model Lead {
+  id              String      @id @default(uuid())
+  
+  // Contact information
+  firstName       String?
+  lastName        String?
+  email           String?
+  phoneNumber     String?
+  zipCode         String      // Required field
+  
+  // Lead context
+  insuranceType   String?     // What insurance they're looking for
+  source          String      @default("web") // web, popup, phone_click, affiliate
+  
+  // Attribution
+  referrer        String?     // HTTP referrer
+  utmSource       String?     // Campaign source
+  utmMedium       String?     // Campaign medium
+  utmCampaign     String?     // Campaign name
+  ipAddress       String?
+  userAgent       String?
+  
+  // Additional data (custom fields, form data, etc.)
+  metadata        Json?
+  
+  // Status and lifecycle
+  status          LeadStatus  @default(NEW)
+  qualifiedAt     DateTime?
+  convertedAt     DateTime?
+  notes           String?     @db.Text
+  
+  // Timestamps
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  
+  @@index([zipCode])
+  @@index([insuranceType])
+  @@index([status])
+  @@index([source])
+  @@index([createdAt])
+  @@index([email])
+}
