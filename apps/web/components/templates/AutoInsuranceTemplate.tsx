@@ -5,7 +5,7 @@ import {
     CheckCircle, MapPin, ExternalLink, TrendingDown,
     Percent, Users, CreditCard, Gauge, Calendar
 } from 'lucide-react';
-import MarketcallCTA from '@/components/MarketcallCTA';
+import MarketCallCTA from '@/components/MarketCallCTA';
 import CopyAsMarkdown from '@/components/CopyAsMarkdown';
 import AskAIButtons from '@/components/AskAIButtons';
 import {
@@ -283,7 +283,7 @@ export default function AutoInsuranceTemplate({
                             </div>
                         </div>
                         <div className="flex justify-center md:justify-end">
-                            <MarketcallCTA
+                            <MarketCallCTA
                                 insuranceTypeId={insuranceTypeId}
                                 stateId={stateId}
                                 className="max-w-sm w-full"

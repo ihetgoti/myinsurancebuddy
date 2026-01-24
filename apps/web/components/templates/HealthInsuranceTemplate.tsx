@@ -5,7 +5,7 @@ import {
     CheckCircle, MapPin, ExternalLink, Heart, Calendar, Shield,
     Clock, Users, Stethoscope, BadgePercent, FileText
 } from 'lucide-react';
-import MarketcallCTA from '@/components/MarketcallCTA';
+import MarketCallCTA from '@/components/MarketCallCTA';
 import CopyAsMarkdown from '@/components/CopyAsMarkdown';
 import AskAIButtons from '@/components/AskAIButtons';
 import {
@@ -224,7 +224,7 @@ export default function HealthInsuranceTemplate({
                             </div>
                         </div>
                         <div className="flex justify-center md:justify-end">
-                            <MarketcallCTA insuranceTypeId={insuranceTypeId} stateId={stateId} className="max-w-sm w-full" />
+                            <MarketCallCTA insuranceTypeId={insuranceTypeId} stateId={stateId} className="max-w-sm w-full" />
                         </div>
                     </div>
                 </div>
