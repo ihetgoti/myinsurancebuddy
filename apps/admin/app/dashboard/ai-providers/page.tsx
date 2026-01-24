@@ -368,7 +368,7 @@ export default function AIProvidersPage() {
             <li><strong>Skip adding credits</strong> - Use free models like DeepSeek R1!</li>
             <li>Go to Settings → API Keys → Create new key</li>
             <li>Copy the key and paste it above</li>
-            <li><strong>Select "DeepSeek R1 (FREE - Xiaomi)"</strong> as preferred model ⭐</li>
+            <li><strong>Select &quot;DeepSeek R1 (FREE - Xiaomi)&quot;</strong> as preferred model ⭐</li>
             <li>Optional: Create 3-5 accounts for higher rate limits (use Gmail aliases)</li>
           </ol>
           <p className="text-xs text-green-700 mt-3">

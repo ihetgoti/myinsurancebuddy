@@ -309,7 +309,7 @@ export default function AITemplatesPage() {
                 <div className="space-y-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      System Prompt * <span className="text-xs text-gray-500">(Sets the AI's role)</span>
+                      System Prompt * <span className="text-xs text-gray-500">(Sets the AI&apos;s role)</span>
                     </label>
                     <textarea
                       value={formData.systemPrompt}

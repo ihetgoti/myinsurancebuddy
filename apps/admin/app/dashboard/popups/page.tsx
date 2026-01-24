@@ -885,7 +885,7 @@ export default function PopupsPage() {
                                             />
                                             <span className="text-sm font-medium">Show trust badges</span>
                                         </label>
-                                        <p className="text-xs text-gray-500 ml-6">Displays "100% Free" and "No Obligation" badges</p>
+                                        <p className="text-xs text-gray-500 ml-6">Displays &quot;100% Free&quot; and &quot;No Obligation&quot; badges</p>
                                     </div>
 
                                     <div>
