@@ -213,7 +213,7 @@ export default function CallOffersPage() {
                         </p>
                         <p>
                             <strong>📝 Form Leads:</strong> Add your MarketCall form redirect URL.
-                            When users click "Get Quote" buttons, they'll be redirected to your MarketCall form.
+                            When users click &ldquo;Get Quote&rdquo; buttons, they&apos;ll be redirected to your MarketCall form.
                         </p>
                         <p>
                             <strong>🎯 Auto-Targeting:</strong> Select insurance type and states.
