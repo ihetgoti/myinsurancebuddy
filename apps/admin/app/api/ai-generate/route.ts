@@ -80,6 +80,7 @@ export async function POST(req: NextRequest) {
         pageIds,
         sections,
         model: model || 'anthropic/claude-haiku',
+        promptTemplate: 'Generate unique, location-specific insurance content for {{location}}',
         filters,
         batchSize,
         delayBetweenBatches,

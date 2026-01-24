@@ -34,29 +34,29 @@ export class OpenRouterService {
    * Get next available AI provider (round-robin with budget check)
    */
   static async getNextProvider() {
+    // Get all active providers and filter in JavaScript for budget comparison
     const providers = await prisma.aIProvider.findMany({
       where: {
-        isActive: true,
-        OR: [
-          { totalBudget: null }, // No budget limit
-          {
-            AND: [
-              { totalBudget: { not: null } },
-              { usedBudget: { lt: prisma.raw('total_budget') } }
-            ]
-          }
-        ]
+        isActive: true
       },
       orderBy: { priority: 'asc' }
     });
 
-    if (providers.length === 0) {
+    // Filter providers that have budget available
+    const availableProviders = providers.filter((provider: any) => {
+      // No budget limit
+      if (provider.totalBudget === null) return true;
+      // Has budget remaining
+      return provider.usedBudget < provider.totalBudget;
+    });
+
+    if (availableProviders.length === 0) {
       throw new Error('No AI providers available. Please add API keys in settings.');
     }
 
     // Round-robin selection
-    const provider = providers[this.currentProviderIndex % providers.length];
-    this.currentProviderIndex = (this.currentProviderIndex + 1) % providers.length;
+    const provider = availableProviders[this.currentProviderIndex % availableProviders.length];
+    this.currentProviderIndex = (this.currentProviderIndex + 1) % availableProviders.length;
 
     return provider;
   }
