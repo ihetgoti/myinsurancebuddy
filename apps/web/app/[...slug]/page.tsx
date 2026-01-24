@@ -7,6 +7,8 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import DynamicPageRenderer from '@/components/DynamicPageRenderer';
 import HtmlTemplateRenderer from '@/components/HtmlTemplateRenderer';
+import PageWrapper from '@/components/PageWrapper';
+import { LocalBusinessSchema } from '@/components/SchemaMarkup';
 import { Building2, MapPin, FileText, Shield, ArrowRight, ChevronDown } from 'lucide-react';
 import { AutoInsuranceTemplate, HealthInsuranceTemplate, HomeInsuranceTemplate } from '@/components/templates';
 
@@ -249,9 +251,32 @@ function buildVariables(insuranceType: any, country: any, state: any, city: any,
     // Merge custom data from page (overrides base vars)
     const customData = (page?.customData as Record<string, any>) || {};
 
+    // Merge AI-generated content (highest priority)
+    const aiContent = (page?.aiGeneratedContent as Record<string, any>) || {};
+
+    // Map AI content to template variable names
+    const aiVars: Record<string, any> = {};
+    if (aiContent.intro) {
+        aiVars.intro_content = aiContent.intro;
+        aiVars.ai_intro = aiContent.intro;
+    }
+    if (aiContent.requirements) {
+        aiVars.requirements_content = aiContent.requirements;
+        aiVars.ai_requirements = aiContent.requirements;
+    }
+    if (aiContent.faqs && Array.isArray(aiContent.faqs)) {
+        aiVars.faqs = aiContent.faqs;
+        aiVars.ai_faq = aiContent.faqs;
+    }
+    if (aiContent.tips && Array.isArray(aiContent.tips)) {
+        aiVars.tips_content = aiContent.tips;
+        aiVars.ai_tips = aiContent.tips;
+    }
+
     return {
         ...baseVars,
         ...customData,
+        ...aiVars, // AI content takes priority
     };
 }
 
@@ -553,61 +578,134 @@ export default async function DynamicPage({ params }: PageProps) {
 
     if (nicheSlug === 'car-insurance') {
         return (
-            <div className="min-h-screen bg-white">
-                <script
-                    type="application/ld+json"
-                    dangerouslySetInnerHTML={{ __html: JSON.stringify(schemas) }}
-                />
-                {showHeader && <Header insuranceTypes={allInsuranceTypes} states={allStates} />}
-                <AutoInsuranceTemplate
-                    variables={variables}
-                    affiliates={affiliatePartners}
-                    relatedLinks={relatedLinks}
-                    insuranceTypeId={insuranceType?.id}
-                    stateId={state?.id}
-                />
-                {showFooter && <Footer insuranceTypes={allInsuranceTypes} />}
-            </div>
+            <PageWrapper
+                pageType="insurance"
+                insuranceType={insuranceType?.name}
+                insuranceTypeSlug={nicheSlug}
+                stateName={state?.name}
+                stateCode={state?.code}
+                stateId={state?.id}
+                cityName={city?.name}
+                enablePopups={true}
+            >
+                <div className="min-h-screen bg-white">
+                    <script
+                        type="application/ld+json"
+                        dangerouslySetInnerHTML={{ __html: JSON.stringify(schemas) }}
+                    />
+                    {/* LocalBusiness Schema for geo-targeted SEO */}
+                    {state && (
+                        <LocalBusinessSchema
+                            name={`${insuranceType?.name} in ${state?.name}`}
+                            description={`Compare ${insuranceType?.name?.toLowerCase()} rates in ${state?.name}. Get free quotes from top providers.`}
+                            insuranceType={insuranceType?.name}
+                            stateName={state?.name}
+                            stateCode={state?.code}
+                            cityName={city?.name}
+                            url={`https://myinsurancebuddies.com/${page?.slug || nicheSlug}`}
+                            rating={4.8}
+                            reviewCount={1250}
+                        />
+                    )}
+                    {showHeader && <Header insuranceTypes={allInsuranceTypes} states={allStates} />}
+                    <AutoInsuranceTemplate
+                        variables={variables}
+                        affiliates={affiliatePartners}
+                        relatedLinks={relatedLinks}
+                        insuranceTypeId={insuranceType?.id}
+                        stateId={state?.id}
+                    />
+                    {showFooter && <Footer insuranceTypes={allInsuranceTypes} />}
+                </div>
+            </PageWrapper>
         );
     }
 
     if (nicheSlug === 'health-insurance') {
         return (
-            <div className="min-h-screen bg-white">
-                <script
-                    type="application/ld+json"
-                    dangerouslySetInnerHTML={{ __html: JSON.stringify(schemas) }}
-                />
-                {showHeader && <Header insuranceTypes={allInsuranceTypes} states={allStates} />}
-                <HealthInsuranceTemplate
-                    variables={variables}
-                    affiliates={affiliatePartners}
-                    relatedLinks={relatedLinks}
-                    insuranceTypeId={insuranceType?.id}
-                    stateId={state?.id}
-                />
-                {showFooter && <Footer insuranceTypes={allInsuranceTypes} />}
-            </div>
+            <PageWrapper
+                pageType="insurance"
+                insuranceType={insuranceType?.name}
+                insuranceTypeSlug={nicheSlug}
+                stateName={state?.name}
+                stateCode={state?.code}
+                stateId={state?.id}
+                cityName={city?.name}
+                enablePopups={true}
+            >
+                <div className="min-h-screen bg-white">
+                    <script
+                        type="application/ld+json"
+                        dangerouslySetInnerHTML={{ __html: JSON.stringify(schemas) }}
+                    />
+                    {state && (
+                        <LocalBusinessSchema
+                            name={`${insuranceType?.name} in ${state?.name}`}
+                            description={`Find affordable ${insuranceType?.name?.toLowerCase()} plans in ${state?.name}. Compare marketplace options and get subsidies.`}
+                            insuranceType={insuranceType?.name}
+                            stateName={state?.name}
+                            stateCode={state?.code}
+                            cityName={city?.name}
+                            url={`https://myinsurancebuddies.com/${page?.slug || nicheSlug}`}
+                            rating={4.8}
+                            reviewCount={980}
+                        />
+                    )}
+                    {showHeader && <Header insuranceTypes={allInsuranceTypes} states={allStates} />}
+                    <HealthInsuranceTemplate
+                        variables={variables}
+                        affiliates={affiliatePartners}
+                        relatedLinks={relatedLinks}
+                        insuranceTypeId={insuranceType?.id}
+                        stateId={state?.id}
+                    />
+                    {showFooter && <Footer insuranceTypes={allInsuranceTypes} />}
+                </div>
+            </PageWrapper>
         );
     }
 
     if (nicheSlug === 'home-insurance' || nicheSlug === 'homeowners-insurance') {
         return (
-            <div className="min-h-screen bg-white">
-                <script
-                    type="application/ld+json"
-                    dangerouslySetInnerHTML={{ __html: JSON.stringify(schemas) }}
-                />
-                {showHeader && <Header insuranceTypes={allInsuranceTypes} states={allStates} />}
-                <HomeInsuranceTemplate
-                    variables={variables}
-                    affiliates={affiliatePartners}
-                    relatedLinks={relatedLinks}
-                    insuranceTypeId={insuranceType?.id}
-                    stateId={state?.id}
-                />
-                {showFooter && <Footer insuranceTypes={allInsuranceTypes} />}
-            </div>
+            <PageWrapper
+                pageType="insurance"
+                insuranceType={insuranceType?.name}
+                insuranceTypeSlug={nicheSlug}
+                stateName={state?.name}
+                stateCode={state?.code}
+                stateId={state?.id}
+                cityName={city?.name}
+                enablePopups={true}
+            >
+                <div className="min-h-screen bg-white">
+                    <script
+                        type="application/ld+json"
+                        dangerouslySetInnerHTML={{ __html: JSON.stringify(schemas) }}
+                    />
+                    {state && (
+                        <LocalBusinessSchema
+                            name={`${insuranceType?.name} in ${state?.name}`}
+                            description={`Protect your home with ${insuranceType?.name?.toLowerCase()} in ${state?.name}. Compare rates from top providers.`}
+                            insuranceType={insuranceType?.name}
+                            stateName={state?.name}
+                            stateCode={state?.code}
+                            cityName={city?.name}
+                            url={`https://myinsurancebuddies.com/${page?.slug || nicheSlug}`}
+                            rating={4.7}
+                            reviewCount={875}
+                        />
+                    )}
+                    {showHeader && <Header insuranceTypes={allInsuranceTypes} states={allStates} />}
+                    <HomeInsuranceTemplate
+                        variables={variables}
+                        affiliates={affiliatePartners}
+                        relatedLinks={relatedLinks}
+                        insuranceTypeId={insuranceType?.id}
+                        stateId={state?.id}
+                    />
+                    {showFooter && <Footer insuranceTypes={allInsuranceTypes} />}
+                </div>
+            </PageWrapper>
         );
     }
 

@@ -34,6 +34,8 @@ model User {
   apiKeys         ApiKey[]
   notifications   Notification[]
   blogPosts       BlogPost[]
+  aiJobs          AIGenerationJob[]
+  aiPromptTemplates AIPromptTemplate[] @relation("AIPromptCreator")
 }
 
 enum UserRole {
@@ -585,6 +587,13 @@ model Page {
   
   // Custom data (for CSV imports)
   customData      Json?         // Any additional data from CSV
+
+  // AI-generated content tracking
+  aiGeneratedContent Json?      // AI-generated sections: {intro, requirements, faqs, tips, etc.}
+  aiGeneratedAt      DateTime?  // When AI content was generated
+  aiModel            String?    // Model used (e.g., "gpt-3.5-turbo", "claude-haiku")
+  aiPromptVersion    String?    // Version of prompt used
+  isAiGenerated      Boolean    @default(false)
   
   // SEO - Basic
   metaTitle       String?
@@ -1301,7 +1310,224 @@ model CallTrackingSettings {
   siteId          String    // Marketcall site ID e.g. "2477"
   serviceBaseUrl  String    @default("//www.marketcall.com")
   isEnabled       Boolean   @default(true)
-  
+
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
+}
+
+// ============================================
+// AI CONTENT GENERATION
+// ============================================
+
+model AIProvider {
+  id              String    @id @default(uuid())
+  name            String    // "OpenRouter Account 1", "OpenRouter Account 2"
+  provider        String    @default("openrouter") // "openrouter", "openai", "anthropic"
+  apiKey          String    // Encrypted API key
+  apiEndpoint     String    @default("https://openrouter.ai/api/v1/chat/completions")
+
+  // Model preferences
+  preferredModel  String    @default("xiaomi/mimo-v2-flash") // FREE PREMIUM (until Jan 26!), then use deepseek/deepseek-r1
+  fallbackModel   String?   // Backup model if preferred fails (use deepseek/deepseek-r1 after Jan 26)
+
+  // Rate limiting
+  maxRequestsPerMinute Int   @default(60)
+  maxTokensPerRequest  Int   @default(4000)
+
+  // Budget tracking
+  totalBudget     Float?    // Total budget in dollars
+  usedBudget      Float     @default(0) // Amount spent so far
+  requestCount    Int       @default(0)
+  lastUsedAt      DateTime?
+
+  // Status
+  isActive        Boolean   @default(true)
+  priority        Int       @default(0) // Lower = used first
+
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  aiJobs          AIGenerationJob[]
+
+  @@index([isActive])
+  @@index([priority])
+}
+
+model AIGenerationJob {
+  id              String    @id @default(uuid())
+  name            String    // "Auto Insurance - California Cities"
+
+  // Target pages
+  pageIds         String[]  // Specific page IDs to generate content for
+  filters         Json?     // {insuranceTypeId, stateId, cityId, geoLevel}
+
+  // Content sections to generate
+  sections        String[]  // ["intro", "requirements", "faqs", "tips"]
+
+  // AI settings
+  providerId      String?
+  provider        AIProvider? @relation(fields: [providerId], references: [id])
+  model           String    @default("xiaomi/mimo-v2-flash") // FREE PREMIUM (until Jan 26!)
+  promptTemplate  String    @db.Text // Template with {{variables}}
+  temperature     Float     @default(0.7)
+  maxTokens       Int       @default(2000)
+
+  // Batching
+  batchSize       Int       @default(10) // Process N pages at a time
+  delayBetweenBatches Int   @default(1000) // Milliseconds
+
+  // Progress
+  status          JobStatus @default(PENDING)
+  totalPages      Int       @default(0)
+  processedPages  Int       @default(0)
+  successfulPages Int       @default(0)
+  failedPages     Int       @default(0)
+
+  // Costs
+  totalTokensUsed Int       @default(0)
+  estimatedCost   Float     @default(0)
+
+  // Error handling
+  errorLog        Json?     // [{pageId, error}]
+
+  // Scheduling
+  scheduledAt     DateTime?
+  startedAt       DateTime?
+  completedAt     DateTime?
+
+  // Creator
+  createdById     String?
+  createdBy       User?     @relation(fields: [createdById], references: [id])
+
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([status])
+  @@index([providerId])
+}
+
+model AIPromptTemplate {
+  id              String    @id @default(uuid())
+  name            String    // "Auto Insurance - Major Cities", "Health - State Pages"
+  description     String?   @db.Text
+
+  // Targeting - which pages use this template
+  insuranceTypeId String?   // Specific insurance type (null = all)
+  geoLevel        GeoLevel? // CITY, STATE, etc. (null = all)
+  isMajorCity     Boolean?  // Only major cities (null = all)
+
+  // Prompt sections
+  systemPrompt    String    @db.Text // System role instruction
+  introPrompt     String?   @db.Text // Custom prompt for intro section
+  requirementsPrompt String? @db.Text // Custom prompt for requirements
+  faqsPrompt      String?   @db.Text // Custom prompt for FAQs
+  tipsPrompt      String?   @db.Text // Custom prompt for tips
+
+  // AI settings for this template
+  model           String    @default("xiaomi/mimo-v2-flash")
+  temperature     Float     @default(0.7)
+  maxTokens       Int       @default(2000)
+
+  // Template variables available
+  availableVars   Json?     // List of variables this template can use
+  exampleOutput   Json?     // Example of what this template generates
+
+  // Usage
+  isActive        Boolean   @default(true)
+  isDefault       Boolean   @default(false) // Default for matching criteria
+  priority        Int       @default(0) // Higher = preferred when multiple match
+  usageCount      Int       @default(0) // Track how many times used
+
+  // Audit
+  createdById     String?
+  createdBy       User?     @relation("AIPromptCreator", fields: [createdById], references: [id])
+
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([insuranceTypeId])
+  @@index([geoLevel])
+  @@index([isActive])
+  @@index([isDefault])
+}
+
+// ============================================
+// POPUP CONFIGURATION
+// ============================================
+
+enum PopupType {
+  SCROLL        // Trigger on scroll percentage
+  EXIT_INTENT   // Trigger on exit intent (mouse leave, back button)
+  TIMED         // Trigger after X seconds
+  CLICK         // Trigger on specific element click
+}
+
+enum PopupPosition {
+  CENTER
+  BOTTOM_RIGHT
+  BOTTOM_LEFT
+  TOP_CENTER
+}
+
+enum PopupSize {
+  SM
+  MD
+  LG
+}
+
+model Popup {
+  id              String       @id @default(uuid())
+  name            String       // Internal name for admin
+
+  // Content
+  title           String
+  subtitle        String?
+  description     String?      @db.Text
+  ctaText         String       @default("Get Quote")
+  ctaUrl          String       // URL or tel: link
+  secondaryCtaText String?
+  secondaryCtaUrl  String?
+  phoneNumber     String?      // Display phone number
+  imageUrl        String?      // Optional header image
+  badgeText       String?      // e.g., "Limited Time Offer"
+
+  // Styling
+  accentColor     String       @default("blue") // blue, emerald, orange, purple, red
+  position        PopupPosition @default(CENTER)
+  size            PopupSize    @default(MD)
+  showTrustBadges Boolean      @default(true)
+
+  // Trigger settings
+  type            PopupType    @default(SCROLL)
+  scrollPercentage Int?        @default(50) // For SCROLL type: 0-100
+  delaySeconds    Int?         @default(0)  // Additional delay after trigger
+
+  // Frequency settings
+  showOncePerSession Boolean   @default(true)
+  showOncePerDay     Boolean   @default(false)
+  cookieKey       String?      // Custom storage key
+
+  // Targeting
+  insuranceTypeIds String[]    // Show only for these insurance types (empty = all)
+  stateIds         String[]    // Show only for these states (empty = all)
+  pageTypes        String[]    // Show only on these page types: "insurance", "blog", "landing"
+  excludePageSlugs String[]    // Exclude specific page slugs
+
+  // Control
+  isActive        Boolean      @default(true)
+  priority        Int          @default(0) // Higher = shown first when multiple match
+
+  // Schedule (optional)
+  startDate       DateTime?
+  endDate         DateTime?
+
+  // Notes
+  notes           String?      @db.Text
+
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  @@index([isActive])
+  @@index([type])
+  @@index([priority])
 }

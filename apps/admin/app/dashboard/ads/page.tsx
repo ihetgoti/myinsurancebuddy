@@ -50,12 +50,12 @@ export default function BulkAdsPage() {
         Promise.all([
             fetch('/api/templates').then(r => r.json()),
             fetch('/api/insurance-types').then(r => r.json()),
-            fetch('/api/states').then(r => r.json()),
+            fetch('/api/states?all=true').then(r => r.json()),
         ]).then(([temps, types, sts]) => {
-            setTemplates(temps.map((t: any) => ({ id: t.id, name: t.name })));
-            setInsuranceTypes(types.map((t: any) => ({ id: t.id, name: t.name })));
-            setStates(sts.map((s: any) => ({ id: s.id, name: s.name })));
-        });
+            setTemplates(Array.isArray(temps) ? temps.map((t: any) => ({ id: t.id, name: t.name })) : []);
+            setInsuranceTypes(Array.isArray(types) ? types.map((t: any) => ({ id: t.id, name: t.name })) : []);
+            setStates(Array.isArray(sts) ? sts.map((s: any) => ({ id: s.id, name: s.name })) : []);
+        }).catch(err => console.error('Failed to fetch filter options:', err));
     }, []);
 
     const fetchPages = useCallback(async () => {

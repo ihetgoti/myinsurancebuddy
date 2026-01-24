@@ -1,0 +1,960 @@
+/* ===========================================
+CAR INSURANCE LANDING PAGE - STATIC CSS
+=========================================== */
+
+/* CSS Variables */
+:root {
+    /* Colors - Matched to Tailwind Slate/Blue Theme */
+    /* Blue 600 - Primary Brand */
+    --primary: 221 83% 53%;
+    /* Blue 700 - Hover State */
+    --primary-dark: 221 87% 48%;
+    /* Slate 50 - Secondary Background */
+    --secondary: 210 40% 98%;
+    /* Blue 500 - Accents */
+    --accent: 217 91% 60%;
+    /* Emerald 600 - Success State */
+    --success: 158 64% 38%;
+    /* Amber 500 - Warning State */
+    --warning: 38 92% 50%;
+    /* Red 600 - Danger State */
+    --danger: 0 84% 60%;
+
+    /* Slate 900 - Dark Text */
+    --navy-900: 222 47% 11%;
+    /* Slate 800 */
+    --navy-800: 217 33% 17%;
+    /* Slate 700 */
+    --navy-700: 215 25% 27%;
+
+    /* Slate 900 - Body Text */
+    --foreground: 222 47% 11%;
+    /* Slate 500 - Muted Text */
+    --muted: 215 16% 47%;
+    /* Slate 500 */
+    --muted-foreground: 215 16% 47%;
+    /* Slate 50 - Page Background */
+    --background: 210 40% 98%;
+    /* White - Card Background */
+    --card: 0 0% 100%;
+    /* Slate 200 - Borders */
+    --border: 214 32% 91%;
+
+    /* Typography */
+    --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+
+    /* Spacing */
+    --container-max: 1200px;
+    --section-padding: 4rem 1.5rem;
+}
+
+/* Reset */
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    font-family: var(--font-sans);
+    font-size: 16px;
+    line-height: 1.6;
+    color: hsl(var(--foreground));
+    background: hsl(var(--background));
+    -webkit-font-smoothing: antialiased;
+}
+
+/* Container */
+.container {
+    max-width: var(--container-max);
+    margin: 0 auto;
+    padding: 0 1.5rem;
+}
+
+/* Typography */
+h1,
+h2,
+h3,
+h4 {
+    font-weight: 700;
+    line-height: 1.2;
+}
+
+h1 {
+    font-size: clamp(2rem, 5vw, 3rem);
+}
+
+h2 {
+    font-size: clamp(1.5rem, 4vw, 2.25rem);
+}
+
+h3 {
+    font-size: 1.25rem;
+}
+
+/* Buttons */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.75rem 1.5rem;
+    font-size: 1rem;
+    font-weight: 600;
+    border-radius: 0.5rem;
+    border: none;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+
+.btn-primary {
+    background: hsl(var(--primary));
+    color: white;
+}
+
+.btn-primary:hover {
+    background: hsl(var(--primary-dark));
+    transform: translateY(-1px);
+}
+
+.btn-outline {
+    background: transparent;
+    border: 2px solid hsl(var(--primary));
+    color: hsl(var(--primary));
+}
+
+.btn-outline:hover {
+    background: hsl(var(--primary));
+    color: white;
+}
+
+.btn-large {
+    padding: 1rem 2rem;
+    font-size: 1.125rem;
+}
+
+/* Section Header */
+.section-header {
+    text-align: center;
+    margin-bottom: 3rem;
+}
+
+.section-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: hsl(var(--primary) / 0.1);
+    color: hsl(var(--primary));
+    padding: 0.5rem 1rem;
+    border-radius: 9999px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+}
+
+.section-header h2 {
+    color: hsl(var(--foreground));
+    margin-bottom: 0.5rem;
+}
+
+.section-header p {
+    color: hsl(var(--muted));
+    font-size: 1.125rem;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+/* Icons */
+.icon {
+    width: 1.25rem;
+    height: 1.25rem;
+    flex-shrink: 0;
+}
+
+/* ===========================================
+HERO SECTION
+=========================================== */
+.hero {
+    background: linear-gradient(135deg, hsl(var(--navy-900)), hsl(var(--navy-700)));
+    color: white;
+    padding: 2rem 0 4rem;
+}
+
+.breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+}
+
+.breadcrumb a {
+    color: hsl(var(--primary));
+    text-decoration: none;
+}
+
+.breadcrumb a:hover {
+    text-decoration: underline;
+}
+
+.breadcrumb .separator {
+    color: hsl(0 0% 60%);
+}
+
+.breadcrumb .current {
+    color: hsl(0 0% 70%);
+}
+
+.hero-content {
+    max-width: 700px;
+}
+
+.hero h1 {
+    margin-bottom: 1rem;
+}
+
+.hero .tagline {
+    color: hsl(var(--primary));
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+}
+
+.hero .description {
+    color: hsl(0 0% 80%);
+    font-size: 1.125rem;
+    margin-bottom: 2rem;
+}
+
+/* ZIP Form */
+.zip-form {
+    margin-bottom: 2rem;
+}
+
+.zip-input-wrapper {
+    display: flex;
+    gap: 0.5rem;
+    max-width: 400px;
+}
+
+.zip-input-wrapper input {
+    flex: 1;
+    padding: 1rem;
+    font-size: 1rem;
+    border: 2px solid transparent;
+    border-radius: 0.5rem;
+    outline: none;
+}
+
+.zip-input-wrapper input:focus {
+    border-color: hsl(var(--primary));
+}
+
+.zip-input-wrapper button {
+    padding: 1rem 1.5rem;
+    background: hsl(var(--primary));
+    color: white;
+    font-size: 1rem;
+    font-weight: 600;
+    border: none;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.2s;
+}
+
+.zip-input-wrapper button:hover {
+    background: hsl(var(--primary-dark));
+}
+
+/* Trust Badges */
+.trust-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+}
+
+.trust-badges .badge {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+    color: hsl(0 0% 80%);
+}
+
+.trust-badges .badge .icon {
+    color: hsl(var(--primary));
+}
+
+/* ===========================================
+REQUIREMENTS SECTION
+=========================================== */
+.requirements {
+    padding: var(--section-padding);
+    background: white;
+    margin-top: -2rem;
+    position: relative;
+    z-index: 10;
+}
+
+.requirements-box {
+    max-width: 800px;
+    margin: 0 auto;
+    background: white;
+    border-radius: 1rem;
+    box-shadow: 0 10px 40px hsl(var(--navy-900) / 0.1);
+    padding: 2rem;
+    border: 1px solid hsl(var(--border));
+}
+
+.requirements-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+}
+
+.requirements-header .icon {
+    width: 2rem;
+    height: 2rem;
+    color: hsl(var(--primary));
+}
+
+.requirements-header h2 {
+    font-size: 1.5rem;
+}
+
+.coverage-display {
+    text-align: center;
+    padding: 1.5rem;
+    background: hsl(var(--navy-900));
+    border-radius: 0.75rem;
+    margin-bottom: 1.5rem;
+}
+
+.coverage-format {
+    display: block;
+    font-size: 3rem;
+    font-weight: 800;
+    color: hsl(var(--primary));
+    letter-spacing: 0.05em;
+}
+
+.coverage-label {
+    font-size: 0.875rem;
+    color: hsl(0 0% 70%);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+}
+
+.coverage-breakdown {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.coverage-item {
+    text-align: center;
+    padding: 1rem;
+    background: hsl(var(--secondary));
+    border-radius: 0.5rem;
+}
+
+.coverage-item .amount {
+    display: block;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: hsl(var(--foreground));
+}
+
+.coverage-item .label {
+    font-size: 0.75rem;
+    color: hsl(var(--muted));
+    line-height: 1.3;
+}
+
+.state-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    justify-content: center;
+}
+
+.tag {
+    padding: 0.375rem 0.75rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    border-radius: 9999px;
+}
+
+.tag-info {
+    background: hsl(var(--accent) / 0.1);
+    color: hsl(var(--accent));
+}
+
+.tag-muted {
+    background: hsl(var(--muted) / 0.1);
+    color: hsl(var(--muted));
+}
+
+.tag-warning {
+    background: hsl(var(--warning) / 0.1);
+    color: hsl(var(--warning));
+}
+
+/* ===========================================
+INTRO CONTENT
+=========================================== */
+.intro-content {
+    padding: var(--section-padding);
+    background: white;
+}
+
+.content-wrapper {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.content-wrapper p {
+    font-size: 1.125rem;
+    color: hsl(var(--foreground));
+    margin-bottom: 1.5rem;
+    line-height: 1.8;
+}
+
+.insights-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+    margin: 2.5rem 0;
+}
+
+.insight-card {
+    padding: 1.5rem;
+    border-radius: 1rem;
+    border: 1px solid hsl(var(--border));
+}
+
+.insight-card .insight-icon {
+    width: 3rem;
+    height: 3rem;
+    border-radius: 0.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1rem;
+}
+
+.insight-card .insight-icon svg {
+    width: 1.5rem;
+    height: 1.5rem;
+}
+
+.insight-card h3 {
+    font-size: 0.875rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.5rem;
+}
+
+.insight-card p {
+    font-size: 0.9375rem !important;
+    margin-bottom: 0 !important;
+}
+
+.insight-challenge {
+    background: hsl(var(--accent) / 0.05);
+}
+
+.insight-challenge .insight-icon {
+    background: hsl(var(--accent) / 0.1);
+}
+
+.insight-challenge .insight-icon svg {
+    color: hsl(var(--accent));
+}
+
+.insight-challenge h3 {
+    color: hsl(var(--accent));
+}
+
+.insight-saving {
+    background: hsl(var(--success) / 0.05);
+}
+
+.insight-saving .insight-icon {
+    background: hsl(var(--success) / 0.1);
+}
+
+.insight-saving .insight-icon svg {
+    color: hsl(var(--success));
+}
+
+.insight-saving h3 {
+    color: hsl(var(--success));
+}
+
+.insight-mistake {
+    background: hsl(var(--warning) / 0.05);
+}
+
+.insight-mistake .insight-icon {
+    background: hsl(var(--warning) / 0.1);
+}
+
+.insight-mistake .insight-icon svg {
+    color: hsl(var(--warning));
+}
+
+.insight-mistake h3 {
+    color: hsl(var(--warning));
+}
+
+.content-wrapper .btn {
+    display: block;
+    width: fit-content;
+    margin: 2rem auto 0;
+}
+
+/* ===========================================
+LOCAL FACTORS
+=========================================== */
+.local-factors {
+    padding: var(--section-padding);
+    background: hsl(var(--secondary));
+}
+
+.factors-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+}
+
+.factor-card {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 1rem;
+    box-shadow: 0 4px 20px hsl(var(--navy-900) / 0.05);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.factor-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 30px hsl(var(--navy-900) / 0.1);
+}
+
+.factor-card .factor-icon {
+    width: 3rem;
+    height: 3rem;
+    background: hsl(var(--primary) / 0.1);
+    border-radius: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.factor-card h3 {
+    font-size: 1.125rem;
+    margin-bottom: 0.5rem;
+}
+
+.factor-card .impact {
+    color: hsl(var(--muted));
+    font-size: 0.9375rem;
+    margin-bottom: 1rem;
+}
+
+.factor-card .tip {
+    background: hsl(var(--primary) / 0.05);
+    padding: 0.75rem;
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+    border-left: 3px solid hsl(var(--primary));
+}
+
+.factor-card .tip strong {
+    color: hsl(var(--primary));
+}
+
+/* ===========================================
+COVERAGE TIPS
+=========================================== */
+.coverage-tips {
+    padding: var(--section-padding);
+    background: white;
+}
+
+.tips-list {
+    max-width: 700px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.tip-item {
+    display: flex;
+    gap: 1rem;
+    padding: 1rem;
+    background: hsl(var(--secondary));
+    border-radius: 0.75rem;
+}
+
+.tip-check {
+    width: 2rem;
+    height: 2rem;
+    background: hsl(var(--success) / 0.1);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.tip-check svg {
+    width: 1.25rem;
+    height: 1.25rem;
+    color: hsl(var(--success));
+}
+
+.tip-item p {
+    font-size: 1rem;
+    line-height: 1.6;
+}
+
+/* ===========================================
+DISCOUNTS
+=========================================== */
+.discounts {
+    padding: var(--section-padding);
+    background: hsl(var(--secondary));
+}
+
+.discounts-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1rem;
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.discount-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: white;
+    padding: 1.25rem;
+    border-radius: 0.75rem;
+    box-shadow: 0 2px 10px hsl(var(--navy-900) / 0.05);
+}
+
+.discount-info {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+}
+
+.discount-icon {
+    width: 2.5rem;
+    height: 2.5rem;
+    background: hsl(var(--primary) / 0.1);
+    border-radius: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.discount-icon svg {
+    width: 1.25rem;
+    height: 1.25rem;
+    color: hsl(var(--primary));
+}
+
+.discount-info h3 {
+    font-size: 1rem;
+    margin-bottom: 0.25rem;
+}
+
+.discount-info p {
+    font-size: 0.875rem;
+    color: hsl(var(--muted));
+}
+
+.discount-savings {
+    background: hsl(var(--success) / 0.1);
+    color: hsl(var(--success));
+    font-weight: 700;
+    font-size: 1rem;
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.5rem;
+    white-space: nowrap;
+}
+
+.disclaimer {
+    text-align: center;
+    font-size: 0.875rem;
+    color: hsl(var(--muted));
+    margin-top: 2rem;
+}
+
+/* ===========================================
+INSURERS
+=========================================== */
+.insurers {
+    padding: var(--section-padding);
+    background: white;
+}
+
+.insurers-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+.insurer-card {
+    background: white;
+    border: 2px solid hsl(var(--border));
+    border-radius: 1rem;
+    padding: 1.5rem;
+    text-align: center;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.insurer-card:hover {
+    border-color: hsl(var(--primary));
+    box-shadow: 0 8px 30px hsl(var(--primary) / 0.1);
+}
+
+.insurer-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.75rem;
+}
+
+.insurer-header h3 {
+    font-size: 1.25rem;
+}
+
+.rating {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    color: hsl(38 92% 50%);
+    font-weight: 600;
+}
+
+.rating svg {
+    width: 1rem;
+    height: 1rem;
+}
+
+.best-for {
+    color: hsl(var(--muted));
+    font-size: 0.9375rem;
+    margin-bottom: 1.25rem;
+}
+
+.insurer-card .btn {
+    width: 100%;
+}
+
+/* ===========================================
+NEIGHBORHOOD
+=========================================== */
+.neighborhood {
+    padding: var(--section-padding);
+    background: hsl(var(--secondary));
+}
+
+.neighborhood-box {
+    max-width: 800px;
+    margin: 0 auto;
+    background: white;
+    border-radius: 1rem;
+    padding: 2rem;
+    display: flex;
+    gap: 1.5rem;
+    align-items: flex-start;
+    box-shadow: 0 4px 20px hsl(var(--navy-900) / 0.05);
+    border-left: 4px solid hsl(var(--primary));
+}
+
+.neighborhood-icon {
+    width: 3rem;
+    height: 3rem;
+    background: hsl(var(--primary) / 0.1);
+    border-radius: 0.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.neighborhood-icon svg {
+    width: 1.5rem;
+    height: 1.5rem;
+    color: hsl(var(--primary));
+}
+
+.neighborhood-content h2 {
+    font-size: 1.25rem;
+    margin-bottom: 0.75rem;
+}
+
+.neighborhood-content p {
+    color: hsl(var(--muted));
+    line-height: 1.7;
+}
+
+/* ===========================================
+FAQ
+=========================================== */
+.faq {
+    padding: var(--section-padding);
+    background: white;
+}
+
+.faq-list {
+    max-width: 800px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.faq-item {
+    background: hsl(var(--secondary));
+    border-radius: 0.75rem;
+    overflow: hidden;
+}
+
+.faq-item summary {
+    padding: 1.25rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    list-style: none;
+}
+
+.faq-item summary::-webkit-details-marker {
+    display: none;
+}
+
+.faq-item summary::after {
+    content: '+';
+    font-size: 1.5rem;
+    font-weight: 400;
+    color: hsl(var(--muted));
+    transition: transform 0.2s;
+}
+
+.faq-item[open] summary::after {
+    content: '−';
+}
+
+.faq-answer {
+    padding: 0 1.25rem 1.25rem;
+    color: hsl(var(--muted));
+    line-height: 1.7;
+}
+
+/* ===========================================
+CTA BANNER
+=========================================== */
+.cta-banner {
+    padding: var(--section-padding);
+    background: linear-gradient(135deg, hsl(var(--primary)), hsl(166 84% 40%));
+    color: white;
+}
+
+.cta-content {
+    text-align: center;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.cta-content h2 {
+    font-size: clamp(1.75rem, 4vw, 2.5rem);
+    margin-bottom: 0.75rem;
+}
+
+.cta-content>p {
+    font-size: 1.125rem;
+    opacity: 0.9;
+    margin-bottom: 2rem;
+}
+
+.cta-banner .zip-form {
+    margin-bottom: 1.5rem;
+}
+
+.cta-banner .zip-input-wrapper {
+    max-width: 400px;
+    margin: 0 auto;
+}
+
+.cta-banner .zip-input-wrapper button {
+    background: hsl(var(--navy-900));
+}
+
+.cta-banner .zip-input-wrapper button:hover {
+    background: hsl(var(--navy-800));
+}
+
+.cta-banner .trust-badges {
+    justify-content: center;
+}
+
+.cta-banner .badge {
+    color: white;
+    opacity: 0.9;
+}
+
+.cta-banner .badge .icon {
+    color: white;
+}
+
+/* ===========================================
+/* ===========================================
+RESPONSIVE
+=========================================== */
+@media (max-width: 768px) {
+    :root {
+        --section-padding: 3rem 1rem;
+    }
+
+    .zip-input-wrapper {
+        flex-direction: column;
+    }
+
+    .zip-input-wrapper button {
+        width: 100%;
+    }
+
+    .coverage-breakdown {
+        grid-template-columns: 1fr;
+    }
+
+    .neighborhood-box {
+        flex-direction: column;
+    }
+}
+
+@media (max-width: 480px) {
+    .trust-badges {
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+}

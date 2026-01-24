@@ -32,7 +32,10 @@ import {
     Info,
     ArrowRight,
     AlertTriangle,
-    RefreshCw
+    RefreshCw,
+    MessageSquare,
+    Sparkles,
+    Key
 } from 'lucide-react';
 import JobProgressBar from './JobProgressBar';
 
@@ -204,9 +207,18 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
             ],
         },
         {
+            title: 'AI Content',
+            items: [
+                { href: '/dashboard/ai-content', label: 'AI Generation', icon: <Sparkles size={18} strokeWidth={1.5} /> },
+                { href: '/dashboard/ai-providers', label: 'AI Providers', icon: <Key size={18} strokeWidth={1.5} /> },
+                { href: '/dashboard/ai-templates', label: 'AI Templates', icon: <FileText size={18} strokeWidth={1.5} /> },
+            ],
+        },
+        {
             title: 'Marketing',
             items: [
                 { href: '/dashboard/call-offers', label: 'Call Offers', icon: <Zap size={18} strokeWidth={1.5} /> },
+                { href: '/dashboard/popups', label: 'Popups', icon: <MessageSquare size={18} strokeWidth={1.5} /> },
                 { href: '/dashboard/affiliates', label: 'Affiliate Partners', icon: <Handshake size={18} strokeWidth={1.5} /> },
                 { href: '/dashboard/ads', label: 'Manage Ads', icon: <LayoutTemplate size={18} strokeWidth={1.5} /> },
                 { href: '/dashboard/settings/ads', label: 'Ad Settings', icon: <Settings size={18} strokeWidth={1.5} /> },

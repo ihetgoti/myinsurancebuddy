@@ -109,12 +109,19 @@ jobs:
             # Install dependencies
             pnpm install --frozen-lockfile
             
-            # Generate Prisma client and sync schema
+            # Generate Prisma client and run migrations
             cd packages/db
             npx prisma generate
-            npx prisma db push --accept-data-loss
-            
+
+            # Run pending migrations (safe for production)
+            echo "📋 Checking migration status..."
+            npx prisma migrate status || true
+
+            echo "🚀 Applying pending migrations..."
+            npx prisma migrate deploy
+
             # Seed database (creates insurance types, states, admin user)
+            echo "🌱 Running database seed..."
             npx ts-node --transpile-only prisma/seed.ts || echo "Seed skipped (may already exist)"
             cd ../..
             
