@@ -17,6 +17,7 @@ export async function GET(request: NextRequest) {
         const stateId = searchParams.get('stateId');
         const cityId = searchParams.get('cityId');
         const isPublished = searchParams.get('isPublished');
+        const isAiGenerated = searchParams.get('isAiGenerated');
         const idsOnly = searchParams.get('idsOnly') === 'true';
         const limit = parseInt(searchParams.get('limit') || '50');
         const offset = parseInt(searchParams.get('offset') || '0');
@@ -28,6 +29,7 @@ export async function GET(request: NextRequest) {
         if (stateId) where.stateId = stateId;
         if (cityId) where.cityId = cityId;
         if (isPublished !== null) where.isPublished = isPublished === 'true';
+        if (isAiGenerated !== null) where.isAiGenerated = isAiGenerated === 'true';
 
         // If idsOnly, return just the IDs for bulk selection
         if (idsOnly) {

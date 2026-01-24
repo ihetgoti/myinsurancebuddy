@@ -12,6 +12,8 @@ interface Page {
     heroTitle: string | null;
     isPublished: boolean;
     publishedAt: string | null;
+    isAiGenerated: boolean;
+    aiGeneratedAt: string | null;
     insuranceType: { id: string; name: string; slug: string; icon: string | null };
     country: { id: string; code: string; name: string } | null;
     state: { id: string; slug: string; name: string } | null;
@@ -35,6 +37,7 @@ export default function PagesAdminPage() {
         insuranceTypeId: '',
         geoLevel: '',
         isPublished: '',
+        isAiGenerated: '',
     });
     const [page, setPage] = useState(0);
     const limit = 50;
@@ -61,6 +64,7 @@ export default function PagesAdminPage() {
             if (filters.insuranceTypeId) params.set('insuranceTypeId', filters.insuranceTypeId);
             if (filters.geoLevel) params.set('geoLevel', filters.geoLevel);
             if (filters.isPublished) params.set('isPublished', filters.isPublished);
+            if (filters.isAiGenerated) params.set('isAiGenerated', filters.isAiGenerated);
             params.set('limit', limit.toString());
             params.set('offset', (page * limit).toString());
 
@@ -251,6 +255,19 @@ export default function PagesAdminPage() {
                         <option value="false">Draft</option>
                     </select>
 
+                    <select
+                        value={filters.isAiGenerated}
+                        onChange={(e) => {
+                            setFilters({ ...filters, isAiGenerated: e.target.value });
+                            setPage(0);
+                        }}
+                        className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    >
+                        <option value="">All Content Types</option>
+                        <option value="true">AI Generated</option>
+                        <option value="false">Manual/Template</option>
+                    </select>
+
                     {/* Select All Matching Button */}
                     <button
                         onClick={selectAllMatching}
@@ -328,6 +345,7 @@ export default function PagesAdminPage() {
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Level</th>
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">URL</th>
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Content</th>
                                         <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
                                     </tr>
                                 </thead>
@@ -380,6 +398,21 @@ export default function PagesAdminPage() {
                                                     }`}>
                                                     {pageDef.isPublished ? 'Published' : 'Draft'}
                                                 </span>
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                {pageDef.isAiGenerated ? (
+                                                    <span className="inline-flex items-center gap-1 px-2 py-1 text-xs rounded-full bg-purple-100 text-purple-700" title={`AI Generated on ${pageDef.aiGeneratedAt ? new Date(pageDef.aiGeneratedAt).toLocaleDateString() : 'Unknown'}`}>
+                                                        <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                                            <path d="M13 7H7v6h6V7z" />
+                                                            <path fillRule="evenodd" d="M7 2a1 1 0 012 0v1h2V2a1 1 0 112 0v1h2a2 2 0 012 2v2h1a1 1 0 110 2h-1v2h1a1 1 0 110 2h-1v2a2 2 0 01-2 2h-2v1a1 1 0 11-2 0v-1H9v1a1 1 0 11-2 0v-1H5a2 2 0 01-2-2v-2H2a1 1 0 110-2h1V9H2a1 1 0 010-2h1V5a2 2 0 012-2h2V2zM5 5h10v10H5V5z" clipRule="evenodd" />
+                                                        </svg>
+                                                        AI
+                                                    </span>
+                                                ) : (
+                                                    <span className="px-2 py-1 text-xs rounded-full bg-gray-100 text-gray-700">
+                                                        Manual
+                                                    </span>
+                                                )}
                                             </td>
                                             <td className="px-6 py-4 text-right">
                                                 <Link

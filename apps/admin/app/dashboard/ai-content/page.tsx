@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Play, Loader2, CheckCircle2, XCircle, Clock } from 'lucide-react';
+import AdminLayout from '@/components/AdminLayout';
 
 interface InsuranceType {
   id: string;
@@ -145,7 +146,7 @@ export default function AIContentPage() {
   };
 
   return (
-    <div className="p-8">
+    <AdminLayout>
       <div className="max-w-6xl mx-auto">
         <div className="mb-6">
           <h1 className="text-3xl font-bold text-gray-900">AI Content Generation</h1>
@@ -445,6 +446,6 @@ export default function AIContentPage() {
           </div>
         </div>
       </div>
-    </div>
+    </AdminLayout>
   );
 }

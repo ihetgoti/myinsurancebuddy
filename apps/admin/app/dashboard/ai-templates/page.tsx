@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Plus, Edit2, Trash2, Copy, Check, X } from 'lucide-react';
+import AdminLayout from '@/components/AdminLayout';
 
 interface AITemplate {
   id: string;
@@ -196,7 +197,7 @@ export default function AITemplatesPage() {
   }
 
   return (
-    <div className="p-8">
+    <AdminLayout>
       <div className="max-w-7xl mx-auto">
         <div className="flex justify-between items-center mb-6">
           <div>
@@ -600,6 +601,6 @@ export default function AITemplatesPage() {
           </ul>
         </div>
       </div>
-    </div>
+    </AdminLayout>
   );
 }
