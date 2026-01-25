@@ -84,41 +84,42 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 // Resolve URL segments to database entities
 async function resolveRoute(segments: string[]) {
-    // First, try to find a page by exact slug match
-    const fullSlug = segments.join('/');
-    const pageBySlug = await prisma.page.findUnique({
-        where: { slug: fullSlug },
-        include: {
-            template: true,
-            insuranceType: true,
-            country: true,
-            state: true,
-            city: true,
-        },
-    });
+    try {
+        // First, try to find a page by exact slug match
+        const fullSlug = segments.join('/');
+        const pageBySlug = await prisma.page.findUnique({
+            where: { slug: fullSlug },
+            include: {
+                template: true,
+                insuranceType: true,
+                country: true,
+                state: true,
+                city: true,
+            },
+        });
 
-    if (pageBySlug && pageBySlug.isPublished) {
-        return {
-            page: pageBySlug,
-            insuranceType: pageBySlug.insuranceType,
-            country: pageBySlug.country,
-            state: pageBySlug.state,
-            city: pageBySlug.city,
-            geoLevel: pageBySlug.geoLevel,
-        };
-    }
+        if (pageBySlug && pageBySlug.isPublished) {
+            return {
+                page: pageBySlug,
+                insuranceType: pageBySlug.insuranceType,
+                country: pageBySlug.country,
+                state: pageBySlug.state,
+                city: pageBySlug.city,
+                geoLevel: pageBySlug.geoLevel,
+            };
+        }
 
-    // Fallback to hierarchical resolution
-    const [insuranceTypeSlug, countryCode, stateSlug, citySlug] = segments;
+        // Fallback to hierarchical resolution
+        const [insuranceTypeSlug, countryCode, stateSlug, citySlug] = segments;
 
-    // Find insurance type
-    const insuranceType = await prisma.insuranceType.findUnique({
-        where: { slug: insuranceTypeSlug },
-    });
+        // Find insurance type
+        const insuranceType = await prisma.insuranceType.findUnique({
+            where: { slug: insuranceTypeSlug },
+        });
 
-    if (!insuranceType) {
-        return { insuranceType: null, country: null, state: null, city: null, page: null, geoLevel: null };
-    }
+        if (!insuranceType) {
+            return { insuranceType: null, country: null, state: null, city: null, page: null, geoLevel: null };
+        }
 
     let country = null;
     let state = null;
@@ -174,6 +175,10 @@ async function resolveRoute(segments: string[]) {
     });
 
     return { insuranceType, country, state, city, page, geoLevel };
+    } catch (error) {
+        console.error('Error resolving route:', error);
+        return { insuranceType: null, country: null, state: null, city: null, page: null, geoLevel: null };
+    }
 }
 
 function buildVariables(insuranceType: any, country: any, state: any, city: any, page: any): Record<string, any> {
