@@ -158,6 +158,58 @@ export async function POST(req: NextRequest) {
 }
 
 /**
+ * DELETE /api/ai-generate?jobId=xxx
+ * Cancel an AI generation job
+ */
+export async function DELETE(req: NextRequest) {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const url = new URL(req.url);
+    const jobId = url.searchParams.get('jobId');
+
+    if (!jobId) {
+      return NextResponse.json({ error: 'Job ID required' }, { status: 400 });
+    }
+
+    const job = await prisma.aIGenerationJob.findUnique({
+      where: { id: jobId }
+    });
+
+    if (!job) {
+      return NextResponse.json({ error: 'Job not found' }, { status: 404 });
+    }
+
+    // Only cancel jobs that are pending or processing
+    if (!['PENDING', 'PROCESSING', 'QUEUED'].includes(job.status)) {
+      return NextResponse.json({
+        error: `Cannot cancel job with status: ${job.status}`
+      }, { status: 400 });
+    }
+
+    await prisma.aIGenerationJob.update({
+      where: { id: jobId },
+      data: {
+        status: 'CANCELLED',
+        completedAt: new Date(),
+        errorLog: [{ error: 'Job cancelled by user' }]
+      }
+    });
+
+    return NextResponse.json({ success: true, message: 'Job cancelled' });
+  } catch (error: any) {
+    console.error('Cancel job error:', error);
+    return NextResponse.json(
+      { error: error.message },
+      { status: 500 }
+    );
+  }
+}
+
+/**
  * GET /api/ai-generate/[jobId]
  * Get AI generation job status
  */

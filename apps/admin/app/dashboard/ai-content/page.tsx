@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Play, Loader2, CheckCircle2, XCircle, Clock } from 'lucide-react';
+import { Play, Loader2, CheckCircle2, XCircle, Clock, StopCircle } from 'lucide-react';
 import AdminLayout from '@/components/AdminLayout';
 
 interface InsuranceType {
@@ -158,12 +158,34 @@ export default function AIContentPage() {
     }
   };
 
+  const cancelJob = async (jobId: string) => {
+    if (!confirm('Are you sure you want to cancel this job?')) return;
+
+    try {
+      const res = await fetch(`/api/ai-generate?jobId=${jobId}`, {
+        method: 'DELETE'
+      });
+      const data = await res.json();
+
+      if (data.success) {
+        alert('Job cancelled successfully');
+        fetchJobs();
+      } else {
+        alert(`Error: ${data.error}`);
+      }
+    } catch (error: any) {
+      alert(`Failed to cancel job: ${error.message}`);
+    }
+  };
+
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'COMPLETED':
         return <CheckCircle2 className="w-5 h-5 text-green-600" />;
       case 'FAILED':
         return <XCircle className="w-5 h-5 text-red-600" />;
+      case 'CANCELLED':
+        return <StopCircle className="w-5 h-5 text-orange-600" />;
       case 'PROCESSING':
         return <Loader2 className="w-5 h-5 text-blue-600 animate-spin" />;
       default:
@@ -615,7 +637,16 @@ export default function AIContentPage() {
                     <div className="mt-3">
                       <div className="flex items-center justify-between text-xs text-gray-500 mb-1">
                         <span>Progress</span>
-                        <span>{percentage}%</span>
+                        <div className="flex items-center gap-2">
+                          <span>{percentage}%</span>
+                          <button
+                            onClick={() => cancelJob(job.id)}
+                            className="px-2 py-1 bg-red-100 text-red-700 rounded text-xs hover:bg-red-200 flex items-center gap-1"
+                          >
+                            <StopCircle className="w-3 h-3" />
+                            Cancel
+                          </button>
+                        </div>
                       </div>
                       <div className="w-full bg-gray-200 rounded-full h-2">
                         <div
@@ -623,6 +654,18 @@ export default function AIContentPage() {
                           style={{ width: `${percentage}%` }}
                         />
                       </div>
+                    </div>
+                  )}
+
+                  {(job.status === 'PENDING' || job.status === 'QUEUED') && (
+                    <div className="mt-2">
+                      <button
+                        onClick={() => cancelJob(job.id)}
+                        className="px-3 py-1 bg-red-100 text-red-700 rounded text-xs hover:bg-red-200 flex items-center gap-1"
+                      >
+                        <StopCircle className="w-3 h-3" />
+                        Cancel Job
+                      </button>
                     </div>
                   )}
 
