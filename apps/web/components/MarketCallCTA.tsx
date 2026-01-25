@@ -36,7 +36,7 @@ export default async function MarketCallCTA({
         <MarketCallCTAClient
             displayPhone={displayPhone}
             campaignId={campaignId}
-            formUrl={formUrl}
+            formUrl={formUrl ?? undefined}
             variant={variant}
             className={className}
             insuranceTypeId={insuranceTypeId}

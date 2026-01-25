@@ -80,11 +80,10 @@ export async function POST(request: NextRequest) {
                 title: `${insuranceType.name} in ${state.name}`,
                 geoLevel: 'STATE',
                 isPublished: false,
-                priority: 1,
                 insuranceTypeId: insuranceType.id,
                 stateId: state.id,
-                templateName: getTemplateNameForInsuranceType(insuranceType.slug),
-                variables: {
+                customData: {
+                  templateName: getTemplateNameForInsuranceType(insuranceType.slug),
                   state_name: state.name,
                   state_code: state.code,
                   insurance_type: insuranceType.name,
@@ -130,12 +129,11 @@ export async function POST(request: NextRequest) {
                   title: `${insuranceType.name} in ${city.name}, ${state.code}`,
                   geoLevel: 'CITY',
                   isPublished: false,
-                  priority: 2,
                   insuranceTypeId: insuranceType.id,
                   stateId: state.id,
                   cityId: city.id,
-                  templateName: getTemplateNameForInsuranceType(insuranceType.slug),
-                  variables: {
+                  customData: {
+                    templateName: getTemplateNameForInsuranceType(insuranceType.slug),
                     city_name: city.name,
                     state_name: state.name,
                     state_code: state.code,
