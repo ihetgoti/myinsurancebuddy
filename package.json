@@ -8,6 +8,7 @@
         "packages/*"
     ],
     "scripts": {
+        "postinstall": "prisma generate --schema=packages/db/prisma/schema.prisma",
         "build": "turbo run build",
         "dev": "turbo run dev",
         "lint": "turbo run lint",
@@ -17,6 +18,10 @@
     },
     "devDependencies": {
         "turbo": "latest",
-        "prettier": "latest"
+        "prettier": "latest",
+        "prisma": "^5.22.0"
+    },
+    "dependencies": {
+        "@prisma/client": "^5.22.0"
     }
 }

@@ -1,8 +1,15 @@
+const path = require('path')
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
     output: 'standalone',
     transpilePackages: ['@myinsurancebuddy/ui'],
-    // No basePath needed - admin is served on subdomain admin.myinsurancebuddies.com
+
+    // Required for monorepo standalone builds - tells Next.js where to find dependencies
+    outputFileTracingRoot: path.join(__dirname, '../../'),
+
+    // Prevent bundling Prisma - let it resolve at runtime
+    serverExternalPackages: ['@prisma/client', 'prisma'],
 }
 
 module.exports = nextConfig
