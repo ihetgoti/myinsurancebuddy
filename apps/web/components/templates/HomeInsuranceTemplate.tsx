@@ -17,7 +17,22 @@ import {
     CTABanner,
     CoverageCard,
     TOCItem,
-    FAQItem
+    FAQItem,
+    // New SEO Components
+    CostBreakdown,
+    ProviderComparison,
+    DiscountsList,
+    LocalStats,
+    CoverageGuide,
+    ClaimsProcess,
+    BuyersGuide,
+    CostBreakdownItem,
+    ComparisonItem,
+    DiscountItem,
+    LocalStatItem,
+    CoverageGuideItem,
+    ClaimsProcessContent,
+    BuyersGuideContent
 } from './shared';
 
 interface HomeInsuranceTemplateProps {
@@ -90,6 +105,15 @@ export default function HomeInsuranceTemplate({
             answer: 'You can lower your premium by bundling policies, increasing your deductible, improving home security, maintaining good credit, keeping your home in good repair, and asking about all available discounts.'
         }
     ];
+
+    // NEW: AI-generated SEO content sections
+    const aiCostBreakdown: CostBreakdownItem[] | undefined = variables.costBreakdown || variables.ai_costBreakdown;
+    const aiComparison: ComparisonItem[] | undefined = variables.comparison || variables.ai_comparison;
+    const aiDiscounts: DiscountItem[] | undefined = variables.discounts_ai || variables.ai_discounts;
+    const aiLocalStats: LocalStatItem[] | undefined = variables.localStats || variables.ai_localStats;
+    const aiCoverageGuide: CoverageGuideItem[] | undefined = variables.coverageGuide || variables.ai_coverageGuide;
+    const aiClaimsProcess: ClaimsProcessContent | undefined = variables.claimsProcess || variables.ai_claimsProcess;
+    const aiBuyersGuide: BuyersGuideContent | undefined = variables.buyersGuide || variables.ai_buyersGuide;
 
     // Coverage types for HO-3
     const coverageTypes = [
@@ -517,6 +541,78 @@ export default function HomeInsuranceTemplate({
                                 ))}
                             </div>
                         </section>
+
+                        {/* NEW: AI-Generated SEO Sections */}
+
+                        {/* Cost Breakdown Section */}
+                        {aiCostBreakdown && aiCostBreakdown.length > 0 && (
+                            <CostBreakdown
+                                items={aiCostBreakdown}
+                                title={`What Affects Your Home Insurance Rate in ${stateName}`}
+                                description={`Understanding these factors can help you find better rates in ${stateName}`}
+                                accentColor="orange"
+                            />
+                        )}
+
+                        {/* Provider Comparison Section */}
+                        {aiComparison && aiComparison.length > 0 && (
+                            <ProviderComparison
+                                items={aiComparison}
+                                title={`Top Home Insurance Companies in ${stateName}`}
+                                description="Compare the best insurance providers to find the right fit for your home"
+                                accentColor="orange"
+                            />
+                        )}
+
+                        {/* Discounts Section */}
+                        {aiDiscounts && aiDiscounts.length > 0 && (
+                            <DiscountsList
+                                items={aiDiscounts}
+                                title={`Home Insurance Discounts in ${stateName}`}
+                                description="Save money by taking advantage of these available discounts"
+                                accentColor="emerald"
+                            />
+                        )}
+
+                        {/* Local Stats Section */}
+                        {aiLocalStats && aiLocalStats.length > 0 && (
+                            <LocalStats
+                                items={aiLocalStats}
+                                title={`${stateName} Home Insurance Statistics`}
+                                description="Local data that affects your insurance rates"
+                                accentColor="purple"
+                            />
+                        )}
+
+                        {/* Coverage Guide Section */}
+                        {aiCoverageGuide && aiCoverageGuide.length > 0 && (
+                            <CoverageGuide
+                                items={aiCoverageGuide}
+                                title={`Home Insurance Coverage Types in ${stateName}`}
+                                description="Understanding your coverage options helps you make informed decisions"
+                                accentColor="orange"
+                            />
+                        )}
+
+                        {/* Claims Process Section */}
+                        {aiClaimsProcess && (
+                            <ClaimsProcess
+                                content={aiClaimsProcess}
+                                title={`How to File a Home Insurance Claim in ${stateName}`}
+                                description="Step-by-step guide to filing a claim"
+                                accentColor="orange"
+                            />
+                        )}
+
+                        {/* Buyers Guide Section */}
+                        {aiBuyersGuide && (
+                            <BuyersGuide
+                                content={aiBuyersGuide}
+                                title={`How to Buy Home Insurance in ${stateName}`}
+                                description="A complete guide to finding the right coverage"
+                                accentColor="emerald"
+                            />
+                        )}
 
                         {/* FAQ */}
                         <EnhancedFAQ items={faqItems} title={`Home Insurance FAQs for ${stateName}`} accentColor="orange" />

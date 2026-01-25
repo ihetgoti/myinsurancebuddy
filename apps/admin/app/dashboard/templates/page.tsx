@@ -103,6 +103,67 @@ export default function TemplatesPage() {
         alert(`Template ID for "${name}" copied to clipboard:\n${id}`);
     };
 
+    const handleCopyAsMd = (template: Template) => {
+        const sampleData: Record<string, Record<string, string>> = {
+            'state-page': {
+                state: 'California', state_abbr: 'CA', insurance_type: 'Car Insurance',
+                year: '2024', avg_rate: '$145', min_rate: '$89', population: '39,538,223',
+            },
+            'city-page': {
+                city: 'Los Angeles', state: 'California', state_abbr: 'CA',
+                insurance_type: 'Car Insurance', year: '2024', avg_rate: '$165',
+                population: '3,898,747', zip_codes: '90001, 90002, 90003',
+            },
+            'comparison': {
+                title: 'Best Car Insurance Companies', insurance_type: 'Car Insurance',
+                year: '2024', description: 'Compare top insurance companies.',
+            },
+            'guide': {
+                title: 'Complete Guide to Car Insurance', insurance_type: 'Car Insurance',
+                year: '2024', description: 'Everything about car insurance.',
+            },
+            'landing': {
+                title: 'Save Up to 40% on Car Insurance',
+                subtitle: 'Compare quotes from 50+ top insurers.',
+                insurance_type: 'Car Insurance', cta_text: 'Get Free Quotes',
+            },
+        };
+
+        const data = sampleData[template.id] || {};
+        const md = `# Template: ${template.name}
+
+## ID
+\`${template.id}\`
+
+## Description
+${template.description}
+
+## Category
+${template.category}
+
+## Template Variables
+| Variable | Sample Value |
+|----------|--------------|
+${Object.entries(data).map(([key, value]) => `| \`{{${key}}}\` | ${value} |`).join('\n')}
+
+## Sample Data (JSON)
+\`\`\`json
+${JSON.stringify(data, null, 2)}
+\`\`\`
+
+## Features
+- SEO schema markup included
+- Mobile responsive design
+- Strategic ad placements
+- Optimized for ${template.category} pages
+
+---
+Generated from MyInsuranceBuddy Admin Panel
+`;
+        navigator.clipboard.writeText(md);
+        alert(`Template "${template.name}" copied as Markdown!`);
+    };
+
     const filteredTemplates = selectedCategory === 'all'
         ? templates
         : templates.filter(t => t.category === selectedCategory);
@@ -236,6 +297,13 @@ export default function TemplatesPage() {
                                             title="Copy Template ID"
                                         >
                                             📋
+                                        </button>
+                                        <button
+                                            onClick={() => handleCopyAsMd(template)}
+                                            className="px-3 py-2 border border-purple-300 text-purple-600 rounded-lg hover:bg-purple-50 transition-colors text-sm"
+                                            title="Copy as Markdown (for AI)"
+                                        >
+                                            MD
                                         </button>
                                     </div>
                                 </div>

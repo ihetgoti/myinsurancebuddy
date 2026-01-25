@@ -273,6 +273,36 @@ function buildVariables(insuranceType: any, country: any, state: any, city: any,
         aiVars.ai_tips = aiContent.tips;
     }
 
+    // NEW: Map additional AI-generated SEO sections
+    if (aiContent.costBreakdown && Array.isArray(aiContent.costBreakdown)) {
+        aiVars.costBreakdown = aiContent.costBreakdown;
+        aiVars.ai_costBreakdown = aiContent.costBreakdown;
+    }
+    if (aiContent.comparison && Array.isArray(aiContent.comparison)) {
+        aiVars.comparison = aiContent.comparison;
+        aiVars.ai_comparison = aiContent.comparison;
+    }
+    if (aiContent.discounts && Array.isArray(aiContent.discounts)) {
+        aiVars.discounts_ai = aiContent.discounts;
+        aiVars.ai_discounts = aiContent.discounts;
+    }
+    if (aiContent.localStats && Array.isArray(aiContent.localStats)) {
+        aiVars.localStats = aiContent.localStats;
+        aiVars.ai_localStats = aiContent.localStats;
+    }
+    if (aiContent.coverageGuide && Array.isArray(aiContent.coverageGuide)) {
+        aiVars.coverageGuide = aiContent.coverageGuide;
+        aiVars.ai_coverageGuide = aiContent.coverageGuide;
+    }
+    if (aiContent.claimsProcess) {
+        aiVars.claimsProcess = aiContent.claimsProcess;
+        aiVars.ai_claimsProcess = aiContent.claimsProcess;
+    }
+    if (aiContent.buyersGuide) {
+        aiVars.buyersGuide = aiContent.buyersGuide;
+        aiVars.ai_buyersGuide = aiContent.buyersGuide;
+    }
+
     return {
         ...baseVars,
         ...customData,

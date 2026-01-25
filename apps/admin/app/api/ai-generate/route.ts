@@ -22,13 +22,18 @@ export async function POST(req: NextRequest) {
       model,
       batchSize = 10,
       delayBetweenBatches = 1000,
-      priority = 'all' // 'all', 'major-cities', 'states-only'
+      priority = 'all', // 'all', 'major-cities', 'states-only'
+      regenerate = false, // Set to true to regenerate AI content for pages that already have it
+      includeDrafts = false // Set to true to include unpublished/draft pages
     } = body;
 
     // Build page query based on filters
-    const whereClause: any = {
-      isPublished: true
-    };
+    const whereClause: any = {};
+
+    // Only filter by isPublished if not including drafts
+    if (!includeDrafts) {
+      whereClause.isPublished = true;
+    }
 
     if (filters?.insuranceTypeId) {
       whereClause.insuranceTypeId = filters.insuranceTypeId;
@@ -51,8 +56,10 @@ export async function POST(req: NextRequest) {
       whereClause.geoLevel = 'STATE';
     }
 
-    // Get pages that haven't been AI-generated yet
-    whereClause.isAiGenerated = false;
+    // Get pages that haven't been AI-generated yet (unless regenerate is true)
+    if (!regenerate) {
+      whereClause.isAiGenerated = false;
+    }
 
     const pages = await prisma.page.findMany({
       where: whereClause,
@@ -65,9 +72,12 @@ export async function POST(req: NextRequest) {
     });
 
     if (pages.length === 0) {
+      const hint = !regenerate
+        ? ' All pages may already have AI-generated content. Try enabling "Regenerate existing" option to regenerate content for pages that already have AI content.'
+        : '';
       return NextResponse.json({
         success: false,
-        message: 'No pages found matching the criteria'
+        message: `No pages found matching the criteria.${hint}`
       });
     }
 

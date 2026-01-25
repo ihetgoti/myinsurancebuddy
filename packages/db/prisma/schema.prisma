@@ -24,7 +24,11 @@ model User {
   lastLoginAt  DateTime?
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
-  
+
+  // Password reset fields
+  resetOtp        String?
+  resetOtpExpiry  DateTime?
+
   auditLogs       AuditLog[]
   createdPages    Page[]           @relation("PageCreator")
   updatedPages    Page[]           @relation("PageUpdater")
@@ -1419,12 +1423,22 @@ model AIPromptTemplate {
   geoLevel        GeoLevel? // CITY, STATE, etc. (null = all)
   isMajorCity     Boolean?  // Only major cities (null = all)
 
-  // Prompt sections
-  systemPrompt    String    @db.Text // System role instruction
-  introPrompt     String?   @db.Text // Custom prompt for intro section
-  requirementsPrompt String? @db.Text // Custom prompt for requirements
-  faqsPrompt      String?   @db.Text // Custom prompt for FAQs
-  tipsPrompt      String?   @db.Text // Custom prompt for tips
+  // Prompt sections - Original
+  systemPrompt       String    @db.Text // System role instruction
+  introPrompt        String?   @db.Text // Custom prompt for intro section
+  requirementsPrompt String?   @db.Text // Custom prompt for requirements
+  faqsPrompt         String?   @db.Text // Custom prompt for FAQs
+  tipsPrompt         String?   @db.Text // Custom prompt for tips
+
+  // Prompt sections - New SEO sections
+  costBreakdownPrompt  String?   @db.Text // Cost factors breakdown
+  comparisonPrompt     String?   @db.Text // Provider comparison
+  discountsPrompt      String?   @db.Text // Available discounts
+  localStatsPrompt     String?   @db.Text // Location-specific statistics
+  coverageGuidePrompt  String?   @db.Text // Coverage types guide
+  claimsProcessPrompt  String?   @db.Text // Claims filing process
+  buyersGuidePrompt    String?   @db.Text // Step-by-step buying guide
+  metaTagsPrompt       String?   @db.Text // SEO meta tags generation
 
   // AI settings for this template
   model           String    @default("xiaomi/mimo-v2-flash")

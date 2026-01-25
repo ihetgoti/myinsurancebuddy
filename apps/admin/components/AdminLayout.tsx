@@ -191,7 +191,8 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
         {
             title: 'Content',
             items: [
-                { href: '/dashboard/pages', label: 'Pages', icon: <FileText size={18} strokeWidth={1.5} /> },
+                { href: '/dashboard/all-pages', label: 'All Site Pages', icon: <Globe size={18} strokeWidth={1.5} /> },
+                { href: '/dashboard/pages', label: 'Dynamic Pages', icon: <FileText size={18} strokeWidth={1.5} /> },
                 { href: '/dashboard/page-data', label: 'Page Data', icon: <Database size={18} strokeWidth={1.5} /> },
                 { href: '/dashboard/blog', label: 'Blog Posts', icon: <FileText size={18} strokeWidth={1.5} /> },
                 { href: '/dashboard/templates', label: 'Templates', icon: <LayoutTemplate size={18} strokeWidth={1.5} /> },
@@ -209,6 +210,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
         {
             title: 'AI Content',
             items: [
+                { href: '/dashboard/auto-generate', label: 'Auto Generate', icon: <Zap size={18} strokeWidth={1.5} /> },
                 { href: '/dashboard/ai-content', label: 'AI Generation', icon: <Sparkles size={18} strokeWidth={1.5} /> },
                 { href: '/dashboard/ai-providers', label: 'AI Providers', icon: <Key size={18} strokeWidth={1.5} /> },
                 { href: '/dashboard/ai-templates', label: 'AI Templates', icon: <FileText size={18} strokeWidth={1.5} /> },

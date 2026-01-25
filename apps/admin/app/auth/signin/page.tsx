@@ -3,6 +3,8 @@
 import { signIn } from 'next-auth/react';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { Loader2 } from 'lucide-react';
 
 export default function SignIn() {
     const router = useRouter();
@@ -70,14 +72,22 @@ export default function SignIn() {
                             onChange={(e) => setEmail(e.target.value)}
                             required
                             className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent transition-all"
-                            placeholder="admin@myinsurancebuddies.com"
+                            placeholder="your@email.com"
                         />
                     </div>
 
                     <div>
-                        <label htmlFor="password" className="block text-sm font-medium text-slate-700 mb-1">
-                            Password
-                        </label>
+                        <div className="flex items-center justify-between mb-1">
+                            <label htmlFor="password" className="block text-sm font-medium text-slate-700">
+                                Password
+                            </label>
+                            <Link
+                                href="/auth/forgot-password"
+                                className="text-sm text-blue-600 hover:text-blue-800 transition-colors"
+                            >
+                                Forgot password?
+                            </Link>
+                        </div>
                         <input
                             id="password"
                             type="password"
@@ -92,24 +102,25 @@ export default function SignIn() {
                     <button
                         type="submit"
                         disabled={loading}
-                        className="w-full bg-slate-900 text-white py-2.5 px-4 rounded-lg font-medium hover:bg-slate-800 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-slate-900/10"
+                        className="w-full bg-slate-900 text-white py-2.5 px-4 rounded-lg font-medium hover:bg-slate-800 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-slate-900/10 flex items-center justify-center gap-2"
                     >
-                        {loading ? 'Signing in...' : 'Sign In'}
+                        {loading ? (
+                            <>
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                                Signing in...
+                            </>
+                        ) : (
+                            'Sign In'
+                        )}
                     </button>
                 </form>
 
-                <div className="mt-8 bg-slate-50 border border-slate-100 rounded-lg p-4">
-                    <p className="text-xs text-slate-500 font-semibold mb-2 uppercase tracking-wide">Demo Credentials</p>
-                    <div className="space-y-1">
-                        <div className="flex justify-between text-xs">
-                            <span className="text-slate-400">Email:</span>
-                            <span className="font-mono text-slate-700">admin@myinsurancebuddies.com</span>
-                        </div>
-                        <div className="flex justify-between text-xs">
-                            <span className="text-slate-400">Password:</span>
-                            <span className="font-mono text-slate-700">admin123</span>
-                        </div>
-                    </div>
+                <div className="mt-6 pt-6 border-t border-slate-100">
+                    <p className="text-center text-xs text-slate-500">
+                        Secure admin access for authorized personnel only.
+                        <br />
+                        Contact your administrator if you need access.
+                    </p>
                 </div>
             </div>
         </div>

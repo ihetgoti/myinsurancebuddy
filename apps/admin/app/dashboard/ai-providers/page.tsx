@@ -47,8 +47,13 @@ export default function AIProvidersPage() {
     }
   };
 
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
   const handleAddProvider = async (e: React.FormEvent) => {
     e.preventDefault();
+    setSubmitting(true);
+    setError(null);
 
     try {
       const res = await fetch('/api/ai-providers', {
@@ -67,28 +72,40 @@ export default function AIProvidersPage() {
         setFormData({
           name: '',
           apiKey: '',
-          preferredModel: 'anthropic/claude-haiku',
+          preferredModel: 'xiaomi/mimo-v2-flash',
           totalBudget: '',
           priority: '0'
         });
         setShowAddForm(false);
         fetchProviders();
+      } else {
+        const errorData = await res.json();
+        setError(errorData.error || 'Failed to add provider');
       }
     } catch (error) {
       console.error('Failed to add provider:', error);
+      setError('Network error. Please try again.');
+    } finally {
+      setSubmitting(false);
     }
   };
 
   const toggleActive = async (id: string, currentState: boolean) => {
     try {
-      await fetch('/api/ai-providers', {
+      const res = await fetch(`/api/ai-providers/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ isActive: !currentState })
       });
+      if (!res.ok) {
+        const error = await res.json();
+        alert(`Failed to toggle provider: ${error.error || 'Unknown error'}`);
+        return;
+      }
       fetchProviders();
     } catch (error) {
       console.error('Failed to toggle provider:', error);
+      alert('Failed to toggle provider. Check console for details.');
     }
   };
 
@@ -96,12 +113,18 @@ export default function AIProvidersPage() {
     if (!confirm('Are you sure you want to delete this provider?')) return;
 
     try {
-      await fetch(`/api/ai-providers`, {
+      const res = await fetch(`/api/ai-providers/${id}`, {
         method: 'DELETE'
       });
+      if (!res.ok) {
+        const error = await res.json();
+        alert(`Failed to delete provider: ${error.error || 'Unknown error'}`);
+        return;
+      }
       fetchProviders();
     } catch (error) {
       console.error('Failed to delete provider:', error);
+      alert('Failed to delete provider. Check console for details.');
     }
   };
 
@@ -254,17 +277,24 @@ export default function AIProvidersPage() {
                   />
                 </div>
               </div>
+              {error && (
+                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-2 rounded-lg">
+                  {error}
+                </div>
+              )}
               <div className="flex gap-2">
                 <button
                   type="submit"
-                  className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+                  disabled={submitting}
+                  className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Add Provider
+                  {submitting ? 'Adding...' : 'Add Provider'}
                 </button>
                 <button
                   type="button"
                   onClick={() => setShowAddForm(false)}
-                  className="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300"
+                  disabled={submitting}
+                  className="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300 disabled:opacity-50"
                 >
                   Cancel
                 </button>

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Plus, Edit2, Trash2, Copy, Check, X } from 'lucide-react';
+import { Plus, Edit2, Trash2, Copy } from 'lucide-react';
 import AdminLayout from '@/components/AdminLayout';
 
 interface AITemplate {
@@ -12,10 +12,21 @@ interface AITemplate {
   geoLevel: string | null;
   isMajorCity: boolean | null;
   systemPrompt: string;
+  // Original prompts
   introPrompt: string | null;
   requirementsPrompt: string | null;
   faqsPrompt: string | null;
   tipsPrompt: string | null;
+  // New SEO prompts
+  costBreakdownPrompt: string | null;
+  comparisonPrompt: string | null;
+  discountsPrompt: string | null;
+  localStatsPrompt: string | null;
+  coverageGuidePrompt: string | null;
+  claimsProcessPrompt: string | null;
+  buyersGuidePrompt: string | null;
+  metaTagsPrompt: string | null;
+  // Settings
   model: string;
   temperature: number;
   maxTokens: number;
@@ -40,10 +51,21 @@ export default function AITemplatesPage() {
     geoLevel: '',
     isMajorCity: '',
     systemPrompt: '',
+    // Original prompts
     introPrompt: '',
     requirementsPrompt: '',
     faqsPrompt: '',
     tipsPrompt: '',
+    // New SEO prompts
+    costBreakdownPrompt: '',
+    comparisonPrompt: '',
+    discountsPrompt: '',
+    localStatsPrompt: '',
+    coverageGuidePrompt: '',
+    claimsProcessPrompt: '',
+    buyersGuidePrompt: '',
+    metaTagsPrompt: '',
+    // Settings
     model: 'xiaomi/mimo-v2-flash',
     temperature: '0.7',
     maxTokens: '2000',
@@ -82,24 +104,33 @@ export default function AITemplatesPage() {
         isMajorCity: formData.isMajorCity ? formData.isMajorCity === 'true' : null,
       };
 
+      let res: Response;
       if (editingId) {
-        await fetch(`/api/ai-templates?id=${editingId}`, {
+        res = await fetch(`/api/ai-templates?id=${editingId}`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
         });
       } else {
-        await fetch('/api/ai-templates', {
+        res = await fetch('/api/ai-templates', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
         });
       }
 
+      const data = await res.json();
+
+      if (!res.ok) {
+        alert(`Error: ${data.error || 'Failed to save template'}`);
+        return;
+      }
+
       resetForm();
       fetchTemplates();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to save template:', error);
+      alert(`Failed to save template: ${error.message || 'Unknown error'}`);
     }
   };
 
@@ -111,10 +142,21 @@ export default function AITemplatesPage() {
       geoLevel: template.geoLevel || '',
       isMajorCity: template.isMajorCity !== null ? String(template.isMajorCity) : '',
       systemPrompt: template.systemPrompt,
+      // Original prompts
       introPrompt: template.introPrompt || '',
       requirementsPrompt: template.requirementsPrompt || '',
       faqsPrompt: template.faqsPrompt || '',
       tipsPrompt: template.tipsPrompt || '',
+      // New SEO prompts
+      costBreakdownPrompt: template.costBreakdownPrompt || '',
+      comparisonPrompt: template.comparisonPrompt || '',
+      discountsPrompt: template.discountsPrompt || '',
+      localStatsPrompt: template.localStatsPrompt || '',
+      coverageGuidePrompt: template.coverageGuidePrompt || '',
+      claimsProcessPrompt: template.claimsProcessPrompt || '',
+      buyersGuidePrompt: template.buyersGuidePrompt || '',
+      metaTagsPrompt: template.metaTagsPrompt || '',
+      // Settings
       model: template.model,
       temperature: String(template.temperature),
       maxTokens: String(template.maxTokens),
@@ -147,10 +189,21 @@ export default function AITemplatesPage() {
       geoLevel: template.geoLevel || '',
       isMajorCity: template.isMajorCity !== null ? String(template.isMajorCity) : '',
       systemPrompt: template.systemPrompt,
+      // Original prompts
       introPrompt: template.introPrompt || '',
       requirementsPrompt: template.requirementsPrompt || '',
       faqsPrompt: template.faqsPrompt || '',
       tipsPrompt: template.tipsPrompt || '',
+      // New SEO prompts
+      costBreakdownPrompt: template.costBreakdownPrompt || '',
+      comparisonPrompt: template.comparisonPrompt || '',
+      discountsPrompt: template.discountsPrompt || '',
+      localStatsPrompt: template.localStatsPrompt || '',
+      coverageGuidePrompt: template.coverageGuidePrompt || '',
+      claimsProcessPrompt: template.claimsProcessPrompt || '',
+      buyersGuidePrompt: template.buyersGuidePrompt || '',
+      metaTagsPrompt: template.metaTagsPrompt || '',
+      // Settings
       model: template.model,
       temperature: String(template.temperature),
       maxTokens: String(template.maxTokens),
@@ -170,10 +223,21 @@ export default function AITemplatesPage() {
       geoLevel: '',
       isMajorCity: '',
       systemPrompt: '',
+      // Original prompts
       introPrompt: '',
       requirementsPrompt: '',
       faqsPrompt: '',
       tipsPrompt: '',
+      // New SEO prompts
+      costBreakdownPrompt: '',
+      comparisonPrompt: '',
+      discountsPrompt: '',
+      localStatsPrompt: '',
+      coverageGuidePrompt: '',
+      claimsProcessPrompt: '',
+      buyersGuidePrompt: '',
+      metaTagsPrompt: '',
+      // Settings
       model: 'xiaomi/mimo-v2-flash',
       temperature: '0.7',
       maxTokens: '2000',
@@ -371,6 +435,118 @@ export default function AITemplatesPage() {
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg font-mono text-sm"
                       rows={3}
                       placeholder="Provide 5-8 practical tips for getting the best {{insurance_type}} in {{location}}"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* NEW SEO Prompts */}
+              <div>
+                <h3 className="font-medium text-green-700 mb-3">🚀 NEW: SEO Section Prompts</h3>
+                <p className="text-sm text-gray-500 mb-4">These additional prompts generate more unique content for better SEO and indexing.</p>
+
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Cost Breakdown Prompt <span className="text-xs text-green-600">(factors affecting premiums)</span>
+                    </label>
+                    <textarea
+                      value={formData.costBreakdownPrompt}
+                      onChange={(e) => setFormData({ ...formData, costBreakdownPrompt: e.target.value })}
+                      className="w-full px-3 py-2 border border-green-200 rounded-lg font-mono text-sm bg-green-50"
+                      rows={3}
+                      placeholder="Create a detailed cost breakdown for {{insurance_type}} in {{location}}. Include 5-7 factors that affect premiums..."
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Provider Comparison Prompt <span className="text-xs text-green-600">(top insurance carriers)</span>
+                    </label>
+                    <textarea
+                      value={formData.comparisonPrompt}
+                      onChange={(e) => setFormData({ ...formData, comparisonPrompt: e.target.value })}
+                      className="w-full px-3 py-2 border border-green-200 rounded-lg font-mono text-sm bg-green-50"
+                      rows={3}
+                      placeholder="Compare the top 4-5 insurance providers for {{insurance_type}} in {{location}}..."
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Discounts Prompt <span className="text-xs text-green-600">(available savings)</span>
+                    </label>
+                    <textarea
+                      value={formData.discountsPrompt}
+                      onChange={(e) => setFormData({ ...formData, discountsPrompt: e.target.value })}
+                      className="w-full px-3 py-2 border border-green-200 rounded-lg font-mono text-sm bg-green-50"
+                      rows={3}
+                      placeholder="List 6-8 available discounts for {{insurance_type}} in {{location}}..."
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Local Statistics Prompt <span className="text-xs text-green-600">(location-specific data)</span>
+                    </label>
+                    <textarea
+                      value={formData.localStatsPrompt}
+                      onChange={(e) => setFormData({ ...formData, localStatsPrompt: e.target.value })}
+                      className="w-full px-3 py-2 border border-green-200 rounded-lg font-mono text-sm bg-green-50"
+                      rows={3}
+                      placeholder="Provide 5-6 location-specific statistics for {{insurance_type}} in {{location}}..."
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Coverage Guide Prompt <span className="text-xs text-green-600">(coverage types explained)</span>
+                    </label>
+                    <textarea
+                      value={formData.coverageGuidePrompt}
+                      onChange={(e) => setFormData({ ...formData, coverageGuidePrompt: e.target.value })}
+                      className="w-full px-3 py-2 border border-green-200 rounded-lg font-mono text-sm bg-green-50"
+                      rows={3}
+                      placeholder="Explain 4-6 coverage types for {{insurance_type}} in {{location}}..."
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Claims Process Prompt <span className="text-xs text-green-600">(how to file claims)</span>
+                    </label>
+                    <textarea
+                      value={formData.claimsProcessPrompt}
+                      onChange={(e) => setFormData({ ...formData, claimsProcessPrompt: e.target.value })}
+                      className="w-full px-3 py-2 border border-green-200 rounded-lg font-mono text-sm bg-green-50"
+                      rows={3}
+                      placeholder="Explain how to file a {{insurance_type}} claim in {{location}}..."
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Buyers Guide Prompt <span className="text-xs text-green-600">(step-by-step buying guide)</span>
+                    </label>
+                    <textarea
+                      value={formData.buyersGuidePrompt}
+                      onChange={(e) => setFormData({ ...formData, buyersGuidePrompt: e.target.value })}
+                      className="w-full px-3 py-2 border border-green-200 rounded-lg font-mono text-sm bg-green-50"
+                      rows={3}
+                      placeholder="Create a buying guide for {{insurance_type}} in {{location}}..."
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-purple-700 mb-1">
+                      Meta Tags Prompt <span className="text-xs text-purple-600">(SEO meta tags)</span>
+                    </label>
+                    <textarea
+                      value={formData.metaTagsPrompt}
+                      onChange={(e) => setFormData({ ...formData, metaTagsPrompt: e.target.value })}
+                      className="w-full px-3 py-2 border border-purple-200 rounded-lg font-mono text-sm bg-purple-50"
+                      rows={3}
+                      placeholder="Generate SEO-optimized meta tags for this {{insurance_type}} page in {{location}}..."
                     />
                   </div>
                 </div>

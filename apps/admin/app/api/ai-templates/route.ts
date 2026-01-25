@@ -56,10 +56,21 @@ export async function POST(req: NextRequest) {
       geoLevel,
       isMajorCity,
       systemPrompt,
+      // Original prompts
       introPrompt,
       requirementsPrompt,
       faqsPrompt,
       tipsPrompt,
+      // New SEO prompts
+      costBreakdownPrompt,
+      comparisonPrompt,
+      discountsPrompt,
+      localStatsPrompt,
+      coverageGuidePrompt,
+      claimsProcessPrompt,
+      buyersGuidePrompt,
+      metaTagsPrompt,
+      // Settings
       model = 'xiaomi/mimo-v2-flash',
       temperature = 0.7,
       maxTokens = 2000,
@@ -85,10 +96,21 @@ export async function POST(req: NextRequest) {
         geoLevel: geoLevel || null,
         isMajorCity: isMajorCity !== undefined ? isMajorCity : null,
         systemPrompt,
+        // Original prompts
         introPrompt,
         requirementsPrompt,
         faqsPrompt,
         tipsPrompt,
+        // New SEO prompts
+        costBreakdownPrompt,
+        comparisonPrompt,
+        discountsPrompt,
+        localStatsPrompt,
+        coverageGuidePrompt,
+        claimsProcessPrompt,
+        buyersGuidePrompt,
+        metaTagsPrompt,
+        // Settings
         model,
         temperature,
         maxTokens,
@@ -96,8 +118,8 @@ export async function POST(req: NextRequest) {
         exampleOutput: exampleOutput || null,
         isActive,
         isDefault,
-        priority,
-        createdById: session.user?.id
+        priority
+        // createdById removed - user may not exist in DB
       }
     });
 

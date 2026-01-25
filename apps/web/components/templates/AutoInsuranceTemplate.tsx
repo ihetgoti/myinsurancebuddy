@@ -18,7 +18,22 @@ import {
     TrustSignals,
     CoverageCard,
     TOCItem,
-    FAQItem
+    FAQItem,
+    // New SEO Components
+    CostBreakdown,
+    ProviderComparison,
+    DiscountsList,
+    LocalStats,
+    CoverageGuide,
+    ClaimsProcess,
+    BuyersGuide,
+    CostBreakdownItem,
+    ComparisonItem,
+    DiscountItem,
+    LocalStatItem,
+    CoverageGuideItem,
+    ClaimsProcessContent,
+    BuyersGuideContent
 } from './shared';
 
 interface AutoInsuranceTemplateProps {
@@ -96,6 +111,15 @@ export default function AutoInsuranceTemplate({
         }
     ];
 
+    // NEW: AI-generated SEO content sections
+    const aiCostBreakdown: CostBreakdownItem[] | undefined = variables.costBreakdown || variables.ai_costBreakdown;
+    const aiComparison: ComparisonItem[] | undefined = variables.comparison || variables.ai_comparison;
+    const aiDiscounts: DiscountItem[] | undefined = variables.discounts_ai || variables.ai_discounts;
+    const aiLocalStats: LocalStatItem[] | undefined = variables.localStats || variables.ai_localStats;
+    const aiCoverageGuide: CoverageGuideItem[] | undefined = variables.coverageGuide || variables.ai_coverageGuide;
+    const aiClaimsProcess: ClaimsProcessContent | undefined = variables.claimsProcess || variables.ai_claimsProcess;
+    const aiBuyersGuide: BuyersGuideContent | undefined = variables.buyersGuide || variables.ai_buyersGuide;
+
     // Cost factors
     const costFactors = variables.cost_factors || [
         { factor: 'Driving Record', impact: 'high', description: 'Accidents and violations can increase rates 20-40%' },
@@ -127,7 +151,7 @@ export default function AutoInsuranceTemplate({
     const pageUrl = `https://myinsurancebuddies.com/car-insurance/us/${variables.state_slug || 'state'}`;
     const pageTitle = `Auto Insurance in ${stateName}`;
 
-    // Table of Contents items
+    // Table of Contents items - dynamically include AI sections
     const tocItems: TOCItem[] = [
         { id: 'requirements', label: 'Coverage Requirements' },
         { id: 'coverage-types', label: 'Coverage Types Explained' },
@@ -135,6 +159,14 @@ export default function AutoInsuranceTemplate({
         { id: 'discounts', label: 'Available Discounts' },
         { id: 'compare', label: 'Compare Providers' },
         { id: 'tips', label: 'Money-Saving Tips' },
+        // Conditionally add AI sections to TOC
+        ...(aiCostBreakdown?.length ? [{ id: 'cost-breakdown', label: 'Cost Breakdown' }] : []),
+        ...(aiComparison?.length ? [{ id: 'provider-comparison', label: 'Provider Comparison' }] : []),
+        ...(aiDiscounts?.length ? [{ id: 'discounts', label: 'Discounts Available' }] : []),
+        ...(aiLocalStats?.length ? [{ id: 'local-stats', label: 'Local Statistics' }] : []),
+        ...(aiCoverageGuide?.length ? [{ id: 'coverage-guide', label: 'Coverage Guide' }] : []),
+        ...(aiClaimsProcess ? [{ id: 'claims-process', label: 'How to File a Claim' }] : []),
+        ...(aiBuyersGuide ? [{ id: 'buyers-guide', label: 'Buying Guide' }] : []),
         { id: 'faq', label: 'FAQs' }
     ];
 
@@ -642,6 +674,78 @@ export default function AutoInsuranceTemplate({
                                 ))}
                             </div>
                         </section>
+
+                        {/* NEW: AI-Generated SEO Sections */}
+
+                        {/* Cost Breakdown Section */}
+                        {aiCostBreakdown && aiCostBreakdown.length > 0 && (
+                            <CostBreakdown
+                                items={aiCostBreakdown}
+                                title={`What Affects Your Auto Insurance Rate in ${stateName}`}
+                                description={`Understanding these factors can help you find better rates in ${stateName}`}
+                                accentColor="blue"
+                            />
+                        )}
+
+                        {/* Provider Comparison Section */}
+                        {aiComparison && aiComparison.length > 0 && (
+                            <ProviderComparison
+                                items={aiComparison}
+                                title={`Top Auto Insurance Companies in ${stateName}`}
+                                description="Compare the best insurance providers to find the right fit for you"
+                                accentColor="blue"
+                            />
+                        )}
+
+                        {/* Discounts Section */}
+                        {aiDiscounts && aiDiscounts.length > 0 && (
+                            <DiscountsList
+                                items={aiDiscounts}
+                                title={`Auto Insurance Discounts in ${stateName}`}
+                                description="Save money by taking advantage of these available discounts"
+                                accentColor="emerald"
+                            />
+                        )}
+
+                        {/* Local Stats Section */}
+                        {aiLocalStats && aiLocalStats.length > 0 && (
+                            <LocalStats
+                                items={aiLocalStats}
+                                title={`${stateName} Auto Insurance Statistics`}
+                                description="Local data that affects your insurance rates"
+                                accentColor="purple"
+                            />
+                        )}
+
+                        {/* Coverage Guide Section */}
+                        {aiCoverageGuide && aiCoverageGuide.length > 0 && (
+                            <CoverageGuide
+                                items={aiCoverageGuide}
+                                title={`Auto Insurance Coverage Types in ${stateName}`}
+                                description="Understanding your coverage options helps you make informed decisions"
+                                accentColor="blue"
+                            />
+                        )}
+
+                        {/* Claims Process Section */}
+                        {aiClaimsProcess && (
+                            <ClaimsProcess
+                                content={aiClaimsProcess}
+                                title={`How to File an Auto Insurance Claim in ${stateName}`}
+                                description="Step-by-step guide to filing a claim"
+                                accentColor="blue"
+                            />
+                        )}
+
+                        {/* Buyers Guide Section */}
+                        {aiBuyersGuide && (
+                            <BuyersGuide
+                                content={aiBuyersGuide}
+                                title={`How to Buy Auto Insurance in ${stateName}`}
+                                description="A complete guide to finding the right coverage"
+                                accentColor="emerald"
+                            />
+                        )}
 
                         {/* FAQ Section */}
                         <EnhancedFAQ

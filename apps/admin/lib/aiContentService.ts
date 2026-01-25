@@ -1,5 +1,20 @@
 import { prisma } from '@/lib/prisma';
 
+// All available AI content sections
+export type AIContentSection =
+  | 'intro'
+  | 'requirements'
+  | 'faqs'
+  | 'tips'
+  | 'costBreakdown'
+  | 'comparison'
+  | 'discounts'
+  | 'localStats'
+  | 'coverageGuide'
+  | 'claimsProcess'
+  | 'buyersGuide'
+  | 'metaTags';
+
 export interface AIContentRequest {
   pageData: {
     id: string;
@@ -9,8 +24,65 @@ export interface AIContentRequest {
     city?: string;
     customData?: any;
   };
-  sections: ('intro' | 'requirements' | 'faqs' | 'tips')[];
+  sections: AIContentSection[];
   model?: string;
+}
+
+export interface CostBreakdownItem {
+  factor: string;
+  impact: string;
+  description: string;
+}
+
+export interface ComparisonItem {
+  name: string;
+  strengths: string[];
+  weaknesses: string[];
+  bestFor: string;
+  priceRange: string;
+}
+
+export interface DiscountItem {
+  name: string;
+  savings: string;
+  qualification: string;
+  isLocal: boolean;
+}
+
+export interface LocalStatItem {
+  stat: string;
+  value: string;
+  impact: string;
+  comparison: string;
+}
+
+export interface CoverageGuideItem {
+  type: string;
+  description: string;
+  recommended: string;
+  whenNeeded: string;
+}
+
+export interface ClaimsProcessContent {
+  steps: string[];
+  documents: string[];
+  timeline: string;
+  resources: string[];
+}
+
+export interface BuyersGuideContent {
+  steps: string[];
+  lookFor: string[];
+  redFlags: string[];
+  questions: string[];
+}
+
+export interface MetaTagsContent {
+  metaTitle: string;
+  metaDescription: string;
+  metaKeywords: string[];
+  ogTitle: string;
+  ogDescription: string;
 }
 
 export interface AIContentResponse {
@@ -20,6 +92,14 @@ export interface AIContentResponse {
     requirements?: string;
     faqs?: Array<{ question: string; answer: string }>;
     tips?: string[];
+    costBreakdown?: CostBreakdownItem[];
+    comparison?: ComparisonItem[];
+    discounts?: DiscountItem[];
+    localStats?: LocalStatItem[];
+    coverageGuide?: CoverageGuideItem[];
+    claimsProcess?: ClaimsProcessContent;
+    buyersGuide?: BuyersGuideContent;
+    metaTags?: MetaTagsContent;
   };
   error?: string;
   tokensUsed?: number;
@@ -166,44 +246,93 @@ export class OpenRouterService {
 
   /**
    * Build prompt based on page data and requested sections
+   * Uses simple {{location}} and {{niche}} variables for clarity
    */
   private static buildPrompt(request: AIContentRequest): string {
     const { pageData, sections } = request;
+
+    // Build location string - city, state or just state
     const location = pageData.city
       ? `${pageData.city}, ${pageData.state}`
       : pageData.state || 'the United States';
 
-    let prompt = `Generate unique content for a ${pageData.insuranceType} page for ${location}.\n\n`;
+    // Niche is the insurance type
+    const niche = pageData.insuranceType;
+
+    let prompt = `You are writing content for a ${niche} page targeting ${location}.
+
+VARIABLES:
+- Location: ${location}
+- Niche: ${niche}
+
+Generate unique, SEO-optimized content. Make it specific to ${location} and relevant to ${niche}.
+
+`;
 
     // Add context from customData if available
     if (pageData.customData) {
       const { avg_premium, min_coverage, population } = pageData.customData;
-      prompt += `Context:\n`;
-      if (avg_premium) prompt += `- Average premium: ${avg_premium}\n`;
-      if (min_coverage) prompt += `- Minimum coverage: ${JSON.stringify(min_coverage)}\n`;
-      if (population) prompt += `- Population: ${population}\n`;
-      prompt += `\n`;
+      if (avg_premium || min_coverage || population) {
+        prompt += `LOCAL DATA:\n`;
+        if (avg_premium) prompt += `- Average premium in ${location}: ${avg_premium}\n`;
+        if (min_coverage) prompt += `- Minimum coverage: ${JSON.stringify(min_coverage)}\n`;
+        if (population) prompt += `- Population: ${population}\n`;
+        prompt += `\n`;
+      }
     }
 
-    prompt += `Generate the following sections in JSON format:\n\n`;
+    prompt += `Generate the following in JSON format:\n\n`;
 
     if (sections.includes('intro')) {
-      prompt += `1. "intro": A 2-3 paragraph introduction about ${pageData.insuranceType} in ${location}. Include local context, why it's important, and what residents should know. Make it unique and specific to this location.\n\n`;
+      prompt += `"intro": Write 2-3 engaging paragraphs about ${niche} in ${location}. Include why residents need it, local factors that affect rates, and what makes ${location} unique for ${niche}.\n\n`;
     }
 
     if (sections.includes('requirements')) {
-      prompt += `2. "requirements": A detailed paragraph about ${pageData.insuranceType} requirements in ${location}. Include state-specific laws, minimum coverage, and compliance details.\n\n`;
+      prompt += `"requirements": Explain ${niche} requirements and laws specific to ${location}. Include minimum coverage, penalties, and compliance details.\n\n`;
     }
 
     if (sections.includes('faqs')) {
-      prompt += `3. "faqs": An array of 5-7 location-specific FAQs. Each FAQ should have "question" and "answer" fields. Focus on questions specific to ${location}.\n\n`;
+      prompt += `"faqs": Create 5-7 FAQs as array of {question, answer} objects. Questions should be specific to ${niche} in ${location}.\n\n`;
     }
 
     if (sections.includes('tips')) {
-      prompt += `4. "tips": An array of 5-8 practical tips for getting the best ${pageData.insuranceType} in ${location}. Include local considerations, discounts, and money-saving strategies.\n\n`;
+      prompt += `"tips": List 5-8 practical tips as string array for saving money on ${niche} in ${location}.\n\n`;
     }
 
-    prompt += `\nIMPORTANT: Return ONLY a valid JSON object with the requested fields. No markdown, no code blocks, just pure JSON.`;
+    // NEW SEO SECTIONS
+    if (sections.includes('costBreakdown')) {
+      prompt += `"costBreakdown": Create a detailed cost breakdown for ${niche} in ${location}. Return array of 5-7 objects with: {"factor": "factor name", "impact": "increases/decreases by X%", "description": "brief explanation"}. Include local factors like crime rate, weather, traffic patterns.\n\n`;
+    }
+
+    if (sections.includes('comparison')) {
+      prompt += `"comparison": Compare top 4-5 insurance providers for ${niche} in ${location}. Return array with: {"name": "provider name", "strengths": ["strength1", "strength2"], "weaknesses": ["weakness1"], "bestFor": "who this is best for", "priceRange": "$X-$Y/month"}.\n\n`;
+    }
+
+    if (sections.includes('discounts')) {
+      prompt += `"discounts": List 6-8 available discounts for ${niche} in ${location}. Return array with: {"name": "discount name", "savings": "5-15%", "qualification": "how to qualify", "isLocal": true/false}.\n\n`;
+    }
+
+    if (sections.includes('localStats')) {
+      prompt += `"localStats": Provide 5-6 location-specific statistics for ${niche} in ${location}. Return array with: {"stat": "statistic name", "value": "the value", "impact": "how it affects insurance", "comparison": "compared to state/national average"}.\n\n`;
+    }
+
+    if (sections.includes('coverageGuide')) {
+      prompt += `"coverageGuide": Explain 4-6 coverage types for ${niche} in ${location}. Return array with: {"type": "coverage type", "description": "what it covers", "recommended": "recommended amount", "whenNeeded": "when to consider this"}.\n\n`;
+    }
+
+    if (sections.includes('claimsProcess')) {
+      prompt += `"claimsProcess": Explain how to file a ${niche} claim in ${location}. Return object: {"steps": ["step1", "step2", ...], "documents": ["doc1", "doc2", ...], "timeline": "expected timeline", "resources": ["local resource 1", ...]}.\n\n`;
+    }
+
+    if (sections.includes('buyersGuide')) {
+      prompt += `"buyersGuide": Create a buying guide for ${niche} in ${location}. Return object: {"steps": ["step1", "step2", ...], "lookFor": ["what to look for 1", ...], "redFlags": ["red flag 1", ...], "questions": ["question to ask 1", ...]}.\n\n`;
+    }
+
+    if (sections.includes('metaTags')) {
+      prompt += `"metaTags": Generate SEO-optimized meta tags for this ${niche} page in ${location}. Return object: {"metaTitle": "compelling title 50-60 chars with location", "metaDescription": "engaging description 150-160 chars with CTA", "metaKeywords": ["keyword1", "keyword2", ...], "ogTitle": "social media title", "ogDescription": "social media description"}.\n\n`;
+    }
+
+    prompt += `Return ONLY valid JSON. No markdown, no code blocks.`;
 
     return prompt;
   }
@@ -237,6 +366,39 @@ export class OpenRouterService {
 
       if (sections.includes('tips') && Array.isArray(parsed.tips)) {
         content.tips = parsed.tips;
+      }
+
+      // NEW SEO SECTIONS
+      if (sections.includes('costBreakdown') && Array.isArray(parsed.costBreakdown)) {
+        content.costBreakdown = parsed.costBreakdown;
+      }
+
+      if (sections.includes('comparison') && Array.isArray(parsed.comparison)) {
+        content.comparison = parsed.comparison;
+      }
+
+      if (sections.includes('discounts') && Array.isArray(parsed.discounts)) {
+        content.discounts = parsed.discounts;
+      }
+
+      if (sections.includes('localStats') && Array.isArray(parsed.localStats)) {
+        content.localStats = parsed.localStats;
+      }
+
+      if (sections.includes('coverageGuide') && Array.isArray(parsed.coverageGuide)) {
+        content.coverageGuide = parsed.coverageGuide;
+      }
+
+      if (sections.includes('claimsProcess') && parsed.claimsProcess) {
+        content.claimsProcess = parsed.claimsProcess;
+      }
+
+      if (sections.includes('buyersGuide') && parsed.buyersGuide) {
+        content.buyersGuide = parsed.buyersGuide;
+      }
+
+      if (sections.includes('metaTags') && parsed.metaTags) {
+        content.metaTags = parsed.metaTags;
       }
 
       return content;
@@ -321,7 +483,7 @@ export class OpenRouterService {
  */
 export async function batchGenerateContent(
   pageIds: string[],
-  sections: ('intro' | 'requirements' | 'faqs' | 'tips')[],
+  sections: AIContentSection[],
   options: {
     batchSize?: number;
     delayBetweenBatches?: number;
@@ -375,15 +537,31 @@ export async function batchGenerateContent(
         });
 
         if (response.success && response.content) {
+          // Build update data
+          const updateData: any = {
+            aiGeneratedContent: response.content,
+            aiGeneratedAt: new Date(),
+            aiModel: model || 'xiaomi/mimo-v2-flash',
+            isAiGenerated: true
+          };
+
+          // If meta tags were generated, also update the Page model SEO fields
+          if (response.content.metaTags) {
+            const { metaTitle, metaDescription, metaKeywords, ogTitle, ogDescription } = response.content.metaTags;
+            if (metaTitle) updateData.metaTitle = metaTitle;
+            if (metaDescription) updateData.metaDescription = metaDescription;
+            if (metaKeywords && Array.isArray(metaKeywords)) updateData.metaKeywords = metaKeywords;
+            if (ogTitle) updateData.ogTitle = ogTitle;
+            if (ogDescription) updateData.ogDescription = ogDescription;
+            // Also set Twitter tags to match OG tags
+            if (ogTitle) updateData.twitterTitle = ogTitle;
+            if (ogDescription) updateData.twitterDesc = ogDescription;
+          }
+
           // Update page with AI content
           await prisma.page.update({
             where: { id: page.id },
-            data: {
-              aiGeneratedContent: response.content,
-              aiGeneratedAt: new Date(),
-              aiModel: model || 'xiaomi/mimo-v2-flash',
-              isAiGenerated: true
-            }
+            data: updateData
           });
 
           results.successful++;

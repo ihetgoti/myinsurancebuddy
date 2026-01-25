@@ -175,7 +175,7 @@ async function seedTemplates() {
     console.log("Seeding sample templates...");
 
     // Get or create super admin user
-    const adminEmail = "admin@myinsurancebuddies.com";
+    const adminEmail = "ihetgoti@gmail.com";
     let admin = await prisma.user.findUnique({
         where: { email: adminEmail },
     });
@@ -185,7 +185,7 @@ async function seedTemplates() {
         admin = await prisma.user.create({
             data: {
                 email: adminEmail,
-                name: "Super Admin",
+                name: "Het Goti",
                 passwordHash,
                 role: "SUPER_ADMIN",
                 isActive: true,

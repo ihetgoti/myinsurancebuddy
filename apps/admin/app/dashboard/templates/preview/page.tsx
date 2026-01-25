@@ -54,6 +54,53 @@ function PreviewContent() {
     const [loading, setLoading] = useState(true);
     const [device, setDevice] = useState<'desktop' | 'tablet' | 'mobile'>('desktop');
     const [customData, setCustomData] = useState<Record<string, string>>(SAMPLE_DATA[templateId] || {});
+    const [copied, setCopied] = useState(false);
+
+    const copyAsMarkdown = () => {
+        const templateDescriptions: Record<string, string> = {
+            'state-page': 'SEO-optimized state-level insurance page with ad placements',
+            'city-page': 'Local SEO optimized city-level insurance page',
+            'comparison': 'Insurance comparison page for comparing companies or coverage types',
+            'guide': 'Educational insurance guide with FAQ section',
+            'landing': 'High-converting landing page for lead generation',
+        };
+
+        const md = `# Template: ${templateId}
+
+## Description
+${templateDescriptions[templateId] || 'Custom template'}
+
+## Template Variables
+The following variables are available for this template:
+
+| Variable | Sample Value | Description |
+|----------|--------------|-------------|
+${Object.entries(customData).map(([key, value]) => `| \`{{${key}}}\` | ${value} | ${key.replace(/_/g, ' ')} |`).join('\n')}
+
+## Sample Data (JSON)
+\`\`\`json
+${JSON.stringify(customData, null, 2)}
+\`\`\`
+
+## Usage Instructions
+1. Use these variables in your content generation
+2. Replace placeholder values with actual data
+3. Ensure all required fields are populated
+
+## SEO Features
+- Schema markup included
+- Meta tags optimized
+- Mobile responsive design
+- Strategic ad placements
+
+---
+Generated from MyInsuranceBuddy Admin Panel
+`;
+
+        navigator.clipboard.writeText(md);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+    };
 
     useEffect(() => {
         loadPreview();
@@ -119,6 +166,17 @@ function PreviewContent() {
                                 </button>
                             ))}
                         </div>
+
+                        <button
+                            onClick={copyAsMarkdown}
+                            className={`px-4 py-2 border rounded-lg transition-colors ${
+                                copied
+                                    ? 'bg-green-50 border-green-500 text-green-700'
+                                    : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+                            }`}
+                        >
+                            {copied ? 'Copied!' : 'Copy as MD'}
+                        </button>
 
                         <button
                             onClick={() => router.push(`/dashboard/bulk-generate?template=${templateId}`)}
