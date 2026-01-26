@@ -31,6 +31,11 @@ interface PageProps {
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
     const resolved = await resolveRoute(params.slug);
 
+    // Page exists but not published - return 404 metadata
+    if ('notPublished' in resolved && resolved.notPublished) {
+        return { title: 'Not Found' };
+    }
+
     if (!resolved.page && !resolved.insuranceType) {
         return { title: 'Not Found' };
     }
@@ -98,15 +103,28 @@ async function resolveRoute(segments: string[]) {
             },
         });
 
-        if (pageBySlug && pageBySlug.isPublished) {
-            return {
-                page: pageBySlug,
-                insuranceType: pageBySlug.insuranceType,
-                country: pageBySlug.country,
-                state: pageBySlug.state,
-                city: pageBySlug.city,
-                geoLevel: pageBySlug.geoLevel,
-            };
+        if (pageBySlug) {
+            if (pageBySlug.isPublished) {
+                return {
+                    page: pageBySlug,
+                    insuranceType: pageBySlug.insuranceType,
+                    country: pageBySlug.country,
+                    state: pageBySlug.state,
+                    city: pageBySlug.city,
+                    geoLevel: pageBySlug.geoLevel,
+                };
+            } else {
+                // Page exists but is not published - return 404
+                return {
+                    insuranceType: null,
+                    country: null,
+                    state: null,
+                    city: null,
+                    page: null,
+                    geoLevel: null,
+                    notPublished: true
+                };
+            }
         }
 
         // Fallback to hierarchical resolution
@@ -538,7 +556,13 @@ export async function generateStaticParams() {
 }
 
 export default async function DynamicPage({ params }: PageProps) {
-    const { insuranceType, country, state, city, page } = await resolveRoute(params.slug);
+    const resolved = await resolveRoute(params.slug);
+    const { insuranceType, country, state, city, page } = resolved;
+
+    // If page exists but not published, show 404
+    if ('notPublished' in resolved && resolved.notPublished) {
+        notFound();
+    }
 
     // If nothing found, show 404
     if (!insuranceType && !page) {
