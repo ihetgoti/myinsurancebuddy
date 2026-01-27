@@ -7,10 +7,17 @@ settings:
 importers:
 
   .:
+    dependencies:
+      '@prisma/client':
+        specifier: ^5.22.0
+        version: 5.22.0(prisma@5.22.0)
     devDependencies:
       prettier:
         specifier: latest
         version: 3.8.1
+      prisma:
+        specifier: ^5.22.0
+        version: 5.22.0
       turbo:
         specifier: latest
         version: 2.7.6
@@ -46,7 +53,7 @@ importers:
         version: 14.1.0(@babel/core@7.28.5)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       next-auth:
         specifier: ^4.24.5
-        version: 4.24.13(next@14.1.0(@babel/core@7.28.5)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(nodemailer@7.0.12)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+        version: 4.24.13(next@14.1.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(nodemailer@7.0.12)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       nodemailer:
         specifier: ^7.0.12
         version: 7.0.12
@@ -146,7 +153,7 @@ importers:
         version: 14.1.0(@babel/core@7.28.5)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       next-auth:
         specifier: ^4.24.5
-        version: 4.24.13(next@14.1.0(@babel/core@7.28.5)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(nodemailer@7.0.12)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+        version: 4.24.13(next@14.1.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(nodemailer@7.0.12)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       react:
         specifier: ^18
         version: 18.3.1
@@ -7243,7 +7250,7 @@ snapshots:
 
   neo-async@2.6.2: {}
 
-  next-auth@4.24.13(next@14.1.0(@babel/core@7.28.5)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(nodemailer@7.0.12)(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
+  next-auth@4.24.13(next@14.1.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(nodemailer@7.0.12)(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
     dependencies:
       '@babel/runtime': 7.28.4
       '@panva/hkdf': 1.2.1
