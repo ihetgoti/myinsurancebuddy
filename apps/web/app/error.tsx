@@ -7,11 +7,13 @@ export default function Error({
     error,
     reset,
 }: {
-    error: Error & { digest?: string };
+    error: (Error & { digest?: string }) | null;
     reset: () => void;
 }) {
     useEffect(() => {
-        console.error("Application error:", error);
+        if (error) {
+            console.error("Application error:", error);
+        }
     }, [error]);
 
     return (
