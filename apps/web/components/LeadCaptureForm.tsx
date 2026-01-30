@@ -2,19 +2,20 @@
 
 import { useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { MapPin, Mail, ArrowRight, Loader2, Shield, Clock, CheckCircle, Sparkles, Phone } from 'lucide-react';
+import { MapPin, Mail, ArrowRight, Loader2, Shield, Clock, CheckCircle, Phone } from 'lucide-react';
 import { trackFormSubmit, trackCTAClick } from './GTMDataLayer';
 
 interface LeadCaptureFormProps {
     variant?: 'inline' | 'stacked' | 'compact' | 'hero' | 'sidebar';
     insuranceType?: string;
+    state?: string;
     source?: string;
     redirectUrl?: string;
     showEmail?: boolean;
     showPhone?: boolean;
     showTrustBadges?: boolean;
     buttonText?: string;
-    accentColor?: 'blue' | 'emerald' | 'orange' | 'purple' | 'gradient';
+    accentColor?: 'blue' | 'emerald' | 'orange' | 'purple';
     className?: string;
     title?: string;
     subtitle?: string;
@@ -52,26 +53,19 @@ const colorSchemes = {
         bg: 'bg-purple-50',
         border: 'border-purple-200',
         text: 'text-purple-600'
-    },
-    gradient: {
-        button: 'bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-700 hover:to-cyan-600',
-        focus: 'focus:ring-blue-500',
-        icon: 'text-blue-500',
-        bg: 'bg-blue-50',
-        border: 'border-blue-200',
-        text: 'text-blue-600'
     }
 };
 
 export default function LeadCaptureForm({
     variant = 'inline',
     insuranceType,
+    state,
     source = 'page',
     redirectUrl = '/get-quote',
     showEmail = true,
     showPhone = false,
     showTrustBadges = true,
-    buttonText = 'Get My Free Quotes',
+    buttonText = 'Get Free Quotes',
     accentColor = 'blue',
     className = '',
     title,
@@ -128,44 +122,63 @@ export default function LeadCaptureForm({
         setErrors({});
         setIsLoading(true);
 
+        // Track the click
+        trackCTAClick(buttonText, 'marketcall_redirect', source);
+
+        try {
+            // Try to get MarketCall offer first
+            const params = new URLSearchParams();
+            if (insuranceType) params.set('insuranceType', insuranceType);
+            if (state) params.set('state', state);
+            params.set('zip', zipCode);
+            if (email) params.set('email', email);
+
+            const response = await fetch(`/api/redirect-offer?${params.toString()}`);
+            const data = await response.json();
+
+            if (data.success && data.redirectUrl) {
+                // Track successful redirect
+                trackFormSubmit('lead_capture_form', {
+                    zip_code: zipCode,
+                    has_email: !!email,
+                    insurance_type: insuranceType,
+                    source: source,
+                    redirect_to: 'marketcall',
+                    offer_name: data.offer?.name
+                });
+
+                // Redirect to MarketCall offer
+                window.location.href = data.redirectUrl;
+                return;
+            }
+        } catch (error) {
+            console.log('No MarketCall offer found, falling back to local redirect');
+        }
+
+        // Fallback: redirect to local get-quote page
+        const fallbackParams = new URLSearchParams();
+        fallbackParams.set('zip', zipCode);
+        if (email) fallbackParams.set('email', encodeURIComponent(email));
+        if (phone) fallbackParams.set('phone', encodeURIComponent(phone.replace(/\D/g, '')));
+        if (insuranceType) fallbackParams.set('type', insuranceType);
+        fallbackParams.set('src', source);
+
+        // Track fallback
         trackFormSubmit('lead_capture_form', {
             zip_code: zipCode,
             has_email: !!email,
-            has_phone: !!phone,
             insurance_type: insuranceType,
-            source: source
+            source: source,
+            redirect_to: 'local'
         });
 
-        trackCTAClick(buttonText, redirectUrl, source);
-
-        const params = new URLSearchParams();
-        params.set('zip', zipCode);
-        if (email) params.set('email', encodeURIComponent(email));
-        if (phone) params.set('phone', encodeURIComponent(phone.replace(/\D/g, '')));
-        if (insuranceType) params.set('type', insuranceType);
-        params.set('src', source);
-
-        try {
-            await fetch('/api/leads', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    zipCode,
-                    email: email || null,
-                    phone: phone ? phone.replace(/\D/g, '') : null,
-                    insuranceType,
-                    source
-                })
-            }).catch(() => { });
-        } catch { }
-
-        router.push(`${redirectUrl}?${params.toString()}`);
-    }, [zipCode, email, phone, insuranceType, source, redirectUrl, buttonText, router, showEmail, showPhone]);
+        router.push(`${redirectUrl}?${fallbackParams.toString()}`);
+    }, [zipCode, email, phone, insuranceType, state, source, redirectUrl, buttonText, router, showEmail, showPhone]);
 
     // Sidebar variant
     if (variant === 'sidebar') {
         return (
-            <div className={`bg-white rounded-2xl p-6 shadow-xl border border-slate-200 ${className}`}>
+            <div className={`bg-white rounded-xl p-6 shadow-lg border border-slate-200 ${className}`}>
                 {title && (
                     <div className="mb-4">
                         <h3 className="text-lg font-bold text-slate-900">{title}</h3>
@@ -182,7 +195,7 @@ export default function LeadCaptureForm({
                                 placeholder="12345"
                                 value={zipCode}
                                 onChange={(e) => setZipCode(e.target.value.replace(/\D/g, '').slice(0, 5))}
-                                className={`w-full pl-10 pr-4 py-3 border rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 ${colors.focus} ${errors.zip ? 'border-red-500' : 'border-slate-200'}`}
+                                className={`w-full pl-10 pr-4 py-3 border rounded-lg text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 ${colors.focus} focus:border-transparent ${errors.zip ? 'border-red-500' : 'border-slate-200'}`}
                                 maxLength={5}
                             />
                         </div>
@@ -199,7 +212,7 @@ export default function LeadCaptureForm({
                                     placeholder="you@example.com"
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
-                                    className={`w-full pl-10 pr-4 py-3 border rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 ${colors.focus} ${errors.email ? 'border-red-500' : 'border-slate-200'}`}
+                                    className={`w-full pl-10 pr-4 py-3 border rounded-lg text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 ${colors.focus} focus:border-transparent ${errors.email ? 'border-red-500' : 'border-slate-200'}`}
                                 />
                             </div>
                             {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
@@ -216,7 +229,7 @@ export default function LeadCaptureForm({
                                     placeholder="(555) 123-4567"
                                     value={phone}
                                     onChange={(e) => setPhone(formatPhone(e.target.value))}
-                                    className={`w-full pl-10 pr-4 py-3 border rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 ${colors.focus} ${errors.phone ? 'border-red-500' : 'border-slate-200'}`}
+                                    className={`w-full pl-10 pr-4 py-3 border rounded-lg text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 ${colors.focus} focus:border-transparent ${errors.phone ? 'border-red-500' : 'border-slate-200'}`}
                                 />
                             </div>
                             {errors.phone && <p className="text-red-500 text-xs mt-1">{errors.phone}</p>}
@@ -226,12 +239,12 @@ export default function LeadCaptureForm({
                     <button
                         type="submit"
                         disabled={isLoading}
-                        className={`w-full ${colors.button} text-white font-bold py-3.5 rounded-xl transition-all disabled:opacity-50 flex items-center justify-center gap-2 shadow-lg hover:shadow-xl`}
+                        className={`w-full ${colors.button} text-white font-semibold py-3 rounded-lg transition-all disabled:opacity-50 flex items-center justify-center gap-2`}
                     >
                         {isLoading ? (
                             <>
                                 <Loader2 className="animate-spin" size={20} />
-                                <span>Finding quotes...</span>
+                                <span>Finding best offer...</span>
                             </>
                         ) : (
                             <>
@@ -261,32 +274,32 @@ export default function LeadCaptureForm({
         );
     }
 
-    // Hero variant - large prominent form
+    // Hero variant - clean, professional form
     if (variant === 'hero') {
         return (
-            <div className={`bg-white rounded-3xl p-3 shadow-2xl ${className}`}>
-                <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-3">
+            <div className={`bg-white rounded-xl p-2 shadow-lg border border-slate-200 ${className}`}>
+                <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-2">
                     <div className="flex-1 relative">
-                        <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
+                        <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
                         <input
                             type="text"
-                            placeholder="Enter your ZIP code"
+                            placeholder="ZIP Code"
                             value={zipCode}
                             onChange={(e) => setZipCode(e.target.value.replace(/\D/g, '').slice(0, 5))}
-                            className={`w-full pl-12 pr-4 py-4 bg-slate-50 border-0 rounded-2xl text-lg text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 ${colors.focus} ${errors.zip ? 'ring-2 ring-red-500' : ''}`}
+                            className={`w-full pl-10 pr-4 py-3 bg-slate-50 border rounded-lg text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 ${colors.focus} focus:bg-white ${errors.zip ? 'border-red-500' : 'border-slate-200'}`}
                             maxLength={5}
                         />
                     </div>
 
                     {showEmail && (
                         <div className="flex-1 relative">
-                            <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
+                            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
                             <input
                                 type="email"
                                 placeholder="Email (optional)"
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
-                                className={`w-full pl-12 pr-4 py-4 bg-slate-50 border-0 rounded-2xl text-lg text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 ${colors.focus} ${errors.email ? 'ring-2 ring-red-500' : ''}`}
+                                className={`w-full pl-10 pr-4 py-3 bg-slate-50 border rounded-lg text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 ${colors.focus} focus:bg-white ${errors.email ? 'border-red-500' : 'border-slate-200'}`}
                             />
                         </div>
                     )}
@@ -294,33 +307,24 @@ export default function LeadCaptureForm({
                     <button
                         type="submit"
                         disabled={isLoading || zipCode.length !== 5}
-                        className={`${colors.button} disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold px-8 py-4 rounded-2xl transition-all flex items-center justify-center gap-2 whitespace-nowrap shadow-lg hover:shadow-xl hover:-translate-y-0.5`}
+                        className={`${colors.button} disabled:bg-slate-300 disabled:cursor-not-allowed text-white font-semibold px-6 py-3 rounded-lg transition-all flex items-center justify-center gap-2 whitespace-nowrap`}
                     >
                         {isLoading ? (
-                            <Loader2 className="animate-spin" size={22} />
+                            <Loader2 className="animate-spin" size={20} />
                         ) : (
                             <>
                                 {buttonText}
-                                <ArrowRight size={22} />
+                                <ArrowRight size={20} />
                             </>
                         )}
                     </button>
                 </form>
 
-                {showTrustBadges && (
-                    <div className="flex flex-wrap items-center justify-center gap-6 mt-4 text-sm text-slate-500">
-                        <div className="flex items-center gap-2">
-                            <Sparkles size={16} className={colors.icon} />
-                            <span>Compare 100+ companies</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <Shield size={16} className={colors.icon} />
-                            <span>100% free, no obligation</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <Clock size={16} className={colors.icon} />
-                            <span>Takes only 2 minutes</span>
-                        </div>
+                {(errors.zip || errors.email || errors.phone) && (
+                    <div className="mt-2 px-2">
+                        {errors.zip && <p className="text-red-500 text-sm">{errors.zip}</p>}
+                        {errors.email && <p className="text-red-500 text-sm">{errors.email}</p>}
+                        {errors.phone && <p className="text-red-500 text-sm">{errors.phone}</p>}
                     </div>
                 )}
             </div>
@@ -365,7 +369,7 @@ export default function LeadCaptureForm({
                 <button
                     type="submit"
                     disabled={isLoading}
-                    className={`w-full ${colors.button} text-white font-bold text-lg px-8 py-4 rounded-xl transition-all disabled:opacity-50 flex items-center justify-center gap-2 shadow-lg hover:shadow-xl`}
+                    className={`w-full ${colors.button} text-white font-bold text-lg px-8 py-4 rounded-xl transition-all disabled:opacity-50 flex items-center justify-center gap-2`}
                 >
                     {isLoading ? (
                         <>
@@ -431,7 +435,7 @@ export default function LeadCaptureForm({
     // Default: inline variant
     return (
         <form onSubmit={handleSubmit} className={`${className}`}>
-            <div className="flex flex-col sm:flex-row items-stretch gap-3 bg-white rounded-2xl p-2 shadow-2xl shadow-black/10">
+            <div className="flex flex-col sm:flex-row items-stretch gap-3 bg-white rounded-xl p-2 shadow-lg border border-slate-200">
                 <div className="flex-1 relative">
                     <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
                     <input
@@ -439,7 +443,7 @@ export default function LeadCaptureForm({
                         placeholder="ZIP Code"
                         value={zipCode}
                         onChange={(e) => setZipCode(e.target.value.replace(/\D/g, '').slice(0, 5))}
-                        className={`w-full pl-12 pr-4 py-3.5 text-slate-900 placeholder-slate-400 focus:outline-none text-lg rounded-xl ${errors.zip ? 'bg-red-50' : 'bg-slate-50'}`}
+                        className={`w-full pl-12 pr-4 py-3.5 text-slate-900 placeholder-slate-400 focus:outline-none text-lg rounded-lg ${errors.zip ? 'bg-red-50' : 'bg-slate-50'}`}
                         maxLength={5}
                     />
                 </div>
@@ -452,7 +456,7 @@ export default function LeadCaptureForm({
                             placeholder="Email (optional)"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
-                            className={`w-full pl-12 pr-4 py-3.5 text-slate-900 placeholder-slate-400 focus:outline-none text-lg rounded-xl ${errors.email ? 'bg-red-50' : 'bg-slate-50'}`}
+                            className={`w-full pl-12 pr-4 py-3.5 text-slate-900 placeholder-slate-400 focus:outline-none text-lg rounded-lg ${errors.email ? 'bg-red-50' : 'bg-slate-50'}`}
                         />
                     </div>
                 )}
@@ -460,7 +464,7 @@ export default function LeadCaptureForm({
                 <button
                     type="submit"
                     disabled={zipCode.length !== 5 || isLoading}
-                    className={`${colors.button} disabled:bg-slate-300 text-white font-semibold px-8 py-3.5 rounded-xl transition-all disabled:cursor-not-allowed flex items-center justify-center gap-2 whitespace-nowrap`}
+                    className={`${colors.button} disabled:bg-slate-300 text-white font-semibold px-8 py-3.5 rounded-lg transition-all disabled:cursor-not-allowed flex items-center justify-center gap-2 whitespace-nowrap`}
                 >
                     {isLoading ? (
                         <>
