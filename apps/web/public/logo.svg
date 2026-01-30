@@ -1,0 +1,26 @@
+<svg width="200" height="40" viewBox="0 0 200 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Shield Icon with Gradient -->
+  <defs>
+    <linearGradient id="shieldGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0EA5E9"/>
+      <stop offset="50%" style="stop-color:#2563EB"/>
+      <stop offset="100%" style="stop-color:#7C3AED"/>
+    </linearGradient>
+    <linearGradient id="checkGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#10B981"/>
+      <stop offset="100%" style="stop-color:#34D399"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Shield Background -->
+  <path d="M18 4L6 9V18C6 25.73 11.11 32.82 18 35C24.89 32.82 30 25.73 30 18V9L18 4Z" fill="url(#shieldGradient)"/>
+
+  <!-- Checkmark inside shield -->
+  <path d="M14 19L17 22L23 16" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- Text: MyInsurance -->
+  <text x="38" y="26" font-family="system-ui, -apple-system, sans-serif" font-size="18" font-weight="700" fill="#0F172A">MyInsurance</text>
+
+  <!-- Text: Buddies -->
+  <text x="140" y="26" font-family="system-ui, -apple-system, sans-serif" font-size="18" font-weight="700" fill="#6366F1">Buddies</text>
+</svg>

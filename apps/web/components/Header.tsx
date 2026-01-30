@@ -1,8 +1,9 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { useState, useEffect } from 'react';
-import { ChevronDown, Menu, X, Shield, Phone, Car, Home, Heart, Stethoscope, Briefcase, Dog, User, LogOut } from 'lucide-react';
+import { ChevronDown, Menu, X, Phone, Car, Home, Heart, Stethoscope, Briefcase, Dog, User, LogOut, Shield, CheckCircle } from 'lucide-react';
 import { useSession, signOut } from 'next-auth/react';
 
 interface InsuranceType {
@@ -70,13 +71,27 @@ export default function Header({ insuranceTypes = [], states = [] }: HeaderProps
                 <div className="container mx-auto px-4 h-full max-w-7xl flex items-center justify-between">
 
                     {/* Brand */}
-                    <Link href="/" className="flex items-center gap-2.5 group mr-8">
-                        <div className="w-9 h-9 bg-blue-600 text-white flex items-center justify-center rounded-lg shadow-sm group-hover:shadow-md transition-all">
-                            <Shield className="w-5 h-5 fill-current" />
+                    <Link href="/" className="flex items-center gap-3 group mr-8">
+                        <div className="relative w-10 h-10 flex items-center justify-center">
+                            {/* Gradient Shield Logo */}
+                            <svg viewBox="0 0 32 32" className="w-10 h-10 drop-shadow-md group-hover:drop-shadow-lg transition-all">
+                                <defs>
+                                    <linearGradient id="headerShieldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                        <stop offset="0%" stopColor="#0EA5E9"/>
+                                        <stop offset="50%" stopColor="#2563EB"/>
+                                        <stop offset="100%" stopColor="#7C3AED"/>
+                                    </linearGradient>
+                                </defs>
+                                <path d="M16 2L4 7V16C4 24.28 9.48 31.64 16 34C22.52 31.64 28 24.28 28 16V7L16 2Z" fill="url(#headerShieldGrad)"/>
+                                <path d="M12 17L15 20L21 14" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+                            </svg>
                         </div>
-                        <span className="text-xl font-bold text-slate-900 tracking-tight group-hover:text-blue-600 transition-colors">
-                            MyInsurance<span className="text-slate-400">Buddies</span>
-                        </span>
+                        <div className="flex flex-col">
+                            <span className="text-lg font-extrabold text-slate-900 tracking-tight leading-tight group-hover:text-blue-600 transition-colors">
+                                MyInsurance<span className="bg-gradient-to-r from-blue-600 to-violet-600 bg-clip-text text-transparent">Buddies</span>
+                            </span>
+                            <span className="text-[10px] font-semibold text-slate-400 tracking-wide uppercase">Your Trusted Insurance Guide</span>
+                        </div>
                     </Link>
 
                     {/* Desktop Navigation */}

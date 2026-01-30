@@ -2,10 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
-import { OpenRouterService, AIContentSection } from '@/lib/aiContentService';
 
 export const dynamic = 'force-dynamic';
-export const maxDuration = 300; // 5 minutes for long generation
 
 interface AutoGenerateRequest {
   insuranceTypeId: string;
@@ -16,6 +14,11 @@ interface AutoGenerateRequest {
   sections: string[];
 }
 
+/**
+ * POST /api/auto-generate
+ * Creates a new auto-generate job and returns the job ID immediately.
+ * The actual processing is done via /api/auto-generate/[id]/execute
+ */
 export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
@@ -24,7 +27,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body: AutoGenerateRequest = await request.json();
-    const { insuranceTypeId, stateIds, geoLevels, model, sections } = body;
+    const { insuranceTypeId, stateIds, geoLevels, templateId, model, sections } = body;
 
     if (!insuranceTypeId || !stateIds?.length || !geoLevels?.length) {
       return NextResponse.json({
@@ -45,203 +48,79 @@ export async function POST(request: NextRequest) {
       }, { status: 404 });
     }
 
-    // Get selected states with cities
+    // Calculate estimated total pages
     const selectedStates = await prisma.state.findMany({
       where: { id: { in: stateIds } },
-      include: {
-        cities: true
-      }
+      include: { _count: { select: { cities: true } } }
     });
 
-    const results = {
-      pagesCreated: 0,
-      pagesSkipped: 0,
-      contentGenerated: 0,
-      errors: [] as string[]
-    };
-
-    // Generate pages for each state and city
+    let estimatedTotal = 0;
     for (const state of selectedStates) {
-      // Create state-level page if STATE is in geoLevels
-      if (geoLevels.includes('STATE')) {
-        try {
-          const stateSlug = `${insuranceType.slug}/${state.slug}`;
-
-          // Check if page already exists
-          let page = await prisma.page.findUnique({
-            where: { slug: stateSlug }
-          });
-
-          if (!page) {
-            // Create the page
-            page = await prisma.page.create({
-              data: {
-                slug: stateSlug,
-                title: `${insuranceType.name} in ${state.name}`,
-                geoLevel: 'STATE',
-                isPublished: false,
-                insuranceTypeId: insuranceType.id,
-                stateId: state.id,
-                customData: {
-                  templateName: getTemplateNameForInsuranceType(insuranceType.slug),
-                  state_name: state.name,
-                  state_code: state.code,
-                  insurance_type: insuranceType.name,
-                  insurance_slug: insuranceType.slug
-                }
-              }
-            });
-            results.pagesCreated++;
-          } else {
-            results.pagesSkipped++;
-          }
-
-          // Generate AI content for this page
-          if (page && sections.length > 0) {
-            try {
-              await generateContentForPage(page, insuranceType, state, null, model, sections);
-              results.contentGenerated++;
-            } catch (error: any) {
-              results.errors.push(`AI content failed for ${stateSlug}: ${error.message}`);
-            }
-          }
-        } catch (error: any) {
-          results.errors.push(`Failed to create state page for ${state.name}: ${error.message}`);
-        }
-      }
-
-      // Create city-level pages if CITY is in geoLevels
-      if (geoLevels.includes('CITY')) {
-        for (const city of state.cities) {
-          try {
-            const citySlug = `${insuranceType.slug}/${state.slug}/${city.slug}`;
-
-            // Check if page already exists
-            let page = await prisma.page.findUnique({
-              where: { slug: citySlug }
-            });
-
-            if (!page) {
-              // Create the page
-              page = await prisma.page.create({
-                data: {
-                  slug: citySlug,
-                  title: `${insuranceType.name} in ${city.name}, ${state.code}`,
-                  geoLevel: 'CITY',
-                  isPublished: false,
-                  insuranceTypeId: insuranceType.id,
-                  stateId: state.id,
-                  cityId: city.id,
-                  customData: {
-                    templateName: getTemplateNameForInsuranceType(insuranceType.slug),
-                    city_name: city.name,
-                    state_name: state.name,
-                    state_code: state.code,
-                    insurance_type: insuranceType.name,
-                    insurance_slug: insuranceType.slug
-                  }
-                }
-              });
-              results.pagesCreated++;
-            } else {
-              results.pagesSkipped++;
-            }
-
-            // Generate AI content for this page
-            if (page && sections.length > 0) {
-              try {
-                await generateContentForPage(page, insuranceType, state, city, model, sections);
-                results.contentGenerated++;
-              } catch (error: any) {
-                results.errors.push(`AI content failed for ${citySlug}: ${error.message}`);
-              }
-            }
-          } catch (error: any) {
-            results.errors.push(`Failed to create city page for ${city.name}: ${error.message}`);
-          }
-        }
-      }
+      if (geoLevels.includes('STATE')) estimatedTotal += 1;
+      if (geoLevels.includes('CITY')) estimatedTotal += state._count.cities;
     }
+
+    // Create the job record
+    const job = await prisma.aIGenerationJob.create({
+      data: {
+        name: `${insuranceType.name} - ${selectedStates.length} States`,
+        filters: {
+          insuranceTypeId,
+          stateIds,
+          geoLevels,
+          templateId: templateId || null
+        },
+        sections: sections,
+        model: model,
+        promptTemplate: '', // Will be populated during execution
+        totalPages: estimatedTotal,
+        status: 'PENDING'
+      }
+    });
 
     return NextResponse.json({
       success: true,
-      ...results
+      jobId: job.id,
+      estimatedTotal,
+      message: `Job created. Use /api/auto-generate/${job.id}/execute to start processing.`
     });
 
   } catch (error: any) {
-    console.error('Auto-generate error:', error);
+    console.error('Auto-generate job creation error:', error);
     return NextResponse.json({
       success: false,
-      message: error.message || 'Failed to auto-generate pages'
+      message: error.message || 'Failed to create auto-generate job'
     }, { status: 500 });
   }
 }
 
-function getTemplateNameForInsuranceType(slug: string): string {
-  const templateMap: Record<string, string> = {
-    'car-insurance': 'AutoInsuranceTemplate',
-    'auto-insurance': 'AutoInsuranceTemplate',
-    'home-insurance': 'HomeInsuranceTemplate',
-    'homeowners-insurance': 'HomeInsuranceTemplate',
-    'health-insurance': 'HealthInsuranceTemplate',
-    'life-insurance': 'LifeInsuranceTemplate',
-    'business-insurance': 'BusinessInsuranceTemplate',
-    'travel-insurance': 'TravelInsuranceTemplate'
-  };
-  return templateMap[slug] || 'AutoInsuranceTemplate';
-}
+/**
+ * GET /api/auto-generate
+ * List recent auto-generate jobs
+ */
+export async function GET(request: NextRequest) {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
 
-async function generateContentForPage(
-  page: any,
-  insuranceType: any,
-  state: any,
-  city: any | null,
-  model: string,
-  sections: string[]
-) {
-  const locationName = city ? `${city.name}, ${state.code}` : state.name;
+    const { searchParams } = new URL(request.url);
+    const status = searchParams.get('status');
 
-  // Generate content using OpenRouter
-  const response = await OpenRouterService.generateContent({
-    pageData: {
-      id: page.id,
-      slug: page.slug,
-      insuranceType: insuranceType.name,
-      state: state.name,
-      city: city?.name
-    },
-    sections: sections as AIContentSection[],
-    model
-  });
+    const jobs = await prisma.aIGenerationJob.findMany({
+      where: status ? { status: status as any } : undefined,
+      orderBy: { createdAt: 'desc' },
+      take: 20
+    });
 
-  if (!response.success || !response.content) {
-    throw new Error(response.error || 'Failed to generate AI content');
+    return NextResponse.json({ jobs });
+
+  } catch (error: any) {
+    console.error('List auto-generate jobs error:', error);
+    return NextResponse.json({
+      success: false,
+      message: error.message || 'Failed to list jobs'
+    }, { status: 500 });
   }
-
-  // Build update data
-  const updateData: any = {
-    aiGeneratedContent: response.content,
-    aiGeneratedAt: new Date(),
-    aiModel: model,
-    isAiGenerated: true
-  };
-
-  // If meta tags were generated, update meta fields
-  if (response.content.metaTags) {
-    const { metaTitle, metaDescription, metaKeywords, ogTitle, ogDescription } = response.content.metaTags;
-    if (metaTitle) updateData.metaTitle = metaTitle;
-    if (metaDescription) updateData.metaDescription = metaDescription;
-    if (metaKeywords && Array.isArray(metaKeywords)) updateData.metaKeywords = metaKeywords;
-    if (ogTitle) updateData.ogTitle = ogTitle;
-    if (ogDescription) updateData.ogDescription = ogDescription;
-    if (ogTitle) updateData.twitterTitle = ogTitle;
-    if (ogDescription) updateData.twitterDesc = ogDescription;
-  }
-
-  await prisma.page.update({
-    where: { id: page.id },
-    data: updateData
-  });
-
-  return response.content;
 }

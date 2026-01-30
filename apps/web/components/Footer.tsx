@@ -33,14 +33,23 @@ export default function Footer({ insuranceTypes = [] }: FooterProps) {
                     {/* Brand Column (Col Span 4) */}
                     <div className="lg:col-span-4">
                         <Link href="/" className="flex items-center gap-3 mb-6 group inline-block">
-                            <div className="w-10 h-10 bg-blue-600 text-white flex items-center justify-center rounded-xl shadow-lg shadow-blue-900/20 group-hover:bg-blue-500 transition-colors">
-                                <Shield className="w-5 h-5 fill-current" />
-                            </div>
+                            {/* Professional Gradient Logo */}
+                            <svg viewBox="0 0 32 32" className="w-10 h-10 drop-shadow-lg">
+                                <defs>
+                                    <linearGradient id="footerShieldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                        <stop offset="0%" stopColor="#0EA5E9"/>
+                                        <stop offset="50%" stopColor="#2563EB"/>
+                                        <stop offset="100%" stopColor="#7C3AED"/>
+                                    </linearGradient>
+                                </defs>
+                                <path d="M16 2L4 7V16C4 24.28 9.48 31.64 16 34C22.52 31.64 28 24.28 28 16V7L16 2Z" fill="url(#footerShieldGrad)"/>
+                                <path d="M12 17L15 20L21 14" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+                            </svg>
                             <div>
-                                <span className="block text-xl font-bold text-white tracking-tight leading-none">
-                                    MyInsurance
+                                <span className="block text-xl font-bold text-white tracking-tight leading-tight group-hover:text-blue-400 transition-colors">
+                                    MyInsurance<span className="bg-gradient-to-r from-blue-400 to-violet-400 bg-clip-text text-transparent">Buddies</span>
                                 </span>
-                                <span className="text-[10px] uppercase font-bold text-slate-500 tracking-widest">Buddies</span>
+                                <span className="text-[10px] uppercase font-semibold text-slate-500 tracking-wider">Your Trusted Insurance Guide</span>
                             </div>
                         </Link>
                         <p className="text-sm leading-relaxed mb-6 text-slate-400 max-w-sm">
@@ -85,10 +94,9 @@ export default function Footer({ insuranceTypes = [] }: FooterProps) {
                         <h4 className="text-white font-bold text-sm uppercase tracking-wider mb-6">Company</h4>
                         <ul className="space-y-3 text-sm">
                             <li><FooterLink href="/about">About Us</FooterLink></li>
-                            <li><FooterLink href="/careers">Careers</FooterLink></li>
                             <li><FooterLink href="/contact">Contact Support</FooterLink></li>
-                            <li><FooterLink href="/partners">Partner with Us</FooterLink></li>
-                            <li><FooterLink href="/sitemap">Sitemap</FooterLink></li>
+                            <li><FooterLink href="/privacy">Privacy Policy</FooterLink></li>
+                            <li><FooterLink href="/terms">Terms of Service</FooterLink></li>
                         </ul>
                     </div>
 
@@ -126,7 +134,7 @@ export default function Footer({ insuranceTypes = [] }: FooterProps) {
                         <div className="flex items-center gap-6">
                             <Link href="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link>
                             <Link href="/terms" className="hover:text-white transition-colors">Terms of Service</Link>
-                            <Link href="/licenses" className="hover:text-white transition-colors">Licenses</Link>
+                            <Link href="/faq" className="hover:text-white transition-colors">FAQs</Link>
                         </div>
                     </div>
                     <div className="mt-4 text-[10px] text-slate-600 leading-relaxed text-center md:text-left max-w-4xl">

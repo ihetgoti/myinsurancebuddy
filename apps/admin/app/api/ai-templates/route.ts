@@ -27,7 +27,27 @@ export async function GET(req: NextRequest) {
       }
     });
 
-    return NextResponse.json({ templates });
+    // Get all insurance types to map IDs to slugs
+    const insuranceTypes = await prisma.insuranceType.findMany({
+      select: { id: true, slug: true, name: true }
+    });
+    const insuranceTypeMap = new Map(insuranceTypes.map(t => [t.id, t]));
+
+    // Add insuranceType slug to each template for frontend filtering
+    const templatesWithSlug = templates.map(template => {
+      const insuranceTypeInfo = template.insuranceTypeId
+        ? insuranceTypeMap.get(template.insuranceTypeId)
+        : null;
+
+      return {
+        ...template,
+        // Add slug for frontend filtering (use 'all' if no specific type)
+        insuranceType: insuranceTypeInfo?.slug || 'all',
+        insuranceTypeName: insuranceTypeInfo?.name || 'All Types'
+      };
+    });
+
+    return NextResponse.json({ templates: templatesWithSlug });
   } catch (error: any) {
     console.error('Get AI templates error:', error);
     return NextResponse.json(

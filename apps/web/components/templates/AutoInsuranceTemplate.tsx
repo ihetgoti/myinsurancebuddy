@@ -1,9 +1,9 @@
 import Link from 'next/link';
 import {
     Phone, Car, FileSearch, Shield, FileCheck,
-    DollarSign, AlertTriangle, Star, ChevronDown,
+    DollarSign, AlertTriangle, Star, ChevronDown, ChevronRight,
     CheckCircle, MapPin, ExternalLink, TrendingDown,
-    Percent, Users, CreditCard, Gauge, Calendar
+    Percent, Users, CreditCard, Gauge, Calendar, Globe
 } from 'lucide-react';
 import MarketCallCTA from '@/components/MarketCallCTA';
 import CopyAsMarkdown from '@/components/CopyAsMarkdown';
@@ -766,24 +766,37 @@ export default function AutoInsuranceTemplate({
                 </div>
             </div>
 
-            {/* Related Links */}
+            {/* Related Links - Professional Redesign */}
             {(relatedLinks?.nearbyCities?.length > 0 || relatedLinks?.otherNiches?.length > 0) && (
-                <section className="py-12 border-t bg-slate-50">
+                <section className="py-16 bg-gradient-to-b from-slate-50 to-white border-t border-slate-100">
                     <div className="container mx-auto px-4">
-                        <h2 className="text-xl font-bold text-slate-900 mb-8 text-center">Explore More</h2>
-                        <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+                        <div className="text-center mb-12">
+                            <span className="inline-block px-4 py-1.5 bg-blue-100 text-blue-700 text-xs font-bold uppercase tracking-wider rounded-full mb-4">
+                                Discover More Coverage Options
+                            </span>
+                            <h2 className="text-3xl font-bold text-slate-900 mb-3">Explore Related Insurance</h2>
+                            <p className="text-slate-500 max-w-2xl mx-auto">Find the right coverage for your needs across different locations and insurance types</p>
+                        </div>
+                        <div className="grid md:grid-cols-3 gap-6 max-w-6xl mx-auto">
                             {relatedLinks.nearbyCities?.length > 0 && (
-                                <div>
-                                    <h3 className="font-bold text-slate-900 mb-4 flex items-center gap-2">
-                                        <MapPin size={18} className="text-blue-600" />
-                                        Nearby Cities
-                                    </h3>
+                                <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 hover:shadow-lg hover:border-blue-200 transition-all duration-300">
+                                    <div className="flex items-center gap-3 mb-5">
+                                        <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/20">
+                                            <MapPin size={22} className="text-white" />
+                                        </div>
+                                        <div>
+                                            <h3 className="font-bold text-slate-900 text-lg">Nearby Cities</h3>
+                                            <p className="text-xs text-slate-500">Coverage in your area</p>
+                                        </div>
+                                    </div>
                                     <ul className="space-y-2">
                                         {relatedLinks.nearbyCities.slice(0, 8).map((link: any, i: number) => (
                                             <li key={i}>
-                                                <Link href={link.href} className="text-slate-600 hover:text-blue-600 text-sm flex items-center gap-1">
-                                                    <ChevronDown size={14} className="rotate-[-90deg]" />
-                                                    {link.label}
+                                                <Link href={link.href} className="group flex items-center gap-3 p-2.5 rounded-lg hover:bg-blue-50 transition-colors">
+                                                    <span className="w-6 h-6 bg-slate-100 group-hover:bg-blue-100 rounded-full flex items-center justify-center transition-colors">
+                                                        <ChevronRight size={14} className="text-slate-400 group-hover:text-blue-600" />
+                                                    </span>
+                                                    <span className="text-sm font-medium text-slate-600 group-hover:text-blue-700 transition-colors">{link.label}</span>
                                                 </Link>
                                             </li>
                                         ))}
@@ -791,16 +804,24 @@ export default function AutoInsuranceTemplate({
                                 </div>
                             )}
                             {relatedLinks.otherNiches?.length > 0 && (
-                                <div>
-                                    <h3 className="font-bold text-slate-900 mb-4 flex items-center gap-2">
-                                        <Shield size={18} className="text-blue-600" />
-                                        Other Insurance Types
-                                    </h3>
+                                <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 hover:shadow-lg hover:border-indigo-200 transition-all duration-300">
+                                    <div className="flex items-center gap-3 mb-5">
+                                        <div className="w-12 h-12 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-500/20">
+                                            <Shield size={22} className="text-white" />
+                                        </div>
+                                        <div>
+                                            <h3 className="font-bold text-slate-900 text-lg">Other Insurance</h3>
+                                            <p className="text-xs text-slate-500">Explore more coverage</p>
+                                        </div>
+                                    </div>
                                     <ul className="space-y-2">
                                         {relatedLinks.otherNiches.slice(0, 6).map((link: any, i: number) => (
                                             <li key={i}>
-                                                <Link href={link.href} className="text-slate-600 hover:text-blue-600 text-sm flex items-center gap-2">
-                                                    <span>{link.icon}</span> {link.label}
+                                                <Link href={link.href} className="group flex items-center gap-3 p-2.5 rounded-lg hover:bg-indigo-50 transition-colors">
+                                                    <span className="w-6 h-6 bg-slate-100 group-hover:bg-indigo-100 rounded-full flex items-center justify-center transition-colors text-slate-500 group-hover:text-indigo-600 text-sm">
+                                                        {link.icon || <ChevronRight size={14} />}
+                                                    </span>
+                                                    <span className="text-sm font-medium text-slate-600 group-hover:text-indigo-700 transition-colors">{link.label}</span>
                                                 </Link>
                                             </li>
                                         ))}
@@ -808,14 +829,24 @@ export default function AutoInsuranceTemplate({
                                 </div>
                             )}
                             {relatedLinks.parentLocations?.length > 0 && (
-                                <div>
-                                    <h3 className="font-bold text-slate-900 mb-4">Browse More</h3>
+                                <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 hover:shadow-lg hover:border-violet-200 transition-all duration-300">
+                                    <div className="flex items-center gap-3 mb-5">
+                                        <div className="w-12 h-12 bg-gradient-to-br from-violet-500 to-fuchsia-600 rounded-xl flex items-center justify-center shadow-lg shadow-violet-500/20">
+                                            <Globe size={22} className="text-white" />
+                                        </div>
+                                        <div>
+                                            <h3 className="font-bold text-slate-900 text-lg">Browse More</h3>
+                                            <p className="text-xs text-slate-500">Statewide coverage</p>
+                                        </div>
+                                    </div>
                                     <ul className="space-y-2">
                                         {relatedLinks.parentLocations.map((link: any, i: number) => (
                                             <li key={i}>
-                                                <Link href={link.href} className="text-slate-600 hover:text-blue-600 text-sm flex items-center gap-1">
-                                                    <ChevronDown size={14} className="rotate-[-90deg]" />
-                                                    {link.label}
+                                                <Link href={link.href} className="group flex items-center gap-3 p-2.5 rounded-lg hover:bg-violet-50 transition-colors">
+                                                    <span className="w-6 h-6 bg-slate-100 group-hover:bg-violet-100 rounded-full flex items-center justify-center transition-colors">
+                                                        <ChevronRight size={14} className="text-slate-400 group-hover:text-violet-600" />
+                                                    </span>
+                                                    <span className="text-sm font-medium text-slate-600 group-hover:text-violet-700 transition-colors">{link.label}</span>
                                                 </Link>
                                             </li>
                                         ))}

@@ -1,13 +1,13 @@
 /**
- * Simple in-memory job store for tracking bulk generation progress
+ * Simple in-memory job store for tracking bulk/auto generation progress
  * Note: This is client-side state, not persisted
  */
 
 export interface JobProgress {
     id: string;
-    type: 'bulk';
+    type: 'bulk' | 'auto';
     name: string;
-    status: 'QUEUED' | 'PROCESSING' | 'COMPLETED' | 'FAILED';
+    status: 'QUEUED' | 'PENDING' | 'PROCESSING' | 'COMPLETED' | 'FAILED' | 'CANCELLED';
     total: number;
     processed: number;
     created: number;
@@ -16,6 +16,10 @@ export interface JobProgress {
     failed: number;
     startedAt: string;
     completedAt?: string;
+    // Auto-generate specific fields
+    tokensUsed?: number;
+    estimatedCost?: number;
+    currentPage?: string;
 }
 
 // In-memory store (browser only)

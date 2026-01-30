@@ -231,6 +231,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
             title: 'Settings',
             items: [
                 { href: '/dashboard/settings', label: 'Configuration', icon: <Settings size={18} strokeWidth={1.5} /> },
+                { href: '/dashboard/settings/account', label: 'Account', icon: <Users size={18} strokeWidth={1.5} /> },
             ],
         },
     ];
