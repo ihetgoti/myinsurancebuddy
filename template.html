@@ -1,226 +1,605 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{meta_title}}</title>
     <meta name="description" content="{{meta_description}}">
+    <meta name="keywords" content="{{meta_keywords}}">
     <link rel="canonical" href="{{canonical_url}}">
-
+    
+    <!-- Preconnect for performance -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://cdn.jsdelivr.net">
+    
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                    colors: {
+                        primary: {
+                            50: '#eff6ff',
+                            100: '#dbeafe',
+                            200: '#bfdbfe',
+                            300: '#93c5fd',
+                            400: '#60a5fa',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
+                            800: '#1e40af',
+                            900: '#1e3a8a',
+                        }
+                    },
+                    animation: {
+                        'fade-in': 'fadeIn 0.6s ease-out forwards',
+                        'slide-up': 'slideUp 0.6s ease-out forwards',
+                        'pulse-slow': 'pulseSlow 4s ease-in-out infinite',
+                        'float': 'float 6s ease-in-out infinite',
+                    },
+                    keyframes: {
+                        fadeIn: {
+                            '0%': { opacity: '0' },
+                            '100%': { opacity: '1' },
+                        },
+                        slideUp: {
+                            '0%': { opacity: '0', transform: 'translateY(20px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' },
+                        },
+                        pulseSlow: {
+                            '0%, 100%': { opacity: '0.4' },
+                            '50%': { opacity: '0.6' },
+                        },
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-10px)' },
+                        },
+                    },
+                }
+            }
+        }
+    </script>
+    
     <!-- Open Graph -->
     <meta property="og:title" content="{{meta_title}}">
     <meta property="og:description" content="{{meta_description}}">
     <meta property="og:type" content="website">
-
-    <!-- Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-
+    <meta property="og:url" content="{{canonical_url}}">
+    
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="{{meta_title}}">
+    <meta name="twitter:description" content="{{meta_description}}">
+    
     <!-- FAQ Schema -->
     <script type="application/ld+json">
-        {
-            "@context": "https://schema.org",
-            "@type": "FAQPage",
-            "mainEntity": [
-                {{#each faqs}}
+    {
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        "mainEntity": [
+            {{#each faqs}}
+            {
+                "@type": "Question",
+                "name": "{{question}}",
+                "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "{{answer}}"
+                }
+            }{{#unless @last}},{{/unless}}
+            {{/each}}
+        ]
+    }
+    </script>
+    
+    <!-- LocalBusiness Schema -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "InsuranceAgency",
+        "name": "{{site_name}}",
+        "description": "{{meta_description}}",
+        "url": "{{canonical_url}}",
+        "areaServed": {
+            "@type": "{{#if city_name}}City{{else}}State{{/if}}",
+            "name": "{{city_name}}{{state_name}}"
+        },
+        "hasOfferCatalog": {
+            "@type": "OfferCatalog",
+            "name": "Insurance Services",
+            "itemListElement": [
                 {
-                    "@type": "Question",
-                    "name": "{{question}}",
-                    "acceptedAnswer": {
-                        "@type": "Answer",
-                        "text": "{{answer}}"
+                    "@type": "Offer",
+                    "itemOffered": {
+                        "@type": "Service",
+                        "name": "{{insurance_type_name}}"
                     }
-                } {{#unless @last}}, {{/unless}}
-                {{/each}}
+                }
             ]
         }
+    }
     </script>
+    
+    <!-- Breadcrumb Schema -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+            {
+                "@type": "ListItem",
+                "position": 1,
+                "name": "Home",
+                "item": "{{base_url}}"
+            },
+            {
+                "@type": "ListItem",
+                "position": 2,
+                "name": "{{insurance_type_name}}",
+                "item": "{{base_url}}/{{insurance_type_slug}}"
+            },
+            {
+                "@type": "ListItem",
+                "position": 3,
+                "name": "{{state_name}}",
+                "item": "{{base_url}}/{{insurance_type_slug}}/{{state_code_lower}}"
+            }
+            {{#if city_name}},
+            {
+                "@type": "ListItem",
+                "position": 4,
+                "name": "{{city_name}}",
+                "item": "{{canonical_url}}"
+            }
+            {{/if}}
+        ]
+    }
+    </script>
+    
+    <style>
+        /* Custom styles beyond Tailwind */
+        .gradient-text {
+            background: linear-gradient(135deg, #2563eb 0%, #0891b2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .hero-gradient {
+            background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 50%, #0f172a 100%);
+        }
+        
+        .cta-gradient {
+            background: linear-gradient(135deg, #2563eb 0%, #059669 100%);
+        }
+        
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .card-hover {
+            transition: all 0.3s ease;
+        }
+        
+        .card-hover:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.15);
+        }
+        
+        .shine-effect {
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .shine-effect::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+        
+        .shine-effect:hover::before {
+            left: 100%;
+        }
+        
+        /* Smooth scroll */
+        html {
+            scroll-behavior: smooth;
+        }
+        
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+        
+        /* Animation delays */
+        .delay-100 { animation-delay: 100ms; }
+        .delay-200 { animation-delay: 200ms; }
+        .delay-300 { animation-delay: 300ms; }
+        .delay-400 { animation-delay: 400ms; }
+        .delay-500 { animation-delay: 500ms; }
+    </style>
 </head>
+<body class="font-sans antialiased bg-slate-50">
+    
+    <!-- Header -->
+    <header class="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-b border-slate-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <!-- Logo -->
+                <a href="/" class="flex items-center gap-2 group">
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600 to-cyan-500 flex items-center justify-center shadow-lg group-hover:shadow-xl transition-shadow">
+                        <svg class="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <span class="text-xl font-bold text-slate-900">MyInsurance</span>
+                        <span class="text-xl font-bold text-blue-600">Buddy</span>
+                    </div>
+                </a>
+                
+                <!-- Trust Badge -->
+                <div class="hidden md:flex items-center gap-4">
+                    <div class="flex items-center gap-2 text-sm text-slate-600">
+                        <svg class="w-5 h-5 text-emerald-500" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                        </svg>
+                        <span class="font-medium">Licensed in all 50 states</span>
+                    </div>
+                    <a href="tel:1-855-205-2412" class="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-700 transition-colors">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
+                        </svg>
+                        1-855-205-2412
+                    </a>
+                </div>
+            </div>
+        </div>
+    </header>
 
-<body>
     <!-- Hero Section -->
-    <section class="hero">
-        <div class="container">
+    <section class="hero-gradient pt-32 pb-20 relative overflow-hidden">
+        <!-- Background decorations -->
+        <div class="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
+            <div class="absolute top-20 left-10 w-72 h-72 bg-blue-500/20 rounded-full blur-3xl animate-pulse-slow"></div>
+            <div class="absolute bottom-20 right-10 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl animate-pulse-slow" style="animation-delay: 2s;"></div>
+            <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-blue-600/5 rounded-full blur-3xl"></div>
+        </div>
+        
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
             <!-- Breadcrumb -->
-            <nav class="breadcrumb" aria-label="Breadcrumb">
-                <a href="/">Home</a>
-                <span class="separator">›</span>
-                <a href="/car-insurance">Car Insurance</a>
-                <span class="separator">›</span>
-                <a href="/car-insurance/{{state_code_lower}}">{{state_name}}</a>
-                {{#if city_name}}
-                <span class="separator">›</span>
-                <span class="current">{{city_name}}</span>
-                {{/if}}
+            <nav class="flex items-center gap-2 text-sm text-slate-400 mb-8 opacity-0 animate-fade-in" aria-label="Breadcrumb">
+                <a href="/" class="hover:text-white transition-colors">Home</a>
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                </svg>
+                <a href="/{{insurance_type_slug}}" class="hover:text-white transition-colors">{{insurance_type_name}}</a>
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                </svg>
+                <span class="text-white">{{state_name}}{{#if city_name}} - {{city_name}}{{/if}}</span>
             </nav>
-
-            <div class="hero-content">
-                <div class="hero-text">
-                    <h1>{{h1_title}}</h1>
-                    <p class="tagline">{{hero_tagline}}</p>
-                    <p class="description">{{hero_description}}</p>
-
-                    <!-- ZIP Form -->
-                    <form class="zip-form" action="{{cta_url}}" method="get">
-                        <div class="zip-input-wrapper">
-                            <input type="text" name="zip" placeholder="Enter ZIP Code" pattern="[0-9]{5}" maxlength="5"
-                                required>
-                            <button type="submit">Get Free Quotes</button>
-                        </div>
-                    </form>
-
+            
+            <div class="grid lg:grid-cols-2 gap-12 items-center">
+                <!-- Left content -->
+                <div class="opacity-0 animate-slide-up">
+                    <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-500/20 border border-blue-400/30 text-blue-300 text-sm font-semibold mb-6">
+                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"/>
+                        </svg>
+                        {{#if city_name}}{{city_name}}, {{/if}}{{state_name}}
+                    </div>
+                    
+                    <h1 class="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6 leading-tight">
+                        {{h1_title}}
+                    </h1>
+                    
+                    <p class="text-xl text-slate-300 mb-4 font-medium">{{hero_tagline}}</p>
+                    
+                    <p class="text-lg text-slate-400 mb-8 leading-relaxed">{{hero_description}}</p>
+                    
+                    <!-- Lead Capture Form -->
+                    <div class="bg-white rounded-2xl p-2 shadow-2xl max-w-md opacity-0 animate-slide-up delay-200">
+                        <form action="{{cta_url}}" method="get" class="flex gap-2">
+                            <div class="flex-1 relative">
+                                <svg class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                </svg>
+                                <input 
+                                    type="text" 
+                                    name="zip" 
+                                    placeholder="Enter ZIP Code" 
+                                    pattern="[0-9]{5}" 
+                                    maxlength="5"
+                                    required
+                                    class="w-full pl-12 pr-4 py-4 bg-slate-50 border-0 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium"
+                                >
+                            </div>
+                            <button 
+                                type="submit" 
+                                class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-6 py-4 rounded-xl transition-all hover:shadow-lg hover:-translate-y-0.5 whitespace-nowrap shine-effect"
+                            >
+                                Get Quotes
+                            </button>
+                        </form>
+                    </div>
+                    
                     <!-- Trust Badges -->
-                    <div class="trust-badges">
-                        <div class="badge">
-                            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                    <div class="flex flex-wrap items-center gap-6 mt-6 opacity-0 animate-fade-in delay-300">
+                        <div class="flex items-center gap-2 text-sm text-slate-400">
+                            <svg class="w-5 h-5 text-emerald-400" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
                             </svg>
                             <span>Compare 100+ Companies</span>
                         </div>
-                        <div class="badge">
-                            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
-                                <polyline points="22 4 12 14.01 9 11.01" />
+                        <div class="flex items-center gap-2 text-sm text-slate-400">
+                            <svg class="w-5 h-5 text-emerald-400" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
                             </svg>
-                            <span>Free Quotes</span>
+                            <span>Free - No Obligation</span>
                         </div>
-                        <div class="badge">
-                            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <circle cx="12" cy="12" r="10" />
-                                <line x1="4.93" y1="4.93" x2="19.07" y2="19.07" />
+                        <div class="flex items-center gap-2 text-sm text-slate-400">
+                            <svg class="w-5 h-5 text-emerald-400" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
                             </svg>
                             <span>No Spam Calls</span>
                         </div>
                     </div>
                 </div>
+                
+                <!-- Right content - Visual -->
+                <div class="hidden lg:block relative opacity-0 animate-fade-in delay-200">
+                    <div class="relative">
+                        <!-- Main illustration -->
+                        <div class="bg-white/10 backdrop-blur-sm rounded-3xl p-8 border border-white/20">
+                            <!-- Insurance Card Visualization -->
+                            <div class="bg-gradient-to-br from-blue-600 to-cyan-500 rounded-2xl p-6 shadow-2xl mb-6">
+                                <div class="flex items-center justify-between mb-8">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
+                                            <svg class="w-7 h-7 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                                            </svg>
+                                        </div>
+                                        <div>
+                                            <p class="text-white/70 text-sm">Insurance Coverage</p>
+                                            <p class="text-white font-bold text-lg">{{insurance_type_name}}</p>
+                                        </div>
+                                    </div>
+                                    <div class="text-right">
+                                        <p class="text-white/70 text-sm">Est. Quote</p>
+                                        <p class="text-white font-bold text-2xl">${{avg_rate}}/mo</p>
+                                    </div>
+                                </div>
+                                <div class="space-y-3">
+                                    <div class="flex items-center gap-3 text-white/90">
+                                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                        </svg>
+                                        <span class="text-sm">Full Coverage Included</span>
+                                    </div>
+                                    <div class="flex items-center gap-3 text-white/90">
+                                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                        </svg>
+                                        <span class="text-sm">24/7 Claims Support</span>
+                                    </div>
+                                    <div class="flex items-center gap-3 text-white/90">
+                                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                        </svg>
+                                        <span class="text-sm">Multiple Discounts Available</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Stats -->
+                            <div class="grid grid-cols-3 gap-4">
+                                <div class="bg-white/10 rounded-xl p-4 text-center">
+                                    <p class="text-3xl font-bold text-white mb-1">100+</p>
+                                    <p class="text-white/60 text-sm">Providers</p>
+                                </div>
+                                <div class="bg-white/10 rounded-xl p-4 text-center">
+                                    <p class="text-3xl font-bold text-white mb-1">8M+</p>
+                                    <p class="text-white/60 text-sm">Customers</p>
+                                </div>
+                                <div class="bg-white/10 rounded-xl p-4 text-center">
+                                    <p class="text-3xl font-bold text-white mb-1">${{savings_amount}}</p>
+                                    <p class="text-white/60 text-sm">Avg Savings</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Floating badge -->
+                        <div class="absolute -bottom-4 -right-4 bg-emerald-500 text-white px-4 py-2 rounded-full font-bold shadow-lg animate-float">
+                            <div class="flex items-center gap-2">
+                                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                </svg>
+                                <span>Licensed & Verified</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </section>
 
-    <!-- State Requirements -->
-    <section class="requirements">
-        <div class="container">
-            <div class="requirements-box">
-                <div class="requirements-header">
-                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-                    </svg>
-                    <h2>{{state_name}} Minimum Requirements</h2>
-                </div>
-
-                <div class="coverage-display">
-                    <span class="coverage-format">{{coverage_format}}</span>
-                    <span class="coverage-label">Coverage Format</span>
-                </div>
-
-                <div class="coverage-breakdown">
-                    <div class="coverage-item">
-                        <span class="amount">${{bodily_injury_per_person}}K</span>
-                        <span class="label">Bodily Injury<br>Per Person</span>
+    <!-- State Requirements Section -->
+    <section class="py-16 bg-white">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="bg-slate-50 rounded-3xl p-8 border border-slate-200 card-hover">
+                <div class="flex items-center gap-3 mb-6">
+                    <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
+                        <svg class="w-6 h-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                        </svg>
                     </div>
-                    <div class="coverage-item">
-                        <span class="amount">${{bodily_injury_per_accident}}K</span>
-                        <span class="label">Bodily Injury<br>Per Accident</span>
+                    <h2 class="text-2xl font-bold text-slate-900">{{state_name}} Minimum Requirements</h2>
+                </div>
+                
+                <!-- Coverage Format Display -->
+                <div class="bg-slate-900 rounded-2xl p-6 mb-6 text-center">
+                    <p class="text-4xl md:text-5xl font-bold text-blue-400 mb-2">{{coverage_format}}</p>
+                    <p class="text-slate-400 text-sm uppercase tracking-wide">Required Coverage Format</p>
+                </div>
+                
+                <!-- Coverage Breakdown -->
+                <div class="grid md:grid-cols-3 gap-4 mb-6">
+                    <div class="bg-white rounded-xl p-4 text-center border border-slate-200">
+                        <p class="text-2xl font-bold text-slate-900 mb-1">${{bodily_injury_per_person}}K</p>
+                        <p class="text-slate-500 text-sm">Bodily Injury<br>Per Person</p>
                     </div>
-                    <div class="coverage-item">
-                        <span class="amount">${{property_damage}}K</span>
-                        <span class="label">Property<br>Damage</span>
+                    <div class="bg-white rounded-xl p-4 text-center border border-slate-200">
+                        <p class="text-2xl font-bold text-slate-900 mb-1">${{bodily_injury_per_accident}}K</p>
+                        <p class="text-slate-500 text-sm">Bodily Injury<br>Per Accident</p>
+                    </div>
+                    <div class="bg-white rounded-xl p-4 text-center border border-slate-200">
+                        <p class="text-2xl font-bold text-slate-900 mb-1">${{property_damage}}K</p>
+                        <p class="text-slate-500 text-sm">Property<br>Damage</p>
                     </div>
                 </div>
-
-                <div class="state-tags">
+                
+                <!-- Tags -->
+                <div class="flex flex-wrap gap-3">
                     {{#if is_no_fault}}
-                    <span class="tag tag-info">No-Fault State</span>
+                    <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-blue-50 text-blue-700 text-sm font-medium border border-blue-200">
+                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+                        </svg>
+                        No-Fault State
+                    </span>
                     {{else}}
-                    <span class="tag tag-muted">At-Fault State</span>
+                    <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-100 text-slate-600 text-sm font-medium border border-slate-200">
+                        At-Fault State
+                    </span>
                     {{/if}}
-
                     {{#if pip_required}}
-                    <span class="tag tag-warning">PIP Required</span>
+                    <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-50 text-amber-700 text-sm font-medium border border-amber-200">
+                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                        </svg>
+                        PIP Required
+                    </span>
                     {{/if}}
-
                     {{#if um_required}}
-                    <span class="tag tag-warning">UM/UIM Required</span>
+                    <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-50 text-amber-700 text-sm font-medium border border-amber-200">
+                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                        </svg>
+                        UM/UIM Required
+                    </span>
                     {{/if}}
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- Intro Content -->
-    <section class="intro-content">
-        <div class="container">
-            <div class="content-wrapper">
-                <p>{{intro_paragraph_1}}</p>
-                <p>{{intro_paragraph_2}}</p>
-                <p>{{intro_paragraph_3}}</p>
-
-                <!-- State Insights -->
-                <div class="insights-grid">
-                    <div class="insight-card insight-challenge">
-                        <div class="insight-icon">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <circle cx="12" cy="12" r="10" />
-                                <line x1="12" y1="8" x2="12" y2="12" />
-                                <line x1="12" y1="16" x2="12.01" y2="16" />
-                            </svg>
-                        </div>
-                        <h3>Unique Challenge</h3>
-                        <p>{{state_insights_uniqueChallenge}}</p>
+    <!-- Main Content -->
+    <section class="py-16 bg-slate-50">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+            <!-- Intro -->
+            <div class="prose prose-lg max-w-none mb-12">
+                <p class="text-slate-600 leading-relaxed text-lg">{{intro_paragraph_1}}</p>
+                <p class="text-slate-600 leading-relaxed text-lg">{{intro_paragraph_2}}</p>
+                <p class="text-slate-600 leading-relaxed text-lg">{{intro_paragraph_3}}</p>
+            </div>
+            
+            <!-- State Insights -->
+            <div class="grid md:grid-cols-3 gap-6 mb-12">
+                <!-- Challenge Card -->
+                <div class="bg-white rounded-2xl p-6 border border-slate-200 card-hover">
+                    <div class="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center mb-4">
+                        <svg class="w-6 h-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
                     </div>
-
-                    <div class="insight-card insight-saving">
-                        <div class="insight-icon">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <circle cx="12" cy="12" r="10" />
-                                <path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8" />
-                                <line x1="12" y1="6" x2="12" y2="18" />
-                            </svg>
-                        </div>
-                        <h3>Saving Opportunity</h3>
-                        <p>{{state_insights_savingOpportunity}}</p>
-                    </div>
-
-                    <div class="insight-card insight-mistake">
-                        <div class="insight-icon">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path
-                                    d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
-                                <line x1="12" y1="9" x2="12" y2="13" />
-                                <line x1="12" y1="17" x2="12.01" y2="17" />
-                            </svg>
-                        </div>
-                        <h3>Common Mistake</h3>
-                        <p>{{state_insights_commonMistake}}</p>
-                    </div>
+                    <h3 class="text-lg font-bold text-slate-900 mb-2">Unique Challenge</h3>
+                    <p class="text-slate-600 text-sm leading-relaxed">{{state_insights_uniqueChallenge}}</p>
                 </div>
-
-                <a href="{{cta_url}}" class="btn btn-primary btn-large">Get Your Free Quote</a>
+                
+                <!-- Savings Card -->
+                <div class="bg-white rounded-2xl p-6 border border-slate-200 card-hover">
+                    <div class="w-12 h-12 bg-emerald-50 rounded-xl flex items-center justify-center mb-4">
+                        <svg class="w-6 h-6 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                    </div>
+                    <h3 class="text-lg font-bold text-slate-900 mb-2">Saving Opportunity</h3>
+                    <p class="text-slate-600 text-sm leading-relaxed">{{state_insights_savingOpportunity}}</p>
+                </div>
+                
+                <!-- Mistake Card -->
+                <div class="bg-white rounded-2xl p-6 border border-slate-200 card-hover">
+                    <div class="w-12 h-12 bg-amber-50 rounded-xl flex items-center justify-center mb-4">
+                        <svg class="w-6 h-6 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                        </svg>
+                    </div>
+                    <h3 class="text-lg font-bold text-slate-900 mb-2">Common Mistake</h3>
+                    <p class="text-slate-600 text-sm leading-relaxed">{{state_insights_commonMistake}}</p>
+                </div>
+            </div>
+            
+            <!-- CTA Button -->
+            <div class="text-center">
+                <a href="{{cta_url}}" class="inline-flex items-center gap-2 bg-blue-600 text-white px-8 py-4 rounded-xl font-bold text-lg hover:bg-blue-700 transition-all hover:shadow-lg hover:-translate-y-0.5">
+                    Get Your Free Quote
+                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
+                    </svg>
+                </a>
             </div>
         </div>
     </section>
 
     <!-- Local Factors -->
-    <section class="local-factors">
-        <div class="container">
-            <div class="section-header">
-                <span class="section-badge">Local Insights</span>
-                <h2>Factors Affecting Your Rates in {{city_name}}{{^city_name}}{{state_name}}{{/city_name}}</h2>
-                <p>Understanding what impacts your premium helps you find better deals</p>
+    <section class="py-16 bg-white">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-12">
+                <span class="inline-block px-4 py-1.5 rounded-full bg-blue-50 text-blue-700 text-sm font-semibold mb-4">Local Insights</span>
+                <h2 class="text-3xl font-bold text-slate-900 mb-4">Factors Affecting Your Rates in {{city_name}}{{^city_name}}{{state_name}}{{/city_name}}</h2>
+                <p class="text-slate-600 max-w-2xl mx-auto">Understanding what impacts your premium helps you find better deals</p>
             </div>
-
-            <div class="factors-grid">
+            
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {{#each local_factors}}
-                <div class="factor-card">
-                    <div class="factor-icon factor-icon-{{factor_slug}}">
-                        <!-- Icon inserted via CSS background or inline -->
+                <div class="bg-slate-50 rounded-2xl p-6 border border-slate-200 card-hover">
+                    <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
+                        <span class="text-xl font-bold text-blue-600">{{index}}</span>
                     </div>
-                    <h3>{{factor}}</h3>
-                    <p class="impact">{{impact}}</p>
-                    <div class="tip">
-                        <strong>Pro Tip:</strong> {{tip}}
+                    <h3 class="text-lg font-bold text-slate-900 mb-2">{{factor}}</h3>
+                    <p class="text-slate-600 text-sm mb-4">{{impact}}</p>
+                    <div class="bg-white rounded-lg p-3 border-l-4 border-blue-500">
+                        <p class="text-sm text-slate-700"><span class="font-semibold text-blue-600">Pro Tip:</span> {{tip}}</p>
                     </div>
                 </div>
                 {{/each}}
@@ -229,129 +608,83 @@
     </section>
 
     <!-- Coverage Tips -->
-    <section class="coverage-tips">
-        <div class="container">
-            <div class="section-header">
-                <span class="section-badge">Expert Advice</span>
-                <h2>Coverage Tips for {{state_name}} Drivers</h2>
-                <p>Maximize your protection while minimizing costs</p>
+    <section class="py-16 bg-slate-50">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-12">
+                <span class="inline-block px-4 py-1.5 rounded-full bg-emerald-50 text-emerald-700 text-sm font-semibold mb-4">Expert Advice</span>
+                <h2 class="text-3xl font-bold text-slate-900 mb-4">Coverage Tips for {{state_name}} Drivers</h2>
+                <p class="text-slate-600">Maximize your protection while minimizing costs</p>
             </div>
-
-            <div class="tips-list">
+            
+            <div class="space-y-4">
                 {{#each coverage_tips}}
-                <div class="tip-item">
-                    <div class="tip-check">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
-                            <polyline points="22 4 12 14.01 9 11.01" />
+                <div class="flex items-start gap-4 bg-white rounded-xl p-5 border border-slate-200 card-hover">
+                    <div class="w-8 h-8 bg-emerald-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <svg class="w-4 h-4 text-emerald-600" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
                         </svg>
                     </div>
-                    <p>{{this}}</p>
+                    <p class="text-slate-700">{{this}}</p>
                 </div>
                 {{/each}}
             </div>
         </div>
     </section>
 
-    <!-- Discounts -->
-    <section class="discounts">
-        <div class="container">
-            <div class="section-header">
-                <span class="section-badge">Save More</span>
-                <h2>Available Discounts</h2>
-                <p>Maximize your savings with these common insurance discounts</p>
+    <!-- Top Insurers -->
+    <section class="py-16 bg-white">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-12">
+                <span class="inline-block px-4 py-1.5 rounded-full bg-amber-50 text-amber-700 text-sm font-semibold mb-4">Top Rated</span>
+                <h2 class="text-3xl font-bold text-slate-900 mb-4">Best Insurance Companies in {{state_name}}</h2>
+                <p class="text-slate-600">Compare the best insurers and find your perfect match</p>
             </div>
-
-            <div class="discounts-grid">
-                {{#each discounts_list}}
-                <div class="discount-card">
-                    <div class="discount-info">
-                        <div class="discount-icon">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
-                            </svg>
-                        </div>
-                        <div>
-                            <h3>{{name}}</h3>
-                            <p>{{description}}</p>
-                        </div>
-                    </div>
-                    <div class="discount-savings">{{savings}}</div>
-                </div>
-                {{/each}}
-            </div>
-
-            <p class="disclaimer">* Discount availability and amounts vary by insurer and location</p>
-        </div>
-    </section>
-
-    <!-- Insurer Comparison -->
-    <section class="insurers">
-        <div class="container">
-            <div class="section-header">
-                <span class="section-badge">Top Rated</span>
-                <h2>Top Insurance Companies in {{state_name}}</h2>
-                <p>Compare the best insurers and find your perfect match</p>
-            </div>
-
-            <div class="insurers-grid">
+            
+            <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
                 {{#each top_insurers}}
-                <div class="insurer-card">
-                    <div class="insurer-header">
-                        <h3>{{name}}</h3>
-                        <div class="rating">
-                            <svg viewBox="0 0 24 24" fill="currentColor">
-                                <polygon
-                                    points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-                            </svg>
-                            <span>{{rating}}</span>
-                        </div>
+                <div class="bg-white rounded-2xl p-6 border-2 border-slate-100 hover:border-blue-500 transition-all card-hover text-center">
+                    <div class="w-16 h-16 bg-slate-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                        <span class="text-2xl font-bold text-slate-400">{{name.[0]}}</span>
                     </div>
-                    <p class="best-for">{{bestFor}}</p>
-                    <a href="{{cta_url}}?insurer={{slug}}" class="btn btn-outline">Get Quote</a>
+                    <h3 class="text-lg font-bold text-slate-900 mb-1">{{name}}</h3>
+                    <div class="flex items-center justify-center gap-1 mb-3">
+                        <svg class="w-5 h-5 text-amber-400" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                        </svg>
+                        <span class="font-bold text-slate-900">{{rating}}</span>
+                    </div>
+                    <p class="text-sm text-slate-600 mb-4">{{bestFor}}</p>
+                    <a href="{{cta_url}}?insurer={{slug}}" class="block w-full bg-slate-100 text-slate-700 py-2.5 rounded-lg font-semibold hover:bg-blue-600 hover:text-white transition-colors">
+                        Get Quote
+                    </a>
                 </div>
                 {{/each}}
             </div>
-
-            <p class="disclaimer">Rates vary by location, driving history, and coverage needs</p>
+            
+            <p class="text-center text-sm text-slate-500 mt-8">Rates vary by location, driving history, and coverage needs. Updated monthly.</p>
         </div>
     </section>
 
-    <!-- Neighborhood Guide (City pages only) -->
-    {{#if neighborhood_guide}}
-    <section class="neighborhood">
-        <div class="container">
-            <div class="neighborhood-box">
-                <div class="neighborhood-icon">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
-                        <circle cx="12" cy="10" r="3" />
-                    </svg>
-                </div>
-                <div class="neighborhood-content">
-                    <h2>How Your {{city_name}} Neighborhood Affects Rates</h2>
-                    <p>{{neighborhood_guide}}</p>
-                </div>
+    <!-- FAQ Section -->
+    <section class="py-16 bg-slate-50">
+        <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-12">
+                <span class="inline-block px-4 py-1.5 rounded-full bg-purple-50 text-purple-700 text-sm font-semibold mb-4">Common Questions</span>
+                <h2 class="text-3xl font-bold text-slate-900 mb-4">Frequently Asked Questions</h2>
+                <p class="text-slate-600">Quick answers about {{insurance_type_name}} in {{state_name}}</p>
             </div>
-        </div>
-    </section>
-    {{/if}}
-
-    <!-- FAQ -->
-    <section class="faq">
-        <div class="container">
-            <div class="section-header">
-                <span class="section-badge">Common Questions</span>
-                <h2>Frequently Asked Questions</h2>
-                <p>Quick answers about car insurance in {{state_name}}</p>
-            </div>
-
-            <div class="faq-list">
+            
+            <div class="space-y-4">
                 {{#each faqs}}
-                <details class="faq-item">
-                    <summary>{{question}}</summary>
-                    <div class="faq-answer">
-                        <p>{{answer}}</p>
+                <details class="group bg-white rounded-xl border border-slate-200 overflow-hidden">
+                    <summary class="flex items-center justify-between p-6 cursor-pointer hover:bg-slate-50 transition-colors">
+                        <span class="font-semibold text-slate-900 pr-4">{{question}}</span>
+                        <svg class="w-5 h-5 text-slate-400 group-open:rotate-180 transition-transform flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                        </svg>
+                    </summary>
+                    <div class="px-6 pb-6 text-slate-600 leading-relaxed">
+                        {{answer}}
                     </div>
                 </details>
                 {{/each}}
@@ -360,41 +693,134 @@
     </section>
 
     <!-- Final CTA -->
-    <section class="cta-banner">
-        <div class="container">
-            <div class="cta-content">
-                <h2>Ready to Save on Car Insurance?</h2>
-                <p>{{cta_subtext}}</p>
-
-                <form class="zip-form" action="{{cta_url}}" method="get">
-                    <div class="zip-input-wrapper">
-                        <input type="text" name="zip" placeholder="Enter ZIP Code" pattern="[0-9]{5}" maxlength="5"
-                            required>
-                        <button type="submit">{{cta_text}}</button>
+    <section class="cta-gradient py-20 relative overflow-hidden">
+        <!-- Background decoration -->
+        <div class="absolute inset-0 overflow-hidden pointer-events-none">
+            <div class="absolute top-0 left-1/4 w-96 h-96 bg-white/10 rounded-full blur-3xl"></div>
+            <div class="absolute bottom-0 right-1/4 w-96 h-96 bg-white/5 rounded-full blur-3xl"></div>
+        </div>
+        
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
+            <h2 class="text-3xl md:text-4xl font-bold text-white mb-4">Ready to Save on {{insurance_type_name}}?</h2>
+            <p class="text-lg text-white/80 mb-8 max-w-2xl mx-auto">{{cta_subtext}}</p>
+            
+            <!-- Form -->
+            <div class="bg-white rounded-2xl p-3 shadow-2xl max-w-lg mx-auto mb-8">
+                <form action="{{cta_url}}" method="get" class="flex flex-col sm:flex-row gap-2">
+                    <div class="flex-1 relative">
+                        <svg class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                        </svg>
+                        <input 
+                            type="text" 
+                            name="zip" 
+                            placeholder="Enter ZIP Code" 
+                            pattern="[0-9]{5}" 
+                            maxlength="5"
+                            required
+                            class="w-full pl-12 pr-4 py-4 bg-slate-50 border-0 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium"
+                        >
                     </div>
+                    <button 
+                        type="submit" 
+                        class="bg-slate-900 hover:bg-slate-800 text-white font-bold px-8 py-4 rounded-xl transition-all hover:shadow-lg whitespace-nowrap"
+                    >
+                        {{cta_text}}
+                    </button>
                 </form>
-
-                <div class="trust-badges">
-                    <div class="badge">
-                        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
-                            <polyline points="22 4 12 14.01 9 11.01" />
-                        </svg>
-                        <span>No commitment required</span>
-                    </div>
-                    <div class="badge">
-                        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-                            <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-                        </svg>
-                        <span>Your info is secure</span>
-                    </div>
+            </div>
+            
+            <!-- Trust badges -->
+            <div class="flex flex-wrap items-center justify-center gap-6 text-white/70 text-sm">
+                <div class="flex items-center gap-2">
+                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                    </svg>
+                    <span>No commitment required</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"/>
+                    </svg>
+                    <span>Your info is secure</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                    </svg>
+                    <span>Licensed agents available</span>
                 </div>
             </div>
         </div>
     </section>
 
+    <!-- Footer -->
+    <footer class="bg-slate-900 text-slate-400 py-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid md:grid-cols-4 gap-8 mb-8">
+                <!-- Brand -->
+                <div class="col-span-2">
+                    <a href="/" class="flex items-center gap-2 mb-4">
+                        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600 to-cyan-500 flex items-center justify-center">
+                            <svg class="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                            </svg>
+                        </div>
+                        <span class="text-xl font-bold text-white">MyInsurance<span class="text-blue-500">Buddy</span></span>
+                    </a>
+                    <p class="text-sm mb-4 max-w-sm">We help you compare quotes from 100+ insurance companies to find the best coverage at the lowest price. Licensed in all 50 states.</p>
+                    <div class="flex items-center gap-4">
+                        <a href="#" class="w-8 h-8 bg-slate-800 rounded-lg flex items-center justify-center hover:bg-blue-600 transition-colors">
+                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+                        </a>
+                        <a href="#" class="w-8 h-8 bg-slate-800 rounded-lg flex items-center justify-center hover:bg-blue-400 transition-colors">
+                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z"/></svg>
+                        </a>
+                        <a href="#" class="w-8 h-8 bg-slate-800 rounded-lg flex items-center justify-center hover:bg-pink-600 transition-colors">
+                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
+                        </a>
+                    </div>
+                </div>
+                
+                <!-- Links -->
+                <div>
+                    <h4 class="text-white font-semibold mb-4">Insurance</h4>
+                    <ul class="space-y-2 text-sm">
+                        <li><a href="/car-insurance" class="hover:text-white transition-colors">Car Insurance</a></li>
+                        <li><a href="/home-insurance" class="hover:text-white transition-colors">Home Insurance</a></li>
+                        <li><a href="/life-insurance" class="hover:text-white transition-colors">Life Insurance</a></li>
+                        <li><a href="/health-insurance" class="hover:text-white transition-colors">Health Insurance</a></li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h4 class="text-white font-semibold mb-4">Company</h4>
+                    <ul class="space-y-2 text-sm">
+                        <li><a href="/about" class="hover:text-white transition-colors">About Us</a></li>
+                        <li><a href="/contact" class="hover:text-white transition-colors">Contact</a></li>
+                        <li><a href="/privacy" class="hover:text-white transition-colors">Privacy Policy</a></li>
+                        <li><a href="/terms" class="hover:text-white transition-colors">Terms of Service</a></li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="border-t border-slate-800 pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
+                <p class="text-sm">&copy; {{current_year}} MyInsuranceBuddy. All rights reserved. Licensed insurance agency.</p>
+                <p class="text-xs text-slate-500 max-w-md text-center md:text-right">
+                    Disclaimer: We are not an insurance company. We connect you with insurance providers. Quotes and savings vary.
+                </p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Sticky Mobile CTA -->
+    <div class="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 p-4 z-50">
+        <a href="{{cta_url}}" class="block w-full bg-blue-600 text-white text-center font-bold py-3 rounded-xl hover:bg-blue-700 transition-colors">
+            Get Free Quotes
+        </a>
+    </div>
+    <div class="md:hidden h-20"></div><!-- Spacer for sticky button -->
 
 </body>
-
 </html>

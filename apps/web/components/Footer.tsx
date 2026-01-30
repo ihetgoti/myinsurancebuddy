@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Shield, Facebook, Twitter, Instagram, Linkedin, Heart } from 'lucide-react';
+import { Shield, Facebook, Twitter, Instagram, Linkedin, Mail, Phone, MapPin, CheckCircle, Award, Star } from 'lucide-react';
 
 interface InsuranceType {
     id: string;
@@ -15,130 +15,193 @@ interface FooterProps {
 export default function Footer({ insuranceTypes = [] }: FooterProps) {
     const currentYear = new Date().getFullYear();
 
-    const popularStates = [
-        { name: 'California', slug: 'california' },
-        { name: 'Texas', slug: 'texas' },
-        { name: 'Florida', slug: 'florida' },
-        { name: 'New York', slug: 'new-york' },
-        { name: 'New Jersey', slug: 'new-jersey' },
-        { name: 'Virginia', slug: 'virginia' },
-    ];
+    const footerLinks = {
+        insurance: [
+            { name: 'Car Insurance', href: '/car-insurance' },
+            { name: 'Home Insurance', href: '/home-insurance' },
+            { name: 'Life Insurance', href: '/life-insurance' },
+            { name: 'Health Insurance', href: '/health-insurance' },
+            { name: 'Business Insurance', href: '/business-insurance' },
+            { name: 'Pet Insurance', href: '/pet-insurance' },
+        ],
+        resources: [
+            { name: 'Insurance Guides', href: '/guides' },
+            { name: 'Blog & News', href: '/blog' },
+            { name: 'Calculators', href: '/tools' },
+            { name: 'Coverage by State', href: '/states' },
+            { name: 'FAQ', href: '/faq' },
+            { name: 'Glossary', href: '/glossary' },
+        ],
+        company: [
+            { name: 'About Us', href: '/about' },
+            { name: 'Contact Support', href: '/contact' },
+            { name: 'Careers', href: '/careers' },
+            { name: 'Press', href: '/press' },
+        ],
+        legal: [
+            { name: 'Privacy Policy', href: '/privacy' },
+            { name: 'Terms of Service', href: '/terms' },
+            { name: 'Cookie Policy', href: '/cookies' },
+            { name: 'Do Not Sell', href: '/do-not-sell' },
+        ]
+    };
 
     return (
-        <footer className="bg-slate-900 text-slate-400 border-t border-slate-800">
-            {/* Main Footer Content */}
-            <div className="container mx-auto px-4 py-16 max-w-7xl">
-                <div className="grid md:grid-cols-2 lg:grid-cols-12 gap-12 lg:gap-8">
+        <footer className="bg-slate-900 text-slate-400">
+            {/* Trust Bar */}
+            <div className="border-b border-slate-800">
+                <div className="container mx-auto px-4 py-6">
+                    <div className="flex flex-wrap items-center justify-center md:justify-between gap-6">
+                        <div className="flex items-center gap-2">
+                            <Award className="w-5 h-5 text-amber-400" />
+                            <span className="text-sm font-medium">A+ BBB Rating</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <CheckCircle className="w-5 h-5 text-emerald-400" />
+                            <span className="text-sm font-medium">Licensed in All 50 States</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <Star className="w-5 h-5 text-amber-400" />
+                            <span className="text-sm font-medium">4.8/5 Customer Rating</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <Shield className="w-5 h-5 text-blue-400" />
+                            <span className="text-sm font-medium">256-bit SSL Secure</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-                    {/* Brand Column (Col Span 4) */}
-                    <div className="lg:col-span-4">
-                        <Link href="/" className="flex items-center gap-3 mb-6 group inline-block">
-                            {/* Professional Gradient Logo */}
-                            <svg viewBox="0 0 32 32" className="w-10 h-10 drop-shadow-lg">
-                                <defs>
-                                    <linearGradient id="footerShieldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                                        <stop offset="0%" stopColor="#0EA5E9"/>
-                                        <stop offset="50%" stopColor="#2563EB"/>
-                                        <stop offset="100%" stopColor="#7C3AED"/>
-                                    </linearGradient>
-                                </defs>
-                                <path d="M16 2L4 7V16C4 24.28 9.48 31.64 16 34C22.52 31.64 28 24.28 28 16V7L16 2Z" fill="url(#footerShieldGrad)"/>
-                                <path d="M12 17L15 20L21 14" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
-                            </svg>
+            {/* Main Footer Content */}
+            <div className="container mx-auto px-4 py-16">
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-8 lg:gap-12">
+                    {/* Brand Column */}
+                    <div className="col-span-2">
+                        <Link href="/" className="flex items-center gap-3 mb-6 group">
+                            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-600 to-cyan-500 flex items-center justify-center shadow-lg">
+                                <Shield className="w-7 h-7 text-white" />
+                            </div>
                             <div>
-                                <span className="block text-xl font-bold text-white tracking-tight leading-tight group-hover:text-blue-400 transition-colors">
-                                    MyInsurance<span className="bg-gradient-to-r from-blue-400 to-violet-400 bg-clip-text text-transparent">Buddies</span>
+                                <span className="block text-xl font-bold text-white tracking-tight">
+                                    MyInsurance<span className="text-blue-400">Buddy</span>
                                 </span>
-                                <span className="text-[10px] uppercase font-semibold text-slate-500 tracking-wider">Your Trusted Insurance Guide</span>
+                                <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Your Trusted Guide</span>
                             </div>
                         </Link>
-                        <p className="text-sm leading-relaxed mb-6 text-slate-400 max-w-sm">
-                            We're on a mission to simplify insurance. Our licensed agents help you compare quotes from top carriers to find coverage that fits your life and budget perfectly.
+                        <p className="text-sm leading-relaxed mb-6 text-slate-400 max-w-xs">
+                            We help you compare quotes from 100+ insurance companies to find the best coverage at the lowest price. Licensed in all 50 states.
                         </p>
-                        <div className="flex items-center gap-4">
-                            <SocialLink icon={<Facebook className="w-4 h-4" />} href="#" />
-                            <SocialLink icon={<Twitter className="w-4 h-4" />} href="#" />
-                            <SocialLink icon={<Instagram className="w-4 h-4" />} href="#" />
-                            <SocialLink icon={<Linkedin className="w-4 h-4" />} href="#" />
+                        
+                        {/* Contact Info */}
+                        <div className="space-y-3 mb-6">
+                            <a href="tel:1-855-205-2412" className="flex items-center gap-3 text-sm hover:text-white transition-colors">
+                                <div className="w-8 h-8 bg-slate-800 rounded-lg flex items-center justify-center">
+                                    <Phone className="w-4 h-4" />
+                                </div>
+                                1-855-205-2412
+                            </a>
+                            <a href="mailto:support@myinsurancebuddies.com" className="flex items-center gap-3 text-sm hover:text-white transition-colors">
+                                <div className="w-8 h-8 bg-slate-800 rounded-lg flex items-center justify-center">
+                                    <Mail className="w-4 h-4" />
+                                </div>
+                                support@myinsurancebuddies.com
+                            </a>
+                            <div className="flex items-center gap-3 text-sm">
+                                <div className="w-8 h-8 bg-slate-800 rounded-lg flex items-center justify-center">
+                                    <MapPin className="w-4 h-4" />
+                                </div>
+                                Austin, TX 78701
+                            </div>
+                        </div>
+                        
+                        {/* Social Links */}
+                        <div className="flex items-center gap-3">
+                            <SocialLink icon={<Facebook className="w-4 h-4" />} href="#" label="Facebook" />
+                            <SocialLink icon={<Twitter className="w-4 h-4" />} href="#" label="Twitter" />
+                            <SocialLink icon={<Instagram className="w-4 h-4" />} href="#" label="Instagram" />
+                            <SocialLink icon={<Linkedin className="w-4 h-4" />} href="#" label="LinkedIn" />
                         </div>
                     </div>
 
-                    {/* Links Column 1: Insurance (Col Span 2) */}
-                    <div className="lg:col-span-2">
-                        <h4 className="text-white font-bold text-sm uppercase tracking-wider mb-6">Insurance</h4>
+                    {/* Insurance Links */}
+                    <div>
+                        <h4 className="text-white font-bold text-sm uppercase tracking-wider mb-4">Insurance</h4>
                         <ul className="space-y-3 text-sm">
-                            <li><FooterLink href="/car-insurance">Car Insurance</FooterLink></li>
-                            <li><FooterLink href="/home-insurance">Home Insurance</FooterLink></li>
-                            <li><FooterLink href="/life-insurance">Life Insurance</FooterLink></li>
-                            <li><FooterLink href="/health-insurance">Health Insurance</FooterLink></li>
-                            <li><FooterLink href="/business-insurance">Business Insurance</FooterLink></li>
-                            <li><FooterLink href="/pet-insurance">Pet Insurance</FooterLink></li>
+                            {footerLinks.insurance.map((link) => (
+                                <li key={link.name}>
+                                    <Link href={link.href} className="hover:text-white transition-colors inline-flex items-center gap-1 group">
+                                        {link.name}
+                                        <span className="opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all">→</span>
+                                    </Link>
+                                </li>
+                            ))}
                         </ul>
                     </div>
 
-                    {/* Links Column 2: Resources (Col Span 2) */}
-                    <div className="lg:col-span-2">
-                        <h4 className="text-white font-bold text-sm uppercase tracking-wider mb-6">Resources</h4>
+                    {/* Resources Links */}
+                    <div>
+                        <h4 className="text-white font-bold text-sm uppercase tracking-wider mb-4">Resources</h4>
                         <ul className="space-y-3 text-sm">
-                            <li><FooterLink href="/guides">Insurance Guides</FooterLink></li>
-                            <li><FooterLink href="/blog">Blog & News</FooterLink></li>
-                            <li><FooterLink href="/tools">Calculators</FooterLink></li>
-                            <li><FooterLink href="/states">Coverage by State</FooterLink></li>
-                            <li><FooterLink href="/faq">FAQs</FooterLink></li>
-                            <li><FooterLink href="/glossary">Glossary</FooterLink></li>
+                            {footerLinks.resources.map((link) => (
+                                <li key={link.name}>
+                                    <Link href={link.href} className="hover:text-white transition-colors inline-flex items-center gap-1 group">
+                                        {link.name}
+                                        <span className="opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all">→</span>
+                                    </Link>
+                                </li>
+                            ))}
                         </ul>
                     </div>
 
-                    {/* Links Column 3: Company (Col Span 2) */}
-                    <div className="lg:col-span-2">
-                        <h4 className="text-white font-bold text-sm uppercase tracking-wider mb-6">Company</h4>
+                    {/* Company Links */}
+                    <div>
+                        <h4 className="text-white font-bold text-sm uppercase tracking-wider mb-4">Company</h4>
                         <ul className="space-y-3 text-sm">
-                            <li><FooterLink href="/about">About Us</FooterLink></li>
-                            <li><FooterLink href="/contact">Contact Support</FooterLink></li>
-                            <li><FooterLink href="/privacy">Privacy Policy</FooterLink></li>
-                            <li><FooterLink href="/terms">Terms of Service</FooterLink></li>
+                            {footerLinks.company.map((link) => (
+                                <li key={link.name}>
+                                    <Link href={link.href} className="hover:text-white transition-colors inline-flex items-center gap-1 group">
+                                        {link.name}
+                                        <span className="opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all">→</span>
+                                    </Link>
+                                </li>
+                            ))}
                         </ul>
                     </div>
 
-                    {/* Links Column 4: Contact (Col Span 2) */}
-                    <div className="lg:col-span-2">
-                        <h4 className="text-white font-bold text-sm uppercase tracking-wider mb-6">Contact</h4>
-                        <ul className="space-y-4 text-sm">
-                            <li>
-                                <div className="text-slate-500 text-xs uppercase font-bold mb-1">Call Us</div>
-                                <a href="tel:1-855-205-2412" className="text-white hover:text-blue-400 transition-colors font-medium">1-855-205-2412</a>
-                            </li>
-                            <li>
-                                <div className="text-slate-500 text-xs uppercase font-bold mb-1">Email</div>
-                                <a href="mailto:support@myinsurancebuddies.com" className="text-white hover:text-blue-400 transition-colors font-medium">support@myinsurancebuddies.com</a>
-                            </li>
-                            <li>
-                                <div className="text-slate-500 text-xs uppercase font-bold mb-1">Office</div>
-                                <address className="not-italic text-slate-400">
-                                    123 Insurance Way<br />
-                                    Suite 400<br />
-                                    Austin, TX 78701
-                                </address>
-                            </li>
+                    {/* Legal Links */}
+                    <div>
+                        <h4 className="text-white font-bold text-sm uppercase tracking-wider mb-4">Legal</h4>
+                        <ul className="space-y-3 text-sm">
+                            {footerLinks.legal.map((link) => (
+                                <li key={link.name}>
+                                    <Link href={link.href} className="hover:text-white transition-colors inline-flex items-center gap-1 group">
+                                        {link.name}
+                                        <span className="opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all">→</span>
+                                    </Link>
+                                </li>
+                            ))}
                         </ul>
                     </div>
-
                 </div>
             </div>
 
             {/* Bottom Bar */}
             <div className="border-t border-slate-800 bg-slate-950">
-                <div className="container mx-auto px-4 py-8 max-w-7xl">
-                    <div className="flex flex-col md:flex-row items-center justify-between gap-6 text-xs text-slate-500">
-                        <p>© {currentYear} InsuranceBuddies. All rights reserved. Licensed insurance agency.</p>
-                        <div className="flex items-center gap-6">
-                            <Link href="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link>
-                            <Link href="/terms" className="hover:text-white transition-colors">Terms of Service</Link>
-                            <Link href="/faq" className="hover:text-white transition-colors">FAQs</Link>
+                <div className="container mx-auto px-4 py-6">
+                    <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+                        <p className="text-sm text-slate-500">
+                            &copy; {currentYear} MyInsuranceBuddy. All rights reserved. Licensed insurance agency.
+                        </p>
+                        <div className="flex items-center gap-6 text-sm text-slate-500">
+                            <Link href="/privacy" className="hover:text-white transition-colors">Privacy</Link>
+                            <Link href="/terms" className="hover:text-white transition-colors">Terms</Link>
+                            <Link href="/sitemap" className="hover:text-white transition-colors">Sitemap</Link>
                         </div>
                     </div>
-                    <div className="mt-4 text-[10px] text-slate-600 leading-relaxed text-center md:text-left max-w-4xl">
-                        Disclaimer: MyInsuranceBuddies is not an insurance company. We are a comparison service that connects you with insurance providers. Quotes and savings vary by state and individual factors.
+                    <div className="mt-4 text-xs text-slate-600 leading-relaxed max-w-4xl">
+                        Disclaimer: MyInsuranceBuddy is not an insurance company. We are a licensed insurance comparison service 
+                        that connects you with insurance providers. Quotes and savings vary by state, driving record, and individual factors. 
+                        Not all policies and discounts are available in all states. 
                     </div>
                 </div>
             </div>
@@ -146,21 +209,14 @@ export default function Footer({ insuranceTypes = [] }: FooterProps) {
     );
 }
 
-function SocialLink({ icon, href }: { icon: React.ReactNode, href: string }) {
+function SocialLink({ icon, href, label }: { icon: React.ReactNode, href: string, label: string }) {
     return (
         <a
             href={href}
-            className="w-8 h-8 flex items-center justify-center rounded-full bg-slate-800 text-slate-400 hover:bg-blue-600 hover:text-white transition-all transform hover:-translate-y-1"
+            aria-label={label}
+            className="w-10 h-10 flex items-center justify-center rounded-xl bg-slate-800 text-slate-400 hover:bg-blue-600 hover:text-white transition-all transform hover:-translate-y-1"
         >
             {icon}
         </a>
-    )
-}
-
-function FooterLink({ href, children }: { href: string, children: React.ReactNode }) {
-    return (
-        <Link href={href} className="text-slate-400 hover:text-white hover:translate-x-1 transition-all inline-block">
-            {children}
-        </Link>
-    )
+    );
 }
