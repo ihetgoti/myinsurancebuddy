@@ -38,24 +38,30 @@ async function checkMarketCallOffer(searchParams: { [key: string]: string | stri
 
     try {
         // Find insurance type
-        const insuranceType = type 
-            ? await prisma.insuranceType.findFirst({
-                  where: { slug: type, isActive: true },
-                  select: { id: true, name: true, slug: true }
-              })
-            : null;
+        let insuranceType = null;
+        if (type) {
+            insuranceType = await prisma.insuranceType.findFirst({
+                where: { slug: type, isActive: true },
+                select: { id: true, name: true, slug: true }
+            });
+        }
 
-        // Find best matching offer - include general offers (no insurance type specified)
+        // Build where clause
+        const whereClause: any = {
+            isActive: true,
+            formRedirectUrl: { not: null },
+        };
+
+        // Add insurance type filter
+        if (insuranceType?.id) {
+            whereClause.insuranceTypeId = insuranceType.id;
+        } else {
+            whereClause.insuranceTypeId = null;
+        }
+
+        // Find best matching offer
         const offer = await prisma.callOffer.findFirst({
-            where: {
-                isActive: true,
-                formRedirectUrl: { not: null },
-                // Match insurance type if provided, or get general offers
-                ...(insuranceType?.id
-                    ? { insuranceTypeId: insuranceType.id }
-                    : { insuranceTypeId: null } // General offers
-                ),
-            },
+            where: whereClause,
             orderBy: [
                 { priority: 'desc' },
                 { createdAt: 'desc' },
@@ -174,7 +180,7 @@ export default async function GetQuotePage({
                         What type of insurance are you looking for?
                     </h2>
                     <p className="text-slate-600 text-center mb-10 max-w-xl mx-auto">
-                        Select the insurance type that matches your needs. We'll connect you with the best providers in your area.
+                        Select the insurance type that matches your needs. We&apos;ll connect you with the best providers in your area.
                     </p>
                     
                     <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 max-w-4xl mx-auto">
@@ -223,7 +229,7 @@ export default async function GetQuotePage({
                         {[
                             { step: '1', title: 'Select Your Coverage', desc: 'Choose the type of insurance you need from our comprehensive options.' },
                             { step: '2', title: 'Enter Your ZIP Code', desc: 'We use your location to find the best rates and providers in your area.' },
-                            { step: '3', title: 'Get Connected', desc: 'We'll redirect you to a trusted partner to complete your quote.' },
+                            { step: '3', title: 'Get Connected', desc: 'We&apos;ll redirect you to a trusted partner to complete your quote.' },
                         ].map((item) => (
                             <div key={item.step} className="text-center">
                                 <div className="w-12 h-12 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold text-xl mx-auto mb-4">
