@@ -203,13 +203,13 @@ export default async function HomePage() {
                     <h2 className="text-2xl md:text-3xl font-bold text-slate-900 mb-3">Compare Insurance Quotes</h2>
                     <p className="text-slate-600 mb-8">Enter your ZIP code to get personalized quotes from top providers.</p>
                     
-                    <div className="max-w-lg mx-auto">
+                    <div className="max-w-md mx-auto">
                         <LeadCaptureForm 
-                            variant="hero"
+                            variant="minimal"
                             source="homepage_cta"
                             accentColor="blue"
-                            buttonText="Get Quotes"
-                            redirectUrl="/get-quote"
+                            buttonText="Get Free Quotes"
+                            showTrustBadges={true}
                         />
                     </div>
                     

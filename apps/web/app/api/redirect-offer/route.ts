@@ -11,7 +11,7 @@ export async function GET(request: NextRequest) {
     try {
         const { searchParams } = new URL(request.url);
         const insuranceTypeSlug = searchParams.get('insuranceType');
-        const zip = searchParams.get('zip');
+        const zip = searchParams.get('zip'); // Optional - MarketCall will collect if needed
         const email = searchParams.get('email');
         const phone = searchParams.get('phone');
 
