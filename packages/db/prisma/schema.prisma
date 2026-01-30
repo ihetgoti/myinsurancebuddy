@@ -213,11 +213,12 @@ model InsuranceType {
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
   
-  pages           Page[]
-  bulkJobs        BulkJob[]
-  carriers        Carrier[]
-  faqs            FAQ[]
-  callOffers      CallOffer[]
+  pages             Page[]
+  bulkJobs          BulkJob[]
+  carriers          Carrier[]
+  faqs              FAQ[]
+  callOffers        CallOffer[]
+  affiliatePartners AffiliatePartner[]
   
   @@index([isActive])
   @@index([sortOrder])
@@ -1243,35 +1244,26 @@ model AnalyticsSnapshot {
 
 model AffiliatePartner {
   id              String   @id @default(uuid())
-  name            String   // e.g., "Progressive", "GEICO", "State Farm"
-  slug            String   @unique
-  logo            String?  // URL to logo image
-  description     String?  // Short description of the partner
+  name            String   // Display name e.g., "Auto Insurance Offer"
   
-  // Affiliate link settings
-  affiliateUrl    String?  // The affiliate link URL (placeholder if not set)
-  affiliateId     String?  // Your affiliate ID with this partner
-  trackingParams  Json?    // Additional tracking parameters
+  // MarketCall settings - Simple!
+  marketCallUrl   String   // Direct MarketCall form URL
+  insuranceTypeId String?  // Link to insurance type (niche)
+  insuranceType   InsuranceType? @relation(fields: [insuranceTypeId], references: [id])
   
-  // Display settings
-  displayOrder    Int      @default(0)
+  // Simple display
   isActive        Boolean  @default(true)
-  isFeatured      Boolean  @default(false)
+  priority        Int      @default(0)  // Higher = shown first
   
-  // Categorization
-  insuranceTypes  String[] // ["car", "home", "life"] - types they offer
+  // Auto-generated tracking (system handles this)
+  subId           String?  // Auto-generated for tracking
   
-  // CTA text
-  ctaText         String   @default("Get Quote")
-  
-  // Metadata
-  notes           String?  // Internal notes
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
   
   @@index([isActive])
-  @@index([isFeatured])
-  @@index([displayOrder])
+  @@index([insuranceTypeId])
+  @@index([priority])
 }
 
 // ============================================

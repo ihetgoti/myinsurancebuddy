@@ -4,16 +4,16 @@ import { prisma } from '@/lib/prisma';
 export const dynamic = 'force-dynamic';
 
 /**
- * GET /api/redirect-offer?insuranceType=car-insurance&state=california&zip=12345
- * Returns the best matching MarketCall offer redirect URL
+ * GET /api/redirect-offer?insuranceType=car-insurance&zip=12345&email=test@test.com
+ * Returns the best matching affiliate redirect URL
  */
 export async function GET(request: NextRequest) {
     try {
         const { searchParams } = new URL(request.url);
         const insuranceTypeSlug = searchParams.get('insuranceType');
-        const stateSlug = searchParams.get('state');
         const zip = searchParams.get('zip');
         const email = searchParams.get('email');
+        const phone = searchParams.get('phone');
 
         // Find insurance type
         const insuranceType = insuranceTypeSlug 
@@ -23,21 +23,12 @@ export async function GET(request: NextRequest) {
               })
             : null;
 
-        // Find state
-        const state = stateSlug
-            ? await prisma.state.findFirst({
-                  where: { slug: stateSlug, isActive: true },
-                  select: { id: true, name: true, slug: true, code: true }
-              })
-            : null;
-
-        // Find best matching offer
-        // Priority: 1. Specific match (type + state), 2. Type match, 3. General match
-        const offer = await prisma.callOffer.findFirst({
+        // Find best matching affiliate
+        // Priority: 1. Specific to insurance type, 2. General offers
+        const affiliate = await prisma.affiliatePartner.findFirst({
             where: {
                 isActive: true,
-                formRedirectUrl: { not: null },
-                // If insurance type specified, match it OR get general offers
+                // Match insurance type if found, OR get general offers (null)
                 ...(insuranceType?.id
                     ? {
                         OR: [
@@ -45,17 +36,7 @@ export async function GET(request: NextRequest) {
                             { insuranceTypeId: null },
                         ],
                     }
-                    : { insuranceTypeId: null } // Only general offers if no type specified
-                ),
-                // If state specified, match it OR get all-states offers
-                ...(state?.id
-                    ? {
-                        OR: [
-                            { stateIds: { has: state.id } },
-                            { stateIds: { isEmpty: true } },
-                        ],
-                    }
-                    : {}
+                    : { insuranceTypeId: null }
                 ),
             },
             orderBy: [
@@ -69,23 +50,23 @@ export async function GET(request: NextRequest) {
             }
         });
 
-        if (!offer || !offer.formRedirectUrl) {
+        if (!affiliate?.marketCallUrl) {
             return NextResponse.json({
                 success: false,
-                error: 'No offer available for this location/type',
+                error: 'No affiliate offer available',
                 fallbackUrl: '/get-quote'
             }, { status: 404 });
         }
 
-        // Build redirect URL with parameters
-        let redirectUrl = offer.formRedirectUrl;
+        // Build redirect URL with tracking params
+        let redirectUrl = affiliate.marketCallUrl;
         
         // Add tracking parameters
         const trackingParams = new URLSearchParams();
         if (zip) trackingParams.set('zip', zip);
         if (email) trackingParams.set('email', email);
-        if (offer.subId) trackingParams.set('subid', offer.subId);
-        if (offer.campaignId) trackingParams.set('campaign', offer.campaignId);
+        if (phone) trackingParams.set('phone', phone);
+        if (affiliate.subId) trackingParams.set('subid', affiliate.subId);
         
         // Append params to URL
         const separator = redirectUrl.includes('?') ? '&' : '?';
@@ -94,11 +75,10 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({
             success: true,
             redirectUrl,
-            offer: {
-                id: offer.id,
-                name: offer.name,
-                insuranceType: offer.insuranceType?.name,
-                phoneMask: offer.phoneMask,
+            affiliate: {
+                id: affiliate.id,
+                name: affiliate.name,
+                insuranceType: affiliate.insuranceType?.name,
             }
         });
 
