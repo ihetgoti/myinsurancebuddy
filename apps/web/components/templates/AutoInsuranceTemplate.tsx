@@ -3,11 +3,13 @@ import {
     Phone, Car, FileSearch, Shield, FileCheck,
     DollarSign, AlertTriangle, Star, ChevronDown, ChevronRight,
     CheckCircle, MapPin, ExternalLink, TrendingDown,
-    Percent, Users, CreditCard, Gauge, Calendar, Globe
+    Percent, Users, CreditCard, Gauge, Calendar, Globe, ArrowRight,
+    Home, Heart, Stethoscope, Dog, Briefcase, Plane, Zap, Smartphone, Truck, Umbrella
 } from 'lucide-react';
 import MarketCallCTA from '@/components/MarketCallCTA';
 import CopyAsMarkdown from '@/components/CopyAsMarkdown';
 import AskAIButtons from '@/components/AskAIButtons';
+import { RelatedContentExplorer } from '@/components/navigation';
 import {
     TableOfContents,
     QuickAnswerBox,
@@ -42,7 +44,24 @@ interface AutoInsuranceTemplateProps {
     relatedLinks: any;
     insuranceTypeId?: string;
     stateId?: string;
+    insuranceTypeName?: string;
 }
+
+// Helper to get Lucide icon for insurance type (replaces emojis)
+const getInsuranceIcon = (slug: string, className: string = "w-3 h-3") => {
+    if (slug?.includes('auto') || slug?.includes('car')) return <Car className={className} />;
+    if (slug?.includes('home') || slug?.includes('rent')) return <Home className={className} />;
+    if (slug?.includes('life')) return <Heart className={className} />;
+    if (slug?.includes('health') || slug?.includes('medicare')) return <Stethoscope className={className} />;
+    if (slug?.includes('pet')) return <Dog className={className} />;
+    if (slug?.includes('business') || slug?.includes('commercial')) return <Briefcase className={className} />;
+    if (slug?.includes('travel')) return <Plane className={className} />;
+    if (slug?.includes('motorcycle')) return <Zap className={className} />;
+    if (slug?.includes('phone') || slug?.includes('mobile')) return <Smartphone className={className} />;
+    if (slug?.includes('truck')) return <Truck className={className} />;
+    if (slug?.includes('umbrella')) return <Umbrella className={className} />;
+    return <Shield className={className} />;
+};
 
 export default function AutoInsuranceTemplate({
     variables,
@@ -50,6 +69,7 @@ export default function AutoInsuranceTemplate({
     relatedLinks,
     insuranceTypeId,
     stateId,
+    insuranceTypeName = 'Auto Insurance',
 }: AutoInsuranceTemplateProps) {
     // Core variables
     const stateName = variables.state_name || variables.state || 'Your State';
@@ -261,55 +281,55 @@ export default function AutoInsuranceTemplate({
             />
 
             {/* Hero Section */}
-            <header className="bg-gradient-to-br from-slate-900 via-slate-800 to-blue-900 text-white py-12 md:py-16">
-                <div className="container mx-auto px-4">
+            <header className="bg-gradient-to-br from-slate-900 via-slate-800 to-blue-900 text-white py-10 sm:py-12 md:py-16 lg:py-20">
+                <div className="container mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="grid md:grid-cols-2 gap-8 items-center">
                         <div>
-                            <div className="flex items-center gap-2 text-blue-400 text-sm font-medium mb-3">
-                                <MapPin size={16} />
+                            <div className="flex items-center gap-2 text-blue-400 text-xs sm:text-sm font-medium mb-3">
+                                <MapPin size={14} className="sm:w-16 sm:h-16" />
                                 <span>{stateName} Auto Insurance Guide</span>
                             </div>
                             <h1
-                                className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4"
+                                className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-4 text-white"
                                 itemProp="headline"
                             >
                                 Auto Insurance in {stateName}
                             </h1>
-                            <p className="text-slate-300 text-lg mb-6 max-w-xl" itemProp="description">
+                            <p className="text-slate-300 text-sm sm:text-base md:text-lg mb-6 max-w-xl" itemProp="description">
                                 Compare rates from top providers, understand {stateName}'s coverage requirements,
                                 and save on your auto insurance. Average premium: <strong className="text-white">{avgPremium}</strong>
                             </p>
-                            <div className="flex flex-wrap gap-3">
+                            <div className="flex flex-col sm:flex-row gap-3">
                                 <Link
                                     href="#compare"
-                                    className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3
-                                             rounded-lg font-semibold transition-colors inline-flex items-center gap-2"
+                                    className="bg-blue-600 hover:bg-blue-700 text-white px-4 sm:px-6 py-3
+                                             rounded-lg font-semibold transition-colors inline-flex items-center justify-center gap-2"
                                 >
                                     Compare Rates
                                     <ChevronDown size={18} />
                                 </Link>
                                 <a
                                     href="tel:18552052412"
-                                    className="bg-white/10 hover:bg-white/20 text-white px-6 py-3
-                                             rounded-lg font-semibold transition-colors inline-flex items-center gap-2 border border-white/20"
+                                    className="bg-white/10 hover:bg-white/20 text-white px-4 sm:px-6 py-3
+                                             rounded-lg font-semibold transition-colors inline-flex items-center justify-center gap-2 border border-white/20"
                                 >
                                     <Phone size={18} />
                                     Call for Quote
                                 </a>
                             </div>
 
-                            {/* Trust Badges */}
-                            <div className="flex flex-wrap gap-4 mt-8 text-sm font-medium text-slate-300">
-                                <div className="flex items-center gap-2">
-                                    <Shield className="text-blue-400" size={18} />
+                            {/* Trust Badges - Horizontal scroll on mobile */}
+                            <div className="flex gap-4 mt-6 sm:mt-8 text-xs sm:text-sm font-medium text-slate-300 overflow-x-auto pb-2 -mx-4 px-4 sm:mx-0 sm:px-0 sm:overflow-visible sm:flex-wrap sm:pb-0">
+                                <div className="flex items-center gap-2 flex-shrink-0">
+                                    <Shield className="text-blue-400" size={16} />
                                     <span>Compare 100+ Companies</span>
                                 </div>
-                                <div className="flex items-center gap-2">
-                                    <CheckCircle className="text-blue-400" size={18} />
+                                <div className="flex items-center gap-2 flex-shrink-0">
+                                    <CheckCircle className="text-blue-400" size={16} />
                                     <span>Free Quotes</span>
                                 </div>
-                                <div className="flex items-center gap-2">
-                                    <Shield className="text-blue-400" size={18} />
+                                <div className="flex items-center gap-2 flex-shrink-0">
+                                    <Shield className="text-blue-400" size={16} />
                                     <span>No Spam Calls</span>
                                 </div>
                             </div>
@@ -326,8 +346,8 @@ export default function AutoInsuranceTemplate({
             </header>
 
             {/* Quick Answer Box */}
-            <section className="py-8 bg-slate-50 border-b">
-                <div className="container mx-auto px-4">
+            <section className="py-6 sm:py-8 bg-slate-50 border-b">
+                <div className="container mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="max-w-4xl mx-auto">
                         <QuickAnswerBox
                             question={`What is the minimum car insurance required in ${stateName}?`}
@@ -339,15 +359,15 @@ export default function AutoInsuranceTemplate({
             </section>
 
             {/* Key Takeaways + AI Tools */}
-            <section className="py-8 bg-amber-50 border-b border-amber-200">
-                <div className="container mx-auto px-4">
+            <section className="py-6 sm:py-8 bg-amber-50 border-b border-amber-200">
+                <div className="container mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="max-w-4xl mx-auto">
-                        <div className="flex items-center justify-between mb-4">
-                            <h2 className="text-lg font-bold text-amber-900 flex items-center gap-2">
-                                <CheckCircle size={20} />
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-3">
+                            <h2 className="text-base sm:text-lg font-bold text-amber-900 flex items-center gap-2">
+                                <CheckCircle size={18} className="sm:w-20 sm:h-20" />
                                 Key Takeaways
                             </h2>
-                            <div className="flex items-center gap-2">
+                            <div className="flex flex-wrap items-center gap-2">
                                 <LastUpdated date={lastUpdated} variant="badge" />
                                 <CopyAsMarkdown
                                     title={pageTitle}
@@ -357,9 +377,9 @@ export default function AutoInsuranceTemplate({
                                 />
                             </div>
                         </div>
-                        <ul className="space-y-2">
+                        <ul className="space-y-2 sm:space-y-3">
                             {keyTakeaways.map((item, i) => (
-                                <li key={i} className="flex items-start gap-2 text-amber-800">
+                                <li key={i} className="flex items-start gap-2 text-sm sm:text-base text-amber-800">
                                     <span className="text-amber-600 mt-1">•</span>
                                     {item}
                                 </li>
@@ -377,10 +397,10 @@ export default function AutoInsuranceTemplate({
             </section>
 
             {/* Main Content */}
-            <div className="container mx-auto px-4 py-12">
-                <div className="grid lg:grid-cols-4 gap-8">
-                    {/* Sidebar - Table of Contents */}
-                    <aside className="lg:col-span-1">
+            <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-12 md:py-16">
+                <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 lg:gap-8">
+                    {/* Sidebar - Table of Contents - Hidden on mobile, horizontal scroll on tablet */}
+                    <aside className="hidden lg:block lg:col-span-1">
                         <div className="sticky top-24">
                             <TableOfContents items={tocItems} />
                         </div>
@@ -389,28 +409,38 @@ export default function AutoInsuranceTemplate({
                     {/* Content */}
                     <main className="lg:col-span-3 space-y-12">
                         {/* Visual Flow Diagram */}
-                        <section className="bg-slate-50 rounded-2xl p-8">
-                            <h2 className="text-xl font-bold text-center text-slate-900 mb-8">
+                        <section className="bg-slate-50 rounded-2xl p-4 sm:p-6 md:p-8">
+                            <h2 className="text-lg sm:text-xl font-bold text-center text-slate-900 mb-6 sm:mb-8">
                                 How It Works: Your Path to Savings
                             </h2>
-                            <div className="flex flex-wrap justify-center gap-4 md:gap-8">
+                            <div className="flex flex-col sm:flex-row flex-wrap justify-center gap-4 sm:gap-6 md:gap-8">
                                 {[
                                     { icon: Car, label: 'Enter Vehicle Info', step: 1 },
                                     { icon: FileSearch, label: 'Compare Rates', step: 2 },
                                     { icon: Shield, label: 'Choose Coverage', step: 3 },
                                     { icon: FileCheck, label: 'Get Policy', step: 4 },
                                 ].map((item, i) => (
-                                    <div key={i} className="flex items-center gap-2 md:gap-4">
+                                    <div key={i} className="flex items-center gap-3 sm:gap-4">
                                         <div className="flex flex-col items-center">
-                                            <div className="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center text-white mb-2 shadow-lg">
-                                                <item.icon size={28} />
+                                            <div className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 bg-blue-600 rounded-full flex items-center justify-center text-white mb-2 shadow-lg">
+                                                <item.icon size={22} className="sm:w-6 sm:h-6 md:w-7 md:h-7" />
                                             </div>
-                                            <span className="text-sm font-medium text-slate-700 text-center max-w-24">
+                                            <span className="text-xs sm:text-sm font-medium text-slate-700 text-center max-w-24">
                                                 {item.label}
                                             </span>
                                         </div>
                                         {i < 3 && (
-                                            <div className="hidden md:block text-slate-300 text-2xl">→</div>
+                                            <>
+                                                <div className="hidden sm:block md:hidden text-slate-400">
+                                                    <ArrowRight size={20} />
+                                                </div>
+                                                <div className="hidden md:block text-slate-400">
+                                                    <ArrowRight size={24} />
+                                                </div>
+                                                <div className="sm:hidden text-slate-400 my-1">
+                                                    <ArrowRight size={20} className="rotate-90" />
+                                                </div>
+                                            </>
                                         )}
                                     </div>
                                 ))}
@@ -418,68 +448,68 @@ export default function AutoInsuranceTemplate({
                         </section>
 
                         {/* Local Stats Cards */}
-                        <section className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                            <div className="bg-white border rounded-xl p-4 text-center shadow-sm hover:shadow-md transition-shadow">
-                                <DollarSign size={24} className="mx-auto text-blue-600 mb-2" />
-                                <p className="text-2xl font-bold text-slate-900">{avgPremium}</p>
-                                <p className="text-sm text-slate-500">Avg. Premium</p>
+                        <section className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+                            <div className="bg-white border rounded-xl p-3 sm:p-4 text-center shadow-sm hover:shadow-md transition-shadow">
+                                <DollarSign size={20} className="mx-auto text-blue-600 mb-2 sm:w-6 sm:h-6" />
+                                <p className="text-lg sm:text-xl md:text-2xl font-bold text-slate-900">{avgPremium}</p>
+                                <p className="text-xs sm:text-sm text-slate-600">Avg. Premium</p>
                             </div>
-                            <div className="bg-white border rounded-xl p-4 text-center shadow-sm hover:shadow-md transition-shadow">
-                                <Shield size={24} className="mx-auto text-blue-600 mb-2" />
-                                <p className="text-2xl font-bold text-slate-900">{minCoverage}</p>
-                                <p className="text-sm text-slate-500">Min. Coverage</p>
+                            <div className="bg-white border rounded-xl p-3 sm:p-4 text-center shadow-sm hover:shadow-md transition-shadow">
+                                <Shield size={20} className="mx-auto text-blue-600 mb-2 sm:w-6 sm:h-6" />
+                                <p className="text-lg sm:text-xl md:text-2xl font-bold text-slate-900">{minCoverage}</p>
+                                <p className="text-xs sm:text-sm text-slate-600">Min. Coverage</p>
                             </div>
-                            <div className="bg-white border rounded-xl p-4 text-center shadow-sm hover:shadow-md transition-shadow">
-                                <AlertTriangle size={24} className="mx-auto text-amber-500 mb-2" />
-                                <p className="text-2xl font-bold text-slate-900">{uninsuredRate}</p>
-                                <p className="text-sm text-slate-500">Uninsured Rate</p>
+                            <div className="bg-white border rounded-xl p-3 sm:p-4 text-center shadow-sm hover:shadow-md transition-shadow">
+                                <AlertTriangle size={20} className="mx-auto text-amber-500 mb-2 sm:w-6 sm:h-6" />
+                                <p className="text-lg sm:text-xl md:text-2xl font-bold text-slate-900">{uninsuredRate}</p>
+                                <p className="text-xs sm:text-sm text-slate-600">Uninsured Rate</p>
                             </div>
-                            <div className="bg-white border rounded-xl p-4 text-center shadow-sm hover:shadow-md transition-shadow">
-                                <Star size={24} className="mx-auto text-yellow-500 mb-2" />
-                                <p className="text-2xl font-bold text-slate-900">{topInsurer}</p>
-                                <p className="text-sm text-slate-500">Top Insurer</p>
+                            <div className="bg-white border rounded-xl p-3 sm:p-4 text-center shadow-sm hover:shadow-md transition-shadow">
+                                <Star size={20} className="mx-auto text-yellow-500 mb-2 sm:w-6 sm:h-6" />
+                                <p className="text-lg sm:text-xl md:text-2xl font-bold text-slate-900">{topInsurer}</p>
+                                <p className="text-xs sm:text-sm text-slate-600">Top Insurer</p>
                             </div>
                         </section>
 
                         {/* Introduction */}
                         <section id="requirements" aria-labelledby="requirements-heading" className="prose prose-slate max-w-none">
-                            <h2 id="requirements-heading" className="text-2xl font-bold text-slate-900 mb-4 flex items-center gap-2">
-                                <Shield className="text-blue-600" size={28} />
+                            <h2 id="requirements-heading" className="text-xl sm:text-2xl font-bold text-slate-900 mb-4 flex items-center gap-2">
+                                <Shield className="text-blue-600" size={24} />
                                 Understanding Auto Insurance in {stateName}
                             </h2>
-                            <p className="text-slate-600 leading-relaxed text-lg">
+                            <p className="text-slate-600 leading-relaxed text-sm sm:text-base">
                                 {introContent}
                             </p>
 
-                            <h3 className="text-xl font-bold text-slate-900 mt-8 mb-4">
+                            <h3 className="text-lg sm:text-xl font-bold text-slate-900 mt-6 sm:mt-8 mb-3 sm:mb-4">
                                 {stateName} Minimum Requirements
                             </h3>
-                            <p className="text-slate-600 leading-relaxed">
+                            <p className="text-slate-600 leading-relaxed text-sm sm:text-base">
                                 {requirementsContent}
                             </p>
 
                             {/* Coverage Breakdown Table */}
-                            <div className="bg-blue-50 rounded-xl p-6 mt-6 not-prose">
-                                <h4 className="font-bold text-slate-900 mb-4">
+                            <div className="bg-blue-50 rounded-xl p-4 sm:p-6 mt-6 not-prose">
+                                <h4 className="font-bold text-slate-900 mb-4 text-sm sm:text-base">
                                     {stateName} Minimum Liability Limits ({minCoverage})
                                 </h4>
-                                <div className="grid md:grid-cols-3 gap-4">
-                                    <div className="bg-white rounded-lg p-4 border border-blue-100">
-                                        <p className="text-sm text-slate-500 mb-1">Bodily Injury (Per Person)</p>
-                                        <p className="text-2xl font-bold text-blue-600">${coverageBreakdown.bodily_per_person}</p>
+                                <div className="grid sm:grid-cols-3 gap-3 sm:gap-4">
+                                    <div className="bg-white rounded-lg p-3 sm:p-4 border border-blue-100">
+                                        <p className="text-xs sm:text-sm text-slate-600 mb-1">Bodily Injury (Per Person)</p>
+                                        <p className="text-xl sm:text-2xl font-bold text-blue-600">${coverageBreakdown.bodily_per_person}</p>
                                     </div>
-                                    <div className="bg-white rounded-lg p-4 border border-blue-100">
-                                        <p className="text-sm text-slate-500 mb-1">Bodily Injury (Per Accident)</p>
-                                        <p className="text-2xl font-bold text-blue-600">${coverageBreakdown.bodily_per_accident}</p>
+                                    <div className="bg-white rounded-lg p-3 sm:p-4 border border-blue-100">
+                                        <p className="text-xs sm:text-sm text-slate-600 mb-1">Bodily Injury (Per Accident)</p>
+                                        <p className="text-xl sm:text-2xl font-bold text-blue-600">${coverageBreakdown.bodily_per_accident}</p>
                                     </div>
-                                    <div className="bg-white rounded-lg p-4 border border-blue-100">
-                                        <p className="text-sm text-slate-500 mb-1">Property Damage</p>
-                                        <p className="text-2xl font-bold text-blue-600">${coverageBreakdown.property}</p>
+                                    <div className="bg-white rounded-lg p-3 sm:p-4 border border-blue-100">
+                                        <p className="text-xs sm:text-sm text-slate-600 mb-1">Property Damage</p>
+                                        <p className="text-xl sm:text-2xl font-bold text-blue-600">${coverageBreakdown.property}</p>
                                     </div>
                                 </div>
                                 {isNoFaultState && (
-                                    <div className="mt-4 p-4 bg-amber-50 border border-amber-200 rounded-lg">
-                                        <p className="text-amber-800 text-sm">
+                                    <div className="mt-4 p-3 sm:p-4 bg-amber-50 border border-amber-200 rounded-lg">
+                                        <p className="text-amber-800 text-xs sm:text-sm">
                                             <strong>No-Fault State:</strong> {stateName} requires Personal Injury Protection (PIP) coverage in addition to liability insurance.
                                         </p>
                                     </div>
@@ -489,11 +519,11 @@ export default function AutoInsuranceTemplate({
 
                         {/* Coverage Types */}
                         <section id="coverage-types" aria-labelledby="coverage-heading">
-                            <h2 id="coverage-heading" className="text-2xl font-bold text-slate-900 mb-6 flex items-center gap-2">
-                                <Car className="text-blue-600" size={28} />
+                            <h2 id="coverage-heading" className="text-xl sm:text-2xl font-bold text-slate-900 mb-4 sm:mb-6 flex items-center gap-2">
+                                <Car className="text-blue-600" size={24} />
                                 Coverage Types Explained
                             </h2>
-                            <div className="grid md:grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                                 <CoverageCard
                                     title="Liability Coverage"
                                     description="Covers damages and injuries you cause to others. Required in all states. Includes bodily injury and property damage."
@@ -542,18 +572,18 @@ export default function AutoInsuranceTemplate({
 
                         {/* Cost Factors */}
                         <section id="cost-factors" aria-labelledby="cost-heading">
-                            <h2 id="cost-heading" className="text-2xl font-bold text-slate-900 mb-6 flex items-center gap-2">
-                                <TrendingDown className="text-blue-600" size={28} />
+                            <h2 id="cost-heading" className="text-xl sm:text-2xl font-bold text-slate-900 mb-4 sm:mb-6 flex items-center gap-2">
+                                <TrendingDown className="text-blue-600" size={24} />
                                 What Affects Your Insurance Rate
                             </h2>
-                            <p className="text-slate-600 mb-6">
+                            <p className="text-slate-600 text-sm sm:text-base mb-4 sm:mb-6">
                                 Understanding what impacts your premium helps you find ways to save. Here are the key factors insurers consider:
                             </p>
-                            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
                                 {costFactors.map((item: any, i: number) => (
-                                    <div key={i} className="bg-white border rounded-xl p-4 hover:shadow-md transition-shadow">
+                                    <div key={i} className="bg-white border rounded-xl p-3 sm:p-4 hover:shadow-md transition-shadow">
                                         <div className="flex items-center gap-2 mb-2">
-                                            <span className={`text-xs px-2 py-1 rounded-full font-medium ${
+                                            <span className={`text-[10px] sm:text-xs px-2 py-1 rounded-full font-medium ${
                                                 item.impact === 'high'
                                                     ? 'bg-red-100 text-red-700'
                                                     : item.impact === 'medium'
@@ -563,8 +593,8 @@ export default function AutoInsuranceTemplate({
                                                 {item.impact.toUpperCase()} IMPACT
                                             </span>
                                         </div>
-                                        <h4 className="font-semibold text-slate-900 mb-1">{item.factor}</h4>
-                                        <p className="text-sm text-slate-600">{item.description}</p>
+                                        <h4 className="font-semibold text-slate-900 mb-1 text-sm sm:text-base">{item.factor}</h4>
+                                        <p className="text-xs sm:text-sm text-slate-600">{item.description}</p>
                                     </div>
                                 ))}
                             </div>
@@ -572,22 +602,22 @@ export default function AutoInsuranceTemplate({
 
                         {/* Discounts */}
                         <section id="discounts" aria-labelledby="discounts-heading">
-                            <h2 id="discounts-heading" className="text-2xl font-bold text-slate-900 mb-6 flex items-center gap-2">
-                                <Percent className="text-green-600" size={28} />
+                            <h2 id="discounts-heading" className="text-xl sm:text-2xl font-bold text-slate-900 mb-4 sm:mb-6 flex items-center gap-2">
+                                <Percent className="text-green-600" size={24} />
                                 Available Discounts in {stateName}
                             </h2>
-                            <p className="text-slate-600 mb-6">
+                            <p className="text-slate-600 text-sm sm:text-base mb-4 sm:mb-6">
                                 Most insurers offer discounts that can significantly reduce your premium. Ask your agent about these common savings:
                             </p>
-                            <div className="grid md:grid-cols-2 gap-4">
+                            <div className="grid sm:grid-cols-2 gap-3 sm:gap-4">
                                 {discounts.map((discount: any, i: number) => (
-                                    <div key={i} className="flex items-start gap-4 p-4 bg-green-50 rounded-xl border border-green-100">
-                                        <div className="w-12 h-12 bg-green-600 rounded-xl flex items-center justify-center text-white font-bold flex-shrink-0">
+                                    <div key={i} className="flex items-start gap-3 sm:gap-4 p-3 sm:p-4 bg-green-50 rounded-xl border border-green-100">
+                                        <div className="w-10 h-10 sm:w-12 sm:h-12 bg-green-600 rounded-xl flex items-center justify-center text-white text-[10px] sm:text-xs font-bold flex-shrink-0 text-center leading-tight">
                                             {discount.savings}
                                         </div>
-                                        <div>
-                                            <h4 className="font-semibold text-slate-900">{discount.name}</h4>
-                                            <p className="text-sm text-slate-600">{discount.description}</p>
+                                        <div className="min-w-0">
+                                            <h4 className="font-semibold text-slate-900 text-sm sm:text-base">{discount.name}</h4>
+                                            <p className="text-xs sm:text-sm text-slate-600">{discount.description}</p>
                                         </div>
                                     </div>
                                 ))}
@@ -604,14 +634,14 @@ export default function AutoInsuranceTemplate({
 
                         {/* Comparison Table - Affiliates */}
                         <section id="compare" aria-labelledby="compare-heading">
-                            <h2 id="compare-heading" className="text-2xl font-bold text-slate-900 mb-2 text-center">
+                            <h2 id="compare-heading" className="text-xl sm:text-2xl font-bold text-slate-900 mb-2 text-center">
                                 Compare Top Auto Insurers in {stateName}
                             </h2>
-                            <p className="text-slate-500 text-center mb-8">
+                            <p className="text-slate-600 text-sm sm:text-base text-center mb-6 sm:mb-8">
                                 Get quotes from trusted insurance providers
                             </p>
 
-                            <div className="space-y-4">
+                            <div className="space-y-3 sm:space-y-4">
                                 {affiliates.length > 0 ? (
                                     affiliates.map((partner: any) => (
                                         <a
@@ -619,36 +649,37 @@ export default function AutoInsuranceTemplate({
                                             href={partner.affiliateUrl || '#'}
                                             target="_blank"
                                             rel="noopener noreferrer sponsored"
-                                            className="flex items-center gap-4 p-4 bg-white rounded-xl border
-                                                     hover:shadow-lg hover:border-blue-300 transition-all group"
+                                            className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 bg-white rounded-xl border
+                                                     hover:shadow-lg hover:border-blue-300 transition-all group touch-manipulation"
                                         >
-                                            <div className="w-16 h-16 bg-slate-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                                            <div className="w-12 h-12 sm:w-16 sm:h-16 bg-slate-100 rounded-lg flex items-center justify-center flex-shrink-0">
                                                 {partner.logo ? (
-                                                    <img src={partner.logo} alt={partner.name} className="w-12 h-12 object-contain" />
+                                                    <img src={partner.logo} alt={partner.name} className="w-10 h-10 sm:w-12 sm:h-12 object-contain" />
                                                 ) : (
-                                                    <span className="text-2xl font-bold text-slate-400">{partner.name[0]}</span>
+                                                    <span className="text-xl sm:text-2xl font-bold text-slate-400">{partner.name[0]}</span>
                                                 )}
                                             </div>
-                                            <div className="flex-1">
-                                                <h3 className="font-semibold text-slate-900 group-hover:text-blue-600">
+                                            <div className="flex-1 min-w-0">
+                                                <h3 className="font-semibold text-slate-900 group-hover:text-blue-600 text-sm sm:text-base truncate">
                                                     {partner.name}
                                                 </h3>
-                                                <div className="flex items-center gap-2 text-sm text-slate-500">
+                                                <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 text-xs sm:text-sm text-slate-600">
                                                     <span className="flex text-yellow-400">★★★★★</span>
-                                                    <span>{partner.description || 'Top-rated auto insurer'}</span>
+                                                    <span className="truncate">{partner.description || 'Top-rated auto insurer'}</span>
                                                 </div>
                                             </div>
-                                            <button className="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium
-                                                            group-hover:bg-blue-700 transition-colors flex items-center gap-1">
-                                                Get Quote
-                                                <ExternalLink size={14} />
+                                            <button className="bg-blue-600 text-white px-3 sm:px-4 py-2 rounded-lg font-medium text-sm
+                                                            group-hover:bg-blue-700 transition-colors flex items-center gap-1 flex-shrink-0">
+                                                <span className="hidden sm:inline">Get Quote</span>
+                                                <span className="sm:hidden">Quote</span>
+                                                <ExternalLink size={12} className="sm:w-4 sm:h-4" />
                                             </button>
                                         </a>
                                     ))
                                 ) : (
-                                    <div className="text-center py-8 bg-slate-50 rounded-xl">
-                                        <p className="text-slate-500 mb-2">Compare top insurers to find the best rate</p>
-                                        <Link href="/get-quote" className="text-blue-600 hover:underline inline-flex items-center gap-1">
+                                    <div className="text-center py-6 sm:py-8 bg-slate-50 rounded-xl">
+                                        <p className="text-slate-600 text-sm sm:text-base mb-2">Compare top insurers to find the best rate</p>
+                                        <Link href="/get-quote" className="text-blue-600 hover:underline inline-flex items-center gap-1 text-sm sm:text-base">
                                             Get a personalized quote
                                             <ExternalLink size={14} />
                                         </Link>
@@ -659,17 +690,17 @@ export default function AutoInsuranceTemplate({
 
                         {/* Tips Section */}
                         <section id="tips" aria-labelledby="tips-heading">
-                            <h2 id="tips-heading" className="text-2xl font-bold text-slate-900 mb-6 flex items-center gap-2">
-                                <DollarSign className="text-green-600" size={28} />
+                            <h2 id="tips-heading" className="text-xl sm:text-2xl font-bold text-slate-900 mb-4 sm:mb-6 flex items-center gap-2">
+                                <DollarSign className="text-green-600" size={24} />
                                 Tips to Save on Auto Insurance in {stateName}
                             </h2>
-                            <div className="space-y-4">
+                            <div className="space-y-3 sm:space-y-4">
                                 {tipsContent.map((tip: string, i: number) => (
-                                    <div key={i} className="flex items-start gap-3 bg-green-50 rounded-lg p-4 border border-green-100">
-                                        <span className="w-7 h-7 bg-green-600 text-white rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0">
+                                    <div key={i} className="flex items-start gap-3 bg-green-50 rounded-lg p-3 sm:p-4 border border-green-100">
+                                        <span className="w-6 h-6 sm:w-7 sm:h-7 bg-green-600 text-white rounded-full flex items-center justify-center text-xs sm:text-sm font-bold flex-shrink-0">
                                             {i + 1}
                                         </span>
-                                        <p className="text-slate-700">{tip}</p>
+                                        <p className="text-slate-700 text-sm sm:text-base">{tip}</p>
                                     </div>
                                 ))}
                             </div>
@@ -766,113 +797,63 @@ export default function AutoInsuranceTemplate({
                 </div>
             </div>
 
-            {/* Related Links - Professional Redesign */}
-            {(relatedLinks?.nearbyCities?.length > 0 || relatedLinks?.otherNiches?.length > 0) && (
-                <section className="py-16 bg-gradient-to-b from-slate-50 to-white border-t border-slate-100">
-                    <div className="container mx-auto px-4">
-                        <div className="text-center mb-12">
-                            <span className="inline-block px-4 py-1.5 bg-blue-100 text-blue-700 text-xs font-bold uppercase tracking-wider rounded-full mb-4">
-                                Discover More Coverage Options
-                            </span>
-                            <h2 className="text-3xl font-bold text-slate-900 mb-3">Explore Related Insurance</h2>
-                            <p className="text-slate-500 max-w-2xl mx-auto">Find the right coverage for your needs across different locations and insurance types</p>
-                        </div>
-                        <div className="grid md:grid-cols-3 gap-6 max-w-6xl mx-auto">
-                            {relatedLinks.nearbyCities?.length > 0 && (
-                                <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 hover:shadow-lg hover:border-blue-200 transition-all duration-300">
-                                    <div className="flex items-center gap-3 mb-5">
-                                        <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/20">
-                                            <MapPin size={22} className="text-white" />
-                                        </div>
-                                        <div>
-                                            <h3 className="font-bold text-slate-900 text-lg">Nearby Cities</h3>
-                                            <p className="text-xs text-slate-500">Coverage in your area</p>
-                                        </div>
-                                    </div>
-                                    <ul className="space-y-2">
-                                        {relatedLinks.nearbyCities.slice(0, 8).map((link: any, i: number) => (
-                                            <li key={i}>
-                                                <Link href={link.href} className="group flex items-center gap-3 p-2.5 rounded-lg hover:bg-blue-50 transition-colors">
-                                                    <span className="w-6 h-6 bg-slate-100 group-hover:bg-blue-100 rounded-full flex items-center justify-center transition-colors">
-                                                        <ChevronRight size={14} className="text-slate-400 group-hover:text-blue-600" />
-                                                    </span>
-                                                    <span className="text-sm font-medium text-slate-600 group-hover:text-blue-700 transition-colors">{link.label}</span>
-                                                </Link>
-                                            </li>
-                                        ))}
-                                    </ul>
-                                </div>
-                            )}
-                            {relatedLinks.otherNiches?.length > 0 && (
-                                <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 hover:shadow-lg hover:border-indigo-200 transition-all duration-300">
-                                    <div className="flex items-center gap-3 mb-5">
-                                        <div className="w-12 h-12 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-500/20">
-                                            <Shield size={22} className="text-white" />
-                                        </div>
-                                        <div>
-                                            <h3 className="font-bold text-slate-900 text-lg">Other Insurance</h3>
-                                            <p className="text-xs text-slate-500">Explore more coverage</p>
-                                        </div>
-                                    </div>
-                                    <ul className="space-y-2">
-                                        {relatedLinks.otherNiches.slice(0, 6).map((link: any, i: number) => (
-                                            <li key={i}>
-                                                <Link href={link.href} className="group flex items-center gap-3 p-2.5 rounded-lg hover:bg-indigo-50 transition-colors">
-                                                    <span className="w-6 h-6 bg-slate-100 group-hover:bg-indigo-100 rounded-full flex items-center justify-center transition-colors text-slate-500 group-hover:text-indigo-600 text-sm">
-                                                        {link.icon || <ChevronRight size={14} />}
-                                                    </span>
-                                                    <span className="text-sm font-medium text-slate-600 group-hover:text-indigo-700 transition-colors">{link.label}</span>
-                                                </Link>
-                                            </li>
-                                        ))}
-                                    </ul>
-                                </div>
-                            )}
-                            {relatedLinks.parentLocations?.length > 0 && (
-                                <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 hover:shadow-lg hover:border-violet-200 transition-all duration-300">
-                                    <div className="flex items-center gap-3 mb-5">
-                                        <div className="w-12 h-12 bg-gradient-to-br from-violet-500 to-fuchsia-600 rounded-xl flex items-center justify-center shadow-lg shadow-violet-500/20">
-                                            <Globe size={22} className="text-white" />
-                                        </div>
-                                        <div>
-                                            <h3 className="font-bold text-slate-900 text-lg">Browse More</h3>
-                                            <p className="text-xs text-slate-500">Statewide coverage</p>
-                                        </div>
-                                    </div>
-                                    <ul className="space-y-2">
-                                        {relatedLinks.parentLocations.map((link: any, i: number) => (
-                                            <li key={i}>
-                                                <Link href={link.href} className="group flex items-center gap-3 p-2.5 rounded-lg hover:bg-violet-50 transition-colors">
-                                                    <span className="w-6 h-6 bg-slate-100 group-hover:bg-violet-100 rounded-full flex items-center justify-center transition-colors">
-                                                        <ChevronRight size={14} className="text-slate-400 group-hover:text-violet-600" />
-                                                    </span>
-                                                    <span className="text-sm font-medium text-slate-600 group-hover:text-violet-700 transition-colors">{link.label}</span>
-                                                </Link>
-                                            </li>
-                                        ))}
-                                    </ul>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                </section>
+            {/* Related Content Explorer - Future-proof Navigation */}
+            {(relatedLinks?.nearbyCities?.length > 0 || relatedLinks?.otherNiches?.length > 0 || relatedLinks?.parentLocations?.length > 0) && (
+                <RelatedContentExplorer
+                    currentTitle={`Auto Insurance in ${stateName}`}
+                    groups={[
+                        ...(relatedLinks.otherNiches?.length > 0 ? [{
+                            id: 'other-insurance',
+                            title: 'Other Insurance Types',
+                            icon: 'insurance' as const,
+                            items: relatedLinks.otherNiches.map((link: any) => ({
+                                id: link.href,
+                                title: link.label,
+                                href: link.href,
+                            })),
+                        }] : []),
+                        ...(relatedLinks.nearbyCities?.length > 0 ? [{
+                            id: 'nearby-cities',
+                            title: 'Nearby Cities',
+                            icon: 'nearby' as const,
+                            items: relatedLinks.nearbyCities.map((link: any) => ({
+                                id: link.href,
+                                title: link.label,
+                                href: link.href,
+                            })),
+                        }] : []),
+                        ...(relatedLinks.parentLocations?.length > 0 ? [{
+                            id: 'parent-locations',
+                            title: 'Browse More',
+                            icon: 'parent' as const,
+                            items: relatedLinks.parentLocations.map((link: any) => ({
+                                id: link.href,
+                                title: link.label,
+                                href: link.href,
+                            })),
+                        }] : []),
+                    ]}
+                />
             )}
 
             {/* Sticky Bottom CTA (Mobile) */}
-            <div className="fixed bottom-0 left-0 right-0 bg-gradient-to-r from-blue-600 to-blue-700 text-white py-3 px-4 shadow-lg z-50 md:hidden">
+            <div className="fixed bottom-0 left-0 right-0 bg-gradient-to-r from-blue-600 to-blue-700 text-white py-3 px-4 shadow-lg z-50 md:hidden safe-area-pb">
                 <div className="flex items-center justify-between max-w-xl mx-auto">
                     <div className="flex items-center gap-2">
                         <Phone size={18} />
-                        <span className="font-semibold">1-855-205-2412</span>
+                        <span className="font-semibold text-sm sm:text-base">1-855-205-2412</span>
                     </div>
                     <a
                         href="tel:18552052412"
-                        className="bg-white text-blue-600 px-4 py-2 rounded-lg font-semibold"
+                        className="bg-white text-blue-600 px-3 sm:px-4 py-2 rounded-lg font-semibold text-sm sm:text-base hover:bg-blue-50 transition-colors"
                     >
                         Call Now
                     </a>
                 </div>
             </div>
+            
+            {/* Bottom spacer for mobile sticky CTA */}
+            <div className="h-16 md:hidden" />
         </article>
     );
 }

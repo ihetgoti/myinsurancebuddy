@@ -9,8 +9,18 @@ import DynamicPageRenderer from '@/components/DynamicPageRenderer';
 import HtmlTemplateRenderer from '@/components/HtmlTemplateRenderer';
 import PageWrapper from '@/components/PageWrapper';
 import { LocalBusinessSchema } from '@/components/SchemaMarkup';
-import { Building2, MapPin, FileText, Shield, ArrowRight, ChevronDown } from 'lucide-react';
-import { AutoInsuranceTemplate, HealthInsuranceTemplate, HomeInsuranceTemplate } from '@/components/templates';
+import { Building2, MapPin, FileText, Shield, ArrowRight, ChevronDown, Car, Home, Heart, Stethoscope, Dog, Briefcase, Umbrella, Zap, Plane, Smartphone, Truck, Landmark } from 'lucide-react';
+import { 
+    AutoInsuranceTemplate, 
+    HealthInsuranceTemplate, 
+    HomeInsuranceTemplate,
+    LifeInsuranceTemplate,
+    MotorcycleInsuranceTemplate,
+    PetInsuranceTemplate,
+    BusinessInsuranceTemplate,
+    RentersInsuranceTemplate,
+    UmbrellaInsuranceTemplate
+} from '@/components/templates';
 
 /**
  * ISR Configuration for optimal performance at scale
@@ -25,6 +35,22 @@ interface PageProps {
     params: {
         slug: string[];
     };
+}
+
+// Helper function to get Lucide icon for insurance type
+function getInsuranceIcon(slug: string, className: string = "w-4 h-4") {
+    if (slug.includes('auto') || slug.includes('car')) return <Car className={className} />;
+    if (slug.includes('home') || slug.includes('rent')) return <Home className={className} />;
+    if (slug.includes('life')) return <Heart className={className} />;
+    if (slug.includes('health') || slug.includes('medicare')) return <Stethoscope className={className} />;
+    if (slug.includes('pet')) return <Dog className={className} />;
+    if (slug.includes('business') || slug.includes('commercial')) return <Briefcase className={className} />;
+    if (slug.includes('travel')) return <Plane className={className} />;
+    if (slug.includes('motorcycle')) return <Zap className={className} />;
+    if (slug.includes('phone') || slug.includes('mobile')) return <Smartphone className={className} />;
+    if (slug.includes('truck')) return <Truck className={className} />;
+    if (slug.includes('umbrella')) return <Umbrella className={className} />;
+    return <Shield className={className} />;
 }
 
 // Generate metadata for SEO
@@ -417,6 +443,7 @@ async function getRelatedLinks(insuranceType: any, country: any, state: any, cit
 
         return {
             icon: type.icon || '📋',
+            iconSlug: type.slug,
             label: type.name,
             href: `/${parts.join('/')}`,
         };
@@ -589,11 +616,11 @@ export default async function DynamicPage({ params }: PageProps) {
             where: {
                 isActive: true,
                 // Filter by insurance type if we have one
-                ...(insuranceType?.slug ? {
-                    insuranceTypes: { has: insuranceType.slug.replace('-insurance', '') }
+                ...(insuranceType?.id ? {
+                    insuranceTypeId: insuranceType.id
                 } : {}),
             },
-            orderBy: [{ isFeatured: 'desc' }, { displayOrder: 'asc' }],
+            orderBy: [{ priority: 'desc' }, { createdAt: 'desc' }],
             take: 6,
         }),
     ]);
@@ -616,9 +643,9 @@ export default async function DynamicPage({ params }: PageProps) {
 
     // Inject Affiliate Offers
     if (primaryOffer) {
-        variables.primary_offer_link = primaryOffer.affiliateUrl || '#';
+        variables.primary_offer_link = primaryOffer.marketCallUrl || '#';
         variables.primary_offer_name = primaryOffer.name;
-        variables.primary_offer_cta = primaryOffer.ctaText || 'Get Quote';
+        variables.primary_offer_cta = 'Get Quote';
     }
 
     // Generate schema
@@ -673,6 +700,7 @@ export default async function DynamicPage({ params }: PageProps) {
                         relatedLinks={relatedLinks}
                         insuranceTypeId={insuranceType?.id}
                         stateId={state?.id}
+                        insuranceTypeName={insuranceType?.name}
                     />
                     {showFooter && <Footer insuranceTypes={allInsuranceTypes} />}
                 </div>
@@ -717,6 +745,7 @@ export default async function DynamicPage({ params }: PageProps) {
                         relatedLinks={relatedLinks}
                         insuranceTypeId={insuranceType?.id}
                         stateId={state?.id}
+                        insuranceTypeName={insuranceType?.name}
                     />
                     {showFooter && <Footer insuranceTypes={allInsuranceTypes} />}
                 </div>
@@ -761,7 +790,81 @@ export default async function DynamicPage({ params }: PageProps) {
                         relatedLinks={relatedLinks}
                         insuranceTypeId={insuranceType?.id}
                         stateId={state?.id}
+                        insuranceTypeName={insuranceType?.name}
                     />
+                    {showFooter && <Footer insuranceTypes={allInsuranceTypes} />}
+                </div>
+            </PageWrapper>
+        );
+    }
+
+    // Template selector for other niches using new React templates
+    const getTemplateForNiche = (slug: string | undefined) => {
+        if (!slug) return null;
+        
+        const templateProps = {
+            variables,
+            affiliates: affiliatePartners,
+            relatedLinks,
+            insuranceTypeId: insuranceType?.id,
+            stateId: state?.id,
+            insuranceTypeName: insuranceType?.name,
+        };
+
+        if (slug.includes('life-insurance')) {
+            return <LifeInsuranceTemplate {...templateProps} />;
+        }
+        if (slug.includes('motorcycle')) {
+            return <MotorcycleInsuranceTemplate {...templateProps} />;
+        }
+        if (slug.includes('pet-insurance')) {
+            return <PetInsuranceTemplate {...templateProps} />;
+        }
+        if (slug.includes('business') || slug.includes('commercial')) {
+            return <BusinessInsuranceTemplate {...templateProps} />;
+        }
+        if (slug.includes('renters')) {
+            return <RentersInsuranceTemplate {...templateProps} />;
+        }
+        if (slug.includes('umbrella')) {
+            return <UmbrellaInsuranceTemplate {...templateProps} />;
+        }
+        return null;
+    };
+
+    const NicheTemplate = getTemplateForNiche(nicheSlug);
+    if (NicheTemplate) {
+        return (
+            <PageWrapper
+                pageType="insurance"
+                insuranceType={insuranceType?.name}
+                insuranceTypeSlug={nicheSlug}
+                stateName={state?.name}
+                stateCode={state?.code}
+                stateId={state?.id}
+                cityName={city?.name}
+                enablePopups={true}
+            >
+                <div className="min-h-screen bg-white">
+                    <script
+                        type="application/ld+json"
+                        dangerouslySetInnerHTML={{ __html: JSON.stringify(schemas) }}
+                    />
+                    {state && (
+                        <LocalBusinessSchema
+                            name={`${insuranceType?.name} in ${state?.name}`}
+                            description={`Find affordable ${insuranceType?.name?.toLowerCase()} in ${state?.name}. Compare quotes from top providers.`}
+                            insuranceType={insuranceType?.name}
+                            stateName={state?.name}
+                            stateCode={state?.code}
+                            cityName={city?.name}
+                            url={`https://myinsurancebuddies.com/${page?.slug || nicheSlug}`}
+                            rating={4.7}
+                            reviewCount={875}
+                        />
+                    )}
+                    {showHeader && <Header insuranceTypes={allInsuranceTypes} states={allStates} />}
+                    {NicheTemplate}
                     {showFooter && <Footer insuranceTypes={allInsuranceTypes} />}
                 </div>
             </PageWrapper>
@@ -813,8 +916,8 @@ export default async function DynamicPage({ params }: PageProps) {
                                     <ul className="space-y-2">
                                         {relatedLinks.otherNiches.slice(0, 6).map((link: any, i: number) => (
                                             <li key={i}>
-                                                <Link href={link.href} className="text-slate-600 hover:text-blue-600 transition-colors text-sm flex items-center gap-2">
-                                                    <span>{link.icon}</span> {link.label}
+                                                <Link href={link.href} className="text-slate-600 hover:text-blue-600 transition-colors text-sm flex items-center gap-2 group">
+                                                    <span className="text-slate-400 group-hover:text-blue-600 transition-colors">{getInsuranceIcon(link.iconSlug)}</span> {link.label}
                                                 </Link>
                                             </li>
                                         ))}
@@ -952,8 +1055,8 @@ export default async function DynamicPage({ params }: PageProps) {
                                     <ul className="space-y-2">
                                         {relatedLinks.otherNiches.slice(0, 6).map((link: any, i: number) => (
                                             <li key={i}>
-                                                <Link href={link.href} className="text-slate-600 hover:text-blue-600 transition-colors text-sm flex items-center gap-2">
-                                                    <span>{link.icon}</span> {link.label}
+                                                <Link href={link.href} className="text-slate-600 hover:text-blue-600 transition-colors text-sm flex items-center gap-2 group">
+                                                    <span className="text-slate-400 group-hover:text-blue-600 transition-colors">{getInsuranceIcon(link.iconSlug)}</span> {link.label}
                                                 </Link>
                                             </li>
                                         ))}

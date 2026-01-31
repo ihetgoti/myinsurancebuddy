@@ -94,10 +94,12 @@ export async function GET(request: NextRequest) {
         const offset = parseInt(searchParams.get('offset') || '0');
         const status = searchParams.get('status');
         const insuranceType = searchParams.get('insuranceType');
+        const source = searchParams.get('source');
 
         const where: any = {};
         if (status) where.status = status;
         if (insuranceType) where.insuranceType = insuranceType;
+        if (source) where.source = source;
 
         const [leads, total] = await Promise.all([
             prisma.lead.findMany({

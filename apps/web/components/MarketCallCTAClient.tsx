@@ -1,6 +1,8 @@
 'use client';
 
+import { useState } from 'react';
 import { Phone, PhoneCall, ArrowRight, FileText } from 'lucide-react';
+import FallbackLeadForm from './FallbackLeadForm';
 
 interface MarketCallCTAClientProps {
     displayPhone: string;
@@ -11,10 +13,15 @@ interface MarketCallCTAClientProps {
     insuranceTypeId?: string;
     stateId?: string;
     offerName?: string;
+    hasOffer: boolean;
+    insuranceTypeName?: string;
+    stateName?: string;
+    cityName?: string;
 }
 
 /**
  * Client component that handles interactivity for MarketCall CTAs
+ * Shows fallback lead form when no offer is available
  */
 export default function MarketCallCTAClient({
     displayPhone,
@@ -24,7 +31,11 @@ export default function MarketCallCTAClient({
     className,
     insuranceTypeId,
     stateId,
-    offerName
+    offerName,
+    hasOffer,
+    insuranceTypeName,
+    stateName,
+    cityName,
 }: MarketCallCTAClientProps) {
     const hasPhone = variant === 'phone' || variant === 'both';
     const hasForm = (variant === 'form' || variant === 'both') && formUrl;
@@ -54,6 +65,17 @@ export default function MarketCallCTAClient({
             });
         }
     };
+
+    // If no offer available, show fallback lead form
+    if (!hasOffer) {
+        return (
+            <FallbackLeadForm
+                insuranceType={insuranceTypeName || 'Insurance'}
+                state={stateName}
+                city={cityName}
+            />
+        );
+    }
 
     return (
         <div className={`bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl p-6 shadow-lg ${className}`}>

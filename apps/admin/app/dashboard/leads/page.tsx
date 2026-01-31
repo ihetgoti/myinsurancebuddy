@@ -45,6 +45,7 @@ export default function LeadsPage() {
             params.set('offset', (page * limit).toString());
             if (filters.status) params.set('status', filters.status);
             if (filters.insuranceType) params.set('insuranceType', filters.insuranceType);
+            if (filters.source) params.set('source', filters.source);
 
             // Use web API endpoint from admin app
             const res = await fetch(`/api/leads?${params.toString()}`);
@@ -105,11 +106,20 @@ export default function LeadsPage() {
             popup: 'bg-purple-50 text-purple-700',
             phone_click: 'bg-green-50 text-green-700',
             affiliate: 'bg-orange-50 text-orange-700',
+            fallback_form_no_offer: 'bg-red-50 text-red-700',
+        };
+        
+        const labels: Record<string, string> = {
+            web: 'Web Form',
+            popup: 'Popup',
+            phone_click: 'Phone Click',
+            affiliate: 'Affiliate',
+            fallback_form_no_offer: 'No Offer',
         };
 
         return (
             <span className={`px-2 py-1 text-xs rounded-full ${styles[source] || 'bg-gray-50 text-gray-700'}`}>
-                {source}
+                {labels[source] || source}
             </span>
         );
     };
@@ -169,11 +179,15 @@ export default function LeadsPage() {
                             className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
                         >
                             <option value="">All Types</option>
-                            <option value="auto">Auto</option>
-                            <option value="home">Home</option>
-                            <option value="life">Life</option>
-                            <option value="health">Health</option>
-                            <option value="business">Business</option>
+                            <option value="Auto Insurance">Auto</option>
+                            <option value="Home Insurance">Home</option>
+                            <option value="Life Insurance">Life</option>
+                            <option value="Health Insurance">Health</option>
+                            <option value="Business Insurance">Business</option>
+                            <option value="Renters Insurance">Renters</option>
+                            <option value="Pet Insurance">Pet</option>
+                            <option value="Motorcycle Insurance">Motorcycle</option>
+                            <option value="Umbrella Insurance">Umbrella</option>
                         </select>
 
                         <select
@@ -189,6 +203,7 @@ export default function LeadsPage() {
                             <option value="popup">Popup</option>
                             <option value="phone_click">Phone Click</option>
                             <option value="affiliate">Affiliate</option>
+                            <option value="fallback_form_no_offer">Fallback (No Offer)</option>
                         </select>
 
                         <div className="relative flex-1 min-w-[200px]">
@@ -320,7 +335,7 @@ export default function LeadsPage() {
                 </div>
 
                 {/* Stats Cards */}
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-6">
+                <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mt-6">
                     <div className="bg-white rounded-lg shadow-sm p-4">
                         <div className="text-sm text-gray-500">New Leads</div>
                         <div className="text-2xl font-bold text-blue-600">
@@ -345,6 +360,12 @@ export default function LeadsPage() {
                             {leads.length > 0
                                 ? ((leads.filter(l => l.status === 'CONVERTED').length / leads.length) * 100).toFixed(1)
                                 : 0}%
+                        </div>
+                    </div>
+                    <div className="bg-white rounded-lg shadow-sm p-4">
+                        <div className="text-sm text-gray-500">No Offer (Fallback)</div>
+                        <div className="text-2xl font-bold text-red-600">
+                            {leads.filter(l => l.source === 'fallback_form_no_offer').length}
                         </div>
                     </div>
                 </div>
