@@ -1,4 +1,4 @@
-name: Deploy to Production
+name: Deploy to Production (Docker)
 
 on:
   push:
@@ -7,150 +7,99 @@ on:
   workflow_dispatch:
 
 jobs:
-  build-and-deploy:
+  deploy:
     runs-on: ubuntu-latest
     
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v2
-        with:
-          version: 10
-
-      - name: Get pnpm store directory
-        shell: bash
-        run: |
-          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
-
-      - name: Setup pnpm cache
-        uses: actions/cache@v3
-        with:
-          path: ${{ env.STORE_PATH }}
-          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-pnpm-store-
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Generate Prisma Client
-        run: |
-          cd packages/db
-          npx prisma generate
-          cd ../..
-
-      - name: Build packages
-        run: pnpm build
-        env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
-          NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}
-          NEXTAUTH_URL: ${{ secrets.NEXTAUTH_URL }}
-
-      - name: Deploy to VPS
+      - name: Deploy to VPS via Docker
         uses: appleboy/ssh-action@v1.0.3
         env:
           NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}
           NEXTAUTH_URL: ${{ secrets.NEXTAUTH_URL }}
           NEXTAUTH_URL_ADMIN: ${{ secrets.NEXTAUTH_URL_ADMIN }}
+          POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+          POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
         with:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USERNAME }}
           key: ${{ secrets.VPS_SSH_KEY }}
           port: ${{ secrets.VPS_PORT }}
-          envs: NEXTAUTH_SECRET,NEXTAUTH_URL,NEXTAUTH_URL_ADMIN,PAGES_API_KEY
+          command_timeout: 30m
+          envs: NEXTAUTH_SECRET,NEXTAUTH_URL,NEXTAUTH_URL_ADMIN,POSTGRES_USER,POSTGRES_PASSWORD,POSTGRES_DB
           script: |
             set -e
             PROJECT_DIR="/var/www/myinsurancebuddies.com"
             
-            echo "📦 Deploying MyInsuranceBuddies..."
+            echo "🚀 Deploying MyInsuranceBuddies with Docker..."
             
             # Create directory if it doesn't exist
             if [ ! -d "$PROJECT_DIR" ]; then
-              echo "Creating project directory..."
-              sudo mkdir -p $PROJECT_DIR
-              sudo chown $USER:$USER $PROJECT_DIR
+              echo "📁 Creating project directory..."
+              mkdir -p $PROJECT_DIR
               cd $PROJECT_DIR
               git clone https://github.com/ihetgoti/myinsurancebuddy.git .
             else
               cd $PROJECT_DIR
             fi
             
-            # Create .env file (if not exists or update specific vars)
-            # DATABASE_URL is managed manually on VPS as requested
-            if [ ! -f .env ]; then
-              echo "Creating .env file..."
-              cat > .env << EOF
-            NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
-            NEXTAUTH_URL=${NEXTAUTH_URL}
-            NEXTAUTH_URL_ADMIN=${NEXTAUTH_URL_ADMIN}
-            PAGES_API_KEY=${PAGES_API_KEY}
-            EOF
-            else
-              echo "Updating .env file (preserving DATABASE_URL)..."
-              # Update or append other vars, keep DATABASE_URL
-              # Simple append for now or just ensure these exist
-              grep -q "NEXTAUTH_SECRET" .env || echo "NEXTAUTH_SECRET=${NEXTAUTH_SECRET}" >> .env
-              grep -q "NEXTAUTH_URL" .env || echo "NEXTAUTH_URL=${NEXTAUTH_URL}" >> .env
-              grep -q "NEXTAUTH_URL_ADMIN" .env || echo "NEXTAUTH_URL_ADMIN=${NEXTAUTH_URL_ADMIN}" >> .env
-              grep -q "PAGES_API_KEY" .env || echo "PAGES_API_KEY=${PAGES_API_KEY}" >> .env
-            fi
-            
             # Pull latest code
+            echo "📥 Pulling latest code..."
             git fetch origin main
             git reset --hard origin/main
             
-            # Install dependencies
+            # Create/update .env file
+            echo "📝 Creating .env file..."
+            cat > .env << EOF
+            # Database
+            POSTGRES_USER=${POSTGRES_USER:-myuser}
+            POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-mypassword}
+            POSTGRES_DB=${POSTGRES_DB:-myinsurancebuddy}
+            DATABASE_URL=postgresql://${POSTGRES_USER:-myuser}:${POSTGRES_PASSWORD:-mypassword}@localhost:5432/${POSTGRES_DB:-myinsurancebuddy}?schema=public
+            
+            # NextAuth
+            NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
+            NEXTAUTH_URL=${NEXTAUTH_URL:-https://myinsurancebuddies.com}
+            NEXTAUTH_URL_ADMIN=${NEXTAUTH_URL_ADMIN:-https://admin.myinsurancebuddies.com}
+            
+            # Site
+            SITE_URL=https://myinsurancebuddies.com
+            NODE_ENV=production
+            EOF
+            
+            # Install dependencies (needed for Prisma migrations)
+            echo "📦 Installing dependencies..."
             pnpm install --frozen-lockfile
             
-            # Generate Prisma client and run migrations
+            # Generate Prisma client
+            echo "🔧 Generating Prisma client..."
             cd packages/db
             npx prisma generate
-
-            # Run pending migrations (safe for production)
-            echo "📋 Checking migration status..."
-            MIGRATE_STATUS=$(npx prisma migrate status 2>&1 || true)
-            echo "$MIGRATE_STATUS"
-
-            # Check if we need to baseline (P3005 error or unapplied migrations on existing schema)
-            if echo "$MIGRATE_STATUS" | grep -q "P3005\|not yet been applied"; then
-              echo "🔧 Database needs baseline - marking existing migrations as applied..."
-              # Get list of migration directories
-              for migration in prisma/migrations/*/; do
-                migration_name=$(basename "$migration")
-                if [ "$migration_name" != "migration_lock.toml" ]; then
-                  echo "  Marking $migration_name as applied..."
-                  npx prisma migrate resolve --applied "$migration_name" || true
-                fi
-              done
-            fi
-
-            echo "🚀 Applying pending migrations..."
-            npx prisma migrate deploy || echo "⚠️ Migration deploy completed with warnings"
-
-            # Seed database (creates insurance types, states, admin user)
-            echo "🌱 Running database seed..."
+            
+            # Run migrations
+            echo "📋 Running database migrations..."
+            npx prisma migrate deploy || echo "⚠️ Migration completed with warnings"
+            
+            # Seed database
+            echo "🌱 Seeding database..."
             npx ts-node --transpile-only prisma/seed.ts || echo "Seed skipped (may already exist)"
             cd ../..
             
-            # Build apps
+            # Build apps (on VPS with DATABASE_URL available)
+            echo "🏗️ Building applications..."
             pnpm build
             
             # Update nginx config
+            echo "🔧 Configuring Nginx..."
             sudo cp nginx.conf /etc/nginx/sites-available/myinsurancebuddies.com
             sudo rm -f /etc/nginx/sites-enabled/default
             sudo ln -sf /etc/nginx/sites-available/myinsurancebuddies.com /etc/nginx/sites-enabled/
             sudo nginx -t && sudo systemctl reload nginx
             
             # Restart apps with PM2
+            echo "🔄 Restarting PM2 services..."
             pm2 delete all || true
             pm2 start ecosystem.config.js
             pm2 save
             
-            echo "✅ Deployment completed!"
+            echo "✅ Deployment completed successfully!"

@@ -36,8 +36,9 @@ COPY --from=deps /app/packages/db/node_modules ./packages/db/node_modules 2>/dev
 # Generate Prisma Client
 RUN cd packages/db && pnpm prisma generate
 
-# Build the application
+# Build the application (use dummy DATABASE_URL for build-time static generation)
 ENV NEXT_TELEMETRY_DISABLED=1
+ENV DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy?schema=public"
 RUN pnpm build --filter=web
 
 # Stage 3: Runner

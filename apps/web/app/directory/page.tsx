@@ -5,6 +5,9 @@ import SmartBreadcrumb from '@/components/navigation/SmartBreadcrumb';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 
+// Force dynamic rendering to prevent build-time database calls
+export const dynamic = 'force-dynamic';
+
 export const metadata: Metadata = {
     title: 'Site Directory | Browse All Insurance Guides',
     description: 'Browse our comprehensive directory of insurance guides organized by type, state, and city. Find the best insurance coverage for your needs.',
