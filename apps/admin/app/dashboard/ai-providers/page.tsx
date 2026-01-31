@@ -26,7 +26,7 @@ export default function AIProvidersPage() {
   const [formData, setFormData] = useState({
     name: '',
     apiKey: '',
-    preferredModel: 'xiaomi/mimo-v2-flash', // Default to FREE PREMIUM Xiaomi model (until Jan 26!)
+    preferredModel: 'deepseek/deepseek-r1:free', // Default to free model
     totalBudget: '',
     priority: '0'
   });
@@ -72,7 +72,7 @@ export default function AIProvidersPage() {
         setFormData({
           name: '',
           apiKey: '',
-          preferredModel: 'xiaomi/mimo-v2-flash',
+          preferredModel: 'deepseek/deepseek-r1:free',
           totalBudget: '',
           priority: '0'
         });
@@ -234,7 +234,7 @@ export default function AIProvidersPage() {
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg"
                   >
                     <optgroup label="🆓 FREE Models (Recommended)">
-                      <option value="xiaomi/mimo-v2-flash">🔥 MiMo-V2-Flash (FREE - BEST Quality!) ⚠️ Ends Jan 26</option>
+                      <option value="deepseek/deepseek-r1:free">DeepSeek R1 (Free)</option>
                       <option value="deepseek/deepseek-r1">DeepSeek R1 (FREE - Xiaomi)</option>
                       <option value="deepseek/deepseek-chat">DeepSeek Chat (FREE)</option>
                       <option value="google/gemini-2.0-flash-exp">Gemini 2.0 Flash (FREE)</option>

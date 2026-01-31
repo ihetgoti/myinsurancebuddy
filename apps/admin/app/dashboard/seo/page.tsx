@@ -50,17 +50,45 @@ export default function SEODashboardPage() {
         fetchData();
     }, []);
 
-    const fixSEOIssues = async () => {
+    const [fixOptions, setFixOptions] = useState({
+        fixCanonical: true,
+        fixOgImage: true,
+        fixMetaTitle: false,
+        fixMetaDesc: false,
+    });
+    const [fixPreview, setFixPreview] = useState<any>(null);
+    const [showFixModal, setShowFixModal] = useState(false);
+
+    const previewFixes = async () => {
         setFixing(true);
         try {
             const res = await fetch(getApiUrl('/api/seo/fix'), {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ fixCanonical: true, fixOgImage: true }),
+                body: JSON.stringify({ ...fixOptions, dryRun: true }),
             });
             const data = await res.json();
-            alert(`Fixed ${data.updated} pages!`);
-            fetchData(); // Refresh stats
+            setFixPreview(data);
+        } catch (error: any) {
+            alert('Failed to preview fixes: ' + error.message);
+        } finally {
+            setFixing(false);
+        }
+    };
+
+    const applyFixes = async () => {
+        setFixing(true);
+        try {
+            const res = await fetch(getApiUrl('/api/seo/fix'), {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ...fixOptions, dryRun: false }),
+            });
+            const data = await res.json();
+            alert(`Fixed ${data.updated} pages!${data.errors > 0 ? ` (${data.errors} errors)` : ''}`);
+            setShowFixModal(false);
+            setFixPreview(null);
+            fetchData();
         } catch (error: any) {
             alert('Failed to fix issues: ' + error.message);
         } finally {
@@ -188,18 +216,11 @@ export default function SEODashboardPage() {
                     </div>
                     <div className="flex gap-2">
                         <button
-                            onClick={fixSEOIssues}
+                            onClick={() => setShowFixModal(true)}
                             disabled={fixing}
                             className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 disabled:opacity-50 flex items-center gap-2"
                         >
-                            {fixing ? (
-                                <>
-                                    <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></div>
-                                    Fixing...
-                                </>
-                            ) : (
-                                '🔧 Auto-Fix Issues'
-                            )}
+                            🔧 Auto-Fix Issues
                         </button>
                         <button
                             onClick={generateSitemaps}
@@ -740,6 +761,173 @@ Sitemap: https://myinsurancebuddies.com/sitemap-index.xml`}
                         )}
                     </div>
                 </div>
+
+                {/* Auto-Fix Modal */}
+                {showFixModal && (
+                    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                        <div className="bg-white rounded-xl shadow-xl max-w-2xl w-full mx-4 p-6 max-h-[90vh] overflow-y-auto">
+                            <h2 className="text-xl font-bold mb-4">🔧 Auto-Fix SEO Issues</h2>
+                            
+                            {!fixPreview ? (
+                                <>
+                                    <p className="text-gray-600 mb-6">
+                                        Select which issues to fix. This will update all published pages that are missing these elements.
+                                    </p>
+                                    
+                                    <div className="space-y-4 mb-6">
+                                        <label className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100">
+                                            <input
+                                                type="checkbox"
+                                                checked={fixOptions.fixCanonical}
+                                                onChange={(e) => setFixOptions({...fixOptions, fixCanonical: e.target.checked})}
+                                                className="w-5 h-5 text-green-600"
+                                            />
+                                            <div>
+                                                <div className="font-medium">Canonical URLs</div>
+                                                <div className="text-sm text-gray-500">Add canonical tags to pages missing them</div>
+                                            </div>
+                                        </label>
+                                        
+                                        <label className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100">
+                                            <input
+                                                type="checkbox"
+                                                checked={fixOptions.fixOgImage}
+                                                onChange={(e) => setFixOptions({...fixOptions, fixOgImage: e.target.checked})}
+                                                className="w-5 h-5 text-green-600"
+                                            />
+                                            <div>
+                                                <div className="font-medium">Open Graph Images</div>
+                                                <div className="text-sm text-gray-500">Add default OG image to pages missing them</div>
+                                            </div>
+                                        </label>
+                                        
+                                        <label className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100">
+                                            <input
+                                                type="checkbox"
+                                                checked={fixOptions.fixMetaTitle}
+                                                onChange={(e) => setFixOptions({...fixOptions, fixMetaTitle: e.target.checked})}
+                                                className="w-5 h-5 text-green-600"
+                                            />
+                                            <div>
+                                                <div className="font-medium">Meta Titles</div>
+                                                <div className="text-sm text-gray-500">Auto-generate missing meta titles from page context</div>
+                                            </div>
+                                        </label>
+                                        
+                                        <label className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100">
+                                            <input
+                                                type="checkbox"
+                                                checked={fixOptions.fixMetaDesc}
+                                                onChange={(e) => setFixOptions({...fixOptions, fixMetaDesc: e.target.checked})}
+                                                className="w-5 h-5 text-green-600"
+                                            />
+                                            <div>
+                                                <div className="font-medium">Meta Descriptions</div>
+                                                <div className="text-sm text-gray-500">Auto-generate missing meta descriptions</div>
+                                            </div>
+                                        </label>
+                                    </div>
+                                    
+                                    <div className="flex gap-3">
+                                        <button
+                                            onClick={() => setShowFixModal(false)}
+                                            className="flex-1 px-4 py-2 border rounded-lg hover:bg-gray-50"
+                                        >
+                                            Cancel
+                                        </button>
+                                        <button
+                                            onClick={previewFixes}
+                                            disabled={fixing || (!fixOptions.fixCanonical && !fixOptions.fixOgImage && !fixOptions.fixMetaTitle && !fixOptions.fixMetaDesc)}
+                                            className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 flex items-center justify-center gap-2"
+                                        >
+                                            {fixing ? (
+                                                <>
+                                                    <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></div>
+                                                    Analyzing...
+                                                </>
+                                            ) : (
+                                                'Preview Changes'
+                                            )}
+                                        </button>
+                                    </div>
+                                </>
+                            ) : (
+                                <>
+                                    <div className="bg-gray-50 rounded-lg p-4 mb-4">
+                                        <div className="grid grid-cols-3 gap-4 text-center">
+                                            <div>
+                                                <div className="text-2xl font-bold text-blue-600">{fixPreview.totalFound}</div>
+                                                <div className="text-sm text-gray-600">Pages Found</div>
+                                            </div>
+                                            <div>
+                                                <div className="text-2xl font-bold text-green-600">{fixPreview.fixes?.length || 0}</div>
+                                                <div className="text-sm text-gray-600">Will Be Fixed</div>
+                                            </div>
+                                            <div>
+                                                <div className="text-2xl font-bold text-red-600">{fixPreview.errors || 0}</div>
+                                                <div className="text-sm text-gray-600">Errors</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    {fixPreview.fixes && fixPreview.fixes.length > 0 && (
+                                        <div className="mb-4">
+                                            <h3 className="font-medium mb-2">Sample of pages to fix:</h3>
+                                            <div className="max-h-48 overflow-y-auto border rounded-lg">
+                                                {fixPreview.fixes.map((fix: any, i: number) => (
+                                                    <div key={i} className="px-4 py-2 border-b last:border-b-0 text-sm">
+                                                        <span className="font-medium">{fix.slug}</span>
+                                                        <span className="text-gray-500 ml-2">({fix.fixes.join(', ')})</span>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+                                    
+                                    {fixPreview.errorDetails && fixPreview.errorDetails.length > 0 && (
+                                        <div className="mb-4 bg-red-50 border border-red-200 rounded-lg p-3">
+                                            <h3 className="font-medium text-red-700 mb-2">Errors (first 10):</h3>
+                                            {fixPreview.errorDetails.map((err: any, i: number) => (
+                                                <div key={i} className="text-sm text-red-600">
+                                                    {err.slug}: {err.error}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                    
+                                    <div className="flex gap-3">
+                                        <button
+                                            onClick={() => setFixPreview(null)}
+                                            className="px-4 py-2 border rounded-lg hover:bg-gray-50"
+                                        >
+                                            Back
+                                        </button>
+                                        <button
+                                            onClick={() => setShowFixModal(false)}
+                                            className="px-4 py-2 border rounded-lg hover:bg-gray-50"
+                                        >
+                                            Cancel
+                                        </button>
+                                        <button
+                                            onClick={applyFixes}
+                                            disabled={fixing || fixPreview.fixes?.length === 0}
+                                            className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 flex items-center justify-center gap-2"
+                                        >
+                                            {fixing ? (
+                                                <>
+                                                    <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></div>
+                                                    Fixing...
+                                                </>
+                                            ) : (
+                                                `Apply Fixes (${fixPreview.fixes?.length || 0} pages)`
+                                            )}
+                                        </button>
+                                    </div>
+                                </>
+                            )}
+                        </div>
+                    </div>
+                )}
             </div>
         </AdminLayout>
     );

@@ -1,0 +1,17 @@
+{
+  "name": "MyInsuranceBuddies",
+  "short_name": "MIB",
+  "description": "Your Guide to Finding the Best Insurance - Compare rates and save on auto, home, life, and health insurance.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#3B82F6",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "48x48 72x72 96x96 128x128 256x256",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

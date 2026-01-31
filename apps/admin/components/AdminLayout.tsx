@@ -35,7 +35,13 @@ import {
     RefreshCw,
     MessageSquare,
     Sparkles,
-    Key
+    Key,
+    Target,
+    DollarSign,
+    Trophy,
+    Phone,
+    Code,
+    Mail
 } from 'lucide-react';
 import JobProgressBar from './JobProgressBar';
 
@@ -213,7 +219,10 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
             items: [
                 { href: '/dashboard/auto-generate', label: 'Auto Generate', icon: <Zap size={18} strokeWidth={1.5} /> },
                 { href: '/dashboard/ai-content', label: 'AI Generation', icon: <Sparkles size={18} strokeWidth={1.5} /> },
+                { href: '/dashboard/ai-ranking', label: 'AI Ranking', icon: <Trophy size={18} strokeWidth={1.5} /> },
+                { href: '/dashboard/keywords', label: 'SEO Keywords', icon: <Target size={18} strokeWidth={1.5} /> },
                 { href: '/dashboard/ai-providers', label: 'AI Providers', icon: <Key size={18} strokeWidth={1.5} /> },
+                { href: '/dashboard/free-models', label: 'Free Models', icon: <CheckCircle size={18} strokeWidth={1.5} /> },
                 { href: '/dashboard/ai-templates', label: 'AI Templates', icon: <FileText size={18} strokeWidth={1.5} /> },
             ],
         },
@@ -221,6 +230,9 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
             title: 'Marketing',
             items: [
                 { href: '/dashboard/call-offers', label: 'Call Offers', icon: <Zap size={18} strokeWidth={1.5} /> },
+                { href: '/dashboard/marketcall-scripts', label: 'Marketcall Scripts', icon: <Code size={18} strokeWidth={1.5} /> },
+                { href: '/dashboard/leads-fallback', label: 'Fallback Leads', icon: <Mail size={18} strokeWidth={1.5} /> },
+                { href: '/dashboard/pricing', label: 'Pricing Manager', icon: <DollarSign size={18} strokeWidth={1.5} /> },
                 { href: '/dashboard/popups', label: 'Popups', icon: <MessageSquare size={18} strokeWidth={1.5} /> },
                 { href: '/dashboard/affiliates', label: 'Affiliate Partners', icon: <Handshake size={18} strokeWidth={1.5} /> },
                 { href: '/dashboard/ads', label: 'Manage Ads', icon: <LayoutTemplate size={18} strokeWidth={1.5} /> },

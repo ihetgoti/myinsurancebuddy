@@ -1,10 +1,9 @@
 'use client';
 
 import Link from 'next/link';
-import Image from 'next/image';
 import { useState, useEffect } from 'react';
-import { ChevronDown, Menu, X, Phone, Car, Home, Heart, Stethoscope, Briefcase, Dog, User, LogOut, Shield, CheckCircle } from 'lucide-react';
-import { useSession, signOut } from 'next-auth/react';
+import { ChevronDown, Menu, X, Phone, Car, Home, Heart, Stethoscope, Briefcase, Dog, Shield, Globe } from 'lucide-react';
+import Logo from './Logo';
 
 interface InsuranceType {
     id: string;
@@ -26,7 +25,6 @@ interface HeaderProps {
 }
 
 export default function Header({ insuranceTypes = [], states = [] }: HeaderProps) {
-    const { data: session, status } = useSession();
     const [scrolled, setScrolled] = useState(false);
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
@@ -56,10 +54,6 @@ export default function Header({ insuranceTypes = [], states = [] }: HeaderProps
         { name: 'Pet Insurance', href: '/pet-insurance', icon: <Dog className="w-5 h-5" />, desc: 'For furry friends' },
     ];
 
-    const handleSignOut = () => {
-        signOut({ callbackUrl: '/' });
-    };
-
     return (
         <>
             <header
@@ -72,26 +66,7 @@ export default function Header({ insuranceTypes = [], states = [] }: HeaderProps
 
                     {/* Brand */}
                     <Link href="/" className="flex items-center gap-3 group mr-8">
-                        <div className="relative w-10 h-10 flex items-center justify-center">
-                            {/* Gradient Shield Logo */}
-                            <svg viewBox="0 0 32 32" className="w-10 h-10 drop-shadow-md group-hover:drop-shadow-lg transition-all">
-                                <defs>
-                                    <linearGradient id="headerShieldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                                        <stop offset="0%" stopColor="#0EA5E9"/>
-                                        <stop offset="50%" stopColor="#2563EB"/>
-                                        <stop offset="100%" stopColor="#7C3AED"/>
-                                    </linearGradient>
-                                </defs>
-                                <path d="M16 2L4 7V16C4 24.28 9.48 31.64 16 34C22.52 31.64 28 24.28 28 16V7L16 2Z" fill="url(#headerShieldGrad)"/>
-                                <path d="M12 17L15 20L21 14" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
-                            </svg>
-                        </div>
-                        <div className="flex flex-col">
-                            <span className="text-lg font-extrabold text-slate-900 tracking-tight leading-tight group-hover:text-blue-600 transition-colors">
-                                MyInsurance<span className="bg-gradient-to-r from-blue-600 to-violet-600 bg-clip-text text-transparent">Buddies</span>
-                            </span>
-                            <span className="text-[10px] font-semibold text-slate-400 tracking-wide uppercase">Your Trusted Insurance Guide</span>
-                        </div>
+                        <Logo size="md" variant="full" />
                     </Link>
 
                     {/* Desktop Navigation */}
@@ -126,7 +101,7 @@ export default function Header({ insuranceTypes = [], states = [] }: HeaderProps
                                     </div>
                                     <div className="mt-4 pt-4 border-t border-slate-100 flex justify-between items-center bg-slate-50/50 -mx-6 -mb-6 p-4 rounded-b-2xl">
                                         <div className="text-xs font-semibold text-slate-500 px-2">
-                                            Don't see what you need?
+                                            Don&apos;t see what you need?
                                         </div>
                                         <Link href="/insurance-types" className="text-xs font-bold text-blue-600 hover:underline px-2">
                                             View all 50+ categories →
@@ -152,8 +127,8 @@ export default function Header({ insuranceTypes = [], states = [] }: HeaderProps
                                     <Link href="/guides" className="block px-4 py-2.5 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-50 hover:text-blue-600 transition-colors">
                                         Insurance Guides
                                     </Link>
-                                    <Link href="/states" className="block px-4 py-2.5 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-50 hover:text-blue-600 transition-colors">
-                                        Coverage by State
+                                    <Link href="/directory" className="block px-4 py-2.5 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-50 hover:text-blue-600 transition-colors">
+                                        Site Directory
                                     </Link>
                                     <Link href="/faq" className="block px-4 py-2.5 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-50 hover:text-blue-600 transition-colors">
                                         FAQ
@@ -176,53 +151,6 @@ export default function Header({ insuranceTypes = [], states = [] }: HeaderProps
                         </div>
 
                         <div className="h-8 w-px bg-slate-200 hidden lg:block"></div>
-
-                        {/* Session-aware Auth Buttons */}
-                        {status === 'loading' ? (
-                            <div className="hidden lg:block w-16 h-8 bg-slate-100 rounded animate-pulse"></div>
-                        ) : session ? (
-                            <div className="hidden lg:flex items-center gap-4">
-                                <div className="relative group" onMouseEnter={() => setActiveDropdown('user')} onMouseLeave={() => setActiveDropdown(null)}>
-                                    <button className="flex items-center gap-2 px-3 py-2 rounded-full hover:bg-slate-50 transition-colors">
-                                        <div className="w-8 h-8 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center">
-                                            <User className="w-4 h-4" />
-                                        </div>
-                                        <span className="text-sm font-bold text-slate-700 max-w-[100px] truncate">
-                                            {session.user?.name || session.user?.email?.split('@')[0]}
-                                        </span>
-                                        <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
-                                    </button>
-
-                                    <div className={`absolute top-full right-0 pt-2 w-48 transition-all duration-200 ${activeDropdown === 'user' ? 'opacity-100 visible translate-y-0' : 'opacity-0 invisible translate-y-2'}`}>
-                                        <div className="bg-white rounded-xl shadow-xl ring-1 ring-slate-200/50 p-2">
-                                            <div className="px-3 py-2 border-b border-slate-100 mb-1">
-                                                <p className="text-xs text-slate-400">Signed in as</p>
-                                                <p className="text-sm font-semibold text-slate-900 truncate">{session.user?.email}</p>
-                                            </div>
-                                            <button
-                                                onClick={handleSignOut}
-                                                className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium text-red-600 hover:bg-red-50 transition-colors"
-                                            >
-                                                <LogOut className="w-4 h-4" />
-                                                Sign Out
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        ) : (
-                            <>
-                                <Link href="/login" className="hidden lg:block text-sm font-bold text-slate-600 hover:text-slate-900">
-                                    Log in
-                                </Link>
-                                <Link
-                                    href="/signup"
-                                    className="hidden lg:inline-flex items-center justify-center px-5 py-2.5 text-sm font-bold text-blue-600 bg-blue-50 rounded-full hover:bg-blue-100 transition-all"
-                                >
-                                    Sign Up
-                                </Link>
-                            </>
-                        )}
 
                         <Link
                             href="/get-quote"
@@ -279,6 +207,14 @@ export default function Header({ insuranceTypes = [], states = [] }: HeaderProps
                                     Guides
                                 </Link>
                                 <Link
+                                    href="/directory"
+                                    className="flex items-center gap-2 p-3 rounded-xl hover:bg-slate-50 text-slate-700 font-bold"
+                                    onClick={() => setMobileMenuOpen(false)}
+                                >
+                                    <Globe className="w-4 h-4 text-blue-600" />
+                                    Site Directory
+                                </Link>
+                                <Link
                                     href="/about"
                                     className="block p-3 rounded-xl hover:bg-slate-50 text-slate-700 font-bold"
                                     onClick={() => setMobileMenuOpen(false)}
@@ -290,36 +226,11 @@ export default function Header({ insuranceTypes = [], states = [] }: HeaderProps
                             <div className="pb-8 pt-4">
                                 <Link
                                     href="/get-quote"
-                                    className="block w-full py-4 bg-blue-600 text-white text-center font-bold rounded-xl shadow-lg shadow-blue-900/10 mb-4"
+                                    className="block w-full py-4 bg-blue-600 text-white text-center font-bold rounded-xl shadow-lg shadow-blue-900/10"
                                     onClick={() => setMobileMenuOpen(false)}
                                 >
                                     Start My Quote
                                 </Link>
-                                {session ? (
-                                    <button
-                                        onClick={() => { handleSignOut(); setMobileMenuOpen(false); }}
-                                        className="block w-full py-4 text-center font-bold text-red-600 bg-red-50 rounded-xl"
-                                    >
-                                        Sign Out
-                                    </button>
-                                ) : (
-                                    <>
-                                        <Link
-                                            href="/login"
-                                            className="block w-full py-4 text-center font-bold text-slate-600 bg-slate-50 rounded-xl mb-3"
-                                            onClick={() => setMobileMenuOpen(false)}
-                                        >
-                                            Log In
-                                        </Link>
-                                        <Link
-                                            href="/signup"
-                                            className="block w-full py-4 text-center font-bold text-blue-600 bg-blue-50 rounded-xl"
-                                            onClick={() => setMobileMenuOpen(false)}
-                                        >
-                                            Sign Up
-                                        </Link>
-                                    </>
-                                )}
                             </div>
                         </nav>
                     </div>

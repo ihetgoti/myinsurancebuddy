@@ -66,7 +66,7 @@ export default function AITemplatesPage() {
     buyersGuidePrompt: '',
     metaTagsPrompt: '',
     // Settings
-    model: 'xiaomi/mimo-v2-flash',
+    model: 'deepseek/deepseek-r1:free',
     temperature: '0.7',
     maxTokens: '2000',
     isActive: true,
@@ -238,7 +238,7 @@ export default function AITemplatesPage() {
       buyersGuidePrompt: '',
       metaTagsPrompt: '',
       // Settings
-      model: 'xiaomi/mimo-v2-flash',
+      model: 'deepseek/deepseek-r1:free',
       temperature: '0.7',
       maxTokens: '2000',
       isActive: true,
@@ -565,7 +565,7 @@ export default function AITemplatesPage() {
                       onChange={(e) => setFormData({ ...formData, model: e.target.value })}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg"
                     >
-                      <option value="xiaomi/mimo-v2-flash">MiMo-V2-Flash (FREE)</option>
+                      <option value="deepseek/deepseek-r1:free">DeepSeek R1 (Free)</option>
                       <option value="deepseek/deepseek-r1">DeepSeek R1 (FREE)</option>
                       <option value="google/gemini-2.0-flash-exp">Gemini 2.0 Flash (FREE)</option>
                       <option value="openai/gpt-4o-mini">GPT-4o Mini</option>

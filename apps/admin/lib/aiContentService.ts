@@ -1,4 +1,5 @@
 import { prisma } from '@/lib/prisma';
+import { KeywordContentService, KeywordConfig } from './keywordContentService';
 
 // All available AI content sections
 export type AIContentSection =
@@ -15,6 +16,65 @@ export type AIContentSection =
   | 'buyersGuide'
   | 'metaTags';
 
+// Hardcoded fallback lists (used if DB is unavailable)
+// These are replaced by database values at runtime
+export const FALLBACK_FREE_MODELS = [
+  'deepseek/deepseek-r1:free',
+  'google/gemini-2.0-flash-exp:free',
+  'meta-llama/llama-3.1-8b-instruct:free',
+  'meta-llama/llama-3.3-70b-instruct:free',
+  'mistralai/mistral-7b-instruct:free',
+  'huggingfaceh4/zephyr-7b-beta:free'
+];
+
+// Known PAID models - DANGER! Will spend your deposit
+export const PAID_MODELS = [
+  'openai/gpt-4o-mini', 'openai/gpt-4o',
+  'anthropic/claude-3-haiku', 'anthropic/claude-3-sonnet',
+  'google/gemini-flash-1.5', 'deepseek/deepseek-chat',
+  'xiaomi/mimo-v2-flash', 'novita/r1', 'atlascloud/mimo-v2-flash'
+];
+
+// Cache for free models from DB
+let cachedFreeModels: string[] | null = null;
+let cacheTime = 0;
+const CACHE_TTL = 60000; // 1 minute
+
+/**
+ * Get free models from database (with caching)
+ */
+async function getFreeModelsFromDB(): Promise<string[]> {
+  const now = Date.now();
+  
+  // Return cached if still valid
+  if (cachedFreeModels && (now - cacheTime) < CACHE_TTL) {
+    return cachedFreeModels;
+  }
+  
+  try {
+    const models = await prisma.freeAIModel.findMany({
+      where: { isActive: true },
+      orderBy: { priority: 'asc' }
+    });
+    
+    cachedFreeModels = models.map(m => m.modelId);
+    cacheTime = now;
+    
+    return cachedFreeModels;
+  } catch (e) {
+    console.warn('Failed to fetch free models from DB, using fallback:', e);
+    return FALLBACK_FREE_MODELS;
+  }
+}
+
+/**
+ * Clear the free models cache (call when models are updated)
+ */
+export function clearFreeModelsCache(): void {
+  cachedFreeModels = null;
+  cacheTime = 0;
+}
+
 export interface AIContentRequest {
   pageData: {
     id: string;
@@ -26,6 +86,23 @@ export interface AIContentRequest {
   };
   sections: AIContentSection[];
   model?: string;
+  forceFreeModels?: boolean; // If true, only use free models (protects deposit)
+  keywordConfig?: KeywordConfig; // SEO keyword configuration
+  templatePrompts?: {
+    systemPrompt?: string;
+    introPrompt?: string;
+    requirementsPrompt?: string;
+    faqsPrompt?: string;
+    tipsPrompt?: string;
+    costBreakdownPrompt?: string;
+    comparisonPrompt?: string;
+    discountsPrompt?: string;
+    localStatsPrompt?: string;
+    coverageGuidePrompt?: string;
+    claimsProcessPrompt?: string;
+    buyersGuidePrompt?: string;
+    metaTagsPrompt?: string;
+  };
 }
 
 export interface CostBreakdownItem {
@@ -104,11 +181,93 @@ export interface AIContentResponse {
   error?: string;
   tokensUsed?: number;
   cost?: number;
+  provider?: string; // Which provider was used (for tracking)
+  rateLimited?: boolean; // Indicates if this was a rate limit error
+}
+
+// Custom error for rate limit exhaustion
+export class AllProvidersRateLimitedError extends Error {
+  constructor(message: string = 'All providers have hit their rate limits') {
+    super(message);
+    this.name = 'AllProvidersRateLimitedError';
+  }
 }
 
 // OpenRouter API client with multi-account rotation
 export class OpenRouterService {
   private static currentProviderIndex = 0;
+
+  /**
+   * Get a safe model name - ensures free models only if forceFree is true
+   * This protects your deposit from accidental usage!
+   */
+  private static async getSafeModel(model: string | undefined, forceFree: boolean = true): Promise<string> {
+    // Get current free models from DB
+    const freeModels = await getFreeModelsFromDB();
+    const defaultModel = freeModels[0] || FALLBACK_FREE_MODELS[0];
+    
+    // If not forcing free, return whatever was requested
+    if (!forceFree) {
+      return model || defaultModel;
+    }
+    
+    // If no model specified, use first free model
+    if (!model) {
+      return defaultModel;
+    }
+    
+    // STRICT CHECK: Model MUST end with ':free' to be considered free
+    // This prevents accidental usage of paid models!
+    if (model.endsWith(':free')) {
+      // Also check if it's in our approved list
+      const isApproved = freeModels.some(free => model === free);
+      if (isApproved) {
+        return model;
+      }
+      console.warn(`⚠️ Model "${model}" ends with :free but not in approved list. Using approved model.`);
+    }
+    
+    // Check if it's explicitly in our free list
+    const isFree = freeModels.some(free => model === free);
+    if (isFree) {
+      return model;
+    }
+    
+    // 🚨 PAID MODEL DETECTED! Block it!
+    const isPaid = PAID_MODELS.some(paid => model.includes(paid) || paid.includes(model));
+    if (isPaid) {
+      console.error(`🚨 BLOCKED PAID MODEL: "${model}"`);
+      console.error(`   This model costs money! Using free alternative.`);
+    } else {
+      console.warn(`⚠️ Unknown model "${model}" - treating as paid for safety.`);
+    }
+    
+    // Try to find equivalent free model
+    if (model.includes('deepseek')) return freeModels.find(m => m.includes('deepseek')) || defaultModel;
+    if (model.includes('gemini')) return freeModels.find(m => m.includes('gemini')) || defaultModel;
+    if (model.includes('llama')) return freeModels.find(m => m.includes('llama')) || defaultModel;
+    if (model.includes('mistral')) return freeModels.find(m => m.includes('mistral')) || defaultModel;
+    if (model.includes('mimo') || model.includes('xiaomi')) return freeModels.find(m => m.includes('deepseek')) || defaultModel;
+    
+    // Default to first free model
+    return defaultModel;
+  }
+
+  /**
+   * Check if a model is free (synchronous - checks suffix)
+   * STRICT: Model MUST end with ':free' to be considered free
+   */
+  static isFreeModel(model: string): boolean {
+    // Strict check: must end with :free
+    return model.endsWith(':free');
+  }
+  
+  /**
+   * Get all free models from DB
+   */
+  static async getFreeModels(): Promise<string[]> {
+    return getFreeModelsFromDB();
+  }
 
   /**
    * Get next available AI provider (round-robin with budget check)
@@ -134,36 +293,40 @@ export class OpenRouterService {
       throw new Error('No AI providers available. Please add API keys in settings.');
     }
 
-    // Round-robin selection
+    // Get the next provider in rotation
     const provider = availableProviders[this.currentProviderIndex % availableProviders.length];
+    
+    // Move to next for subsequent calls
     this.currentProviderIndex = (this.currentProviderIndex + 1) % availableProviders.length;
-
+    
     return provider;
   }
 
   /**
-   * Generate AI content for a page
+   * Try to generate content with a specific provider
    */
-  static async generateContent(request: AIContentRequest): Promise<AIContentResponse> {
-    const provider = await this.getNextProvider();
-
+  private static async tryGenerateWithProvider(
+    request: AIContentRequest,
+    provider: any
+  ): Promise<AIContentResponse> {
     try {
+      // Build the prompt
       const prompt = this.buildPrompt(request);
 
-      const response = await fetch(provider.apiEndpoint, {
+      const response = await fetch(provider.apiEndpoint || 'https://openrouter.ai/api/v1/chat/completions', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${provider.apiKey}`,
-          'HTTP-Referer': 'https://myinsurancebuddies.com',
-          'X-Title': 'MyInsuranceBuddies Content Generator'
+          'HTTP-Referer': process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
+          'X-Title': 'Insurance Buddy AI Content Generator'
         },
         body: JSON.stringify({
-          model: request.model || provider.preferredModel,
+          model: await this.getSafeModel(request.model || provider.preferredModel, request.forceFreeModels !== false),
           messages: [
             {
               role: 'system',
-              content: 'You are a professional insurance content writer. Create unique, SEO-optimized, and locally-relevant content for insurance pages. Write in a helpful, professional tone. Always include specific local details when available.'
+              content: request.templatePrompts?.systemPrompt || 'You are a helpful assistant that generates insurance content.'
             },
             {
               role: 'user',
@@ -171,72 +334,57 @@ export class OpenRouterService {
             }
           ],
           temperature: 0.7,
-          max_tokens: provider.maxTokensPerRequest,
+          max_tokens: 4000
         })
       });
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-
-        // Handle rate limit gracefully - STOP, don't crash
-        if (response.status === 429) {
+        const errorMessage = errorData.error?.message || `HTTP ${response.status}`;
+        
+        // Check for rate limit errors
+        if (response.status === 429 || errorMessage.includes('Rate limit') || errorMessage.includes('rate limit')) {
           return {
             success: false,
-            error: 'Rate limit reached. Wait a few minutes or add more API accounts.',
-            tokensUsed: 0,
-            cost: 0
+            error: `Rate limit exceeded: ${errorMessage}`,
+            rateLimited: true
           };
         }
-
-        // Handle insufficient credits
-        if (response.status === 402) {
+        
+        // Check for insufficient credits
+        if (response.status === 402 || errorMessage.includes('Insufficient credits')) {
           return {
             success: false,
-            error: 'Insufficient credits. Add more credits or switch to free model.',
-            tokensUsed: 0,
-            cost: 0
+            error: `Insufficient credits: ${errorMessage}`,
+            rateLimited: true
           };
         }
-
-        // Handle other errors gracefully
-        return {
-          success: false,
-          error: errorData.error?.message || `API error ${response.status}`,
-          tokensUsed: 0,
-          cost: 0
-        };
+        
+        throw new Error(`API error: ${errorMessage}`);
       }
 
       const data = await response.json();
-
-      // Parse response
-      const contentText = data.choices?.[0]?.message?.content;
-      if (!contentText) {
-        return {
-          success: false,
-          error: 'No content generated by AI model',
-          tokensUsed: 0,
-          cost: 0
-        };
+      
+      if (!data.choices?.[0]?.message?.content) {
+        throw new Error('Invalid response format from API');
       }
 
-      // Extract structured content
-      const content = this.parseAIResponse(contentText, request.sections);
-
-      // Track usage
+      const content = data.choices[0].message.content;
       const tokensUsed = data.usage?.total_tokens || 0;
-      const cost = this.calculateCost(tokensUsed, request.model || provider.preferredModel);
+      const cost = this.estimateCost(tokensUsed, request.model || provider.preferredModel);
 
-      await this.trackUsage(provider.id, tokensUsed, cost);
+      // Parse the content based on sections
+      const parsedContent = this.parseContent(content, request.sections);
 
       return {
         success: true,
-        content,
+        content: parsedContent,
         tokensUsed,
-        cost
+        cost,
+        provider: provider.name
       };
+
     } catch (error: any) {
-      console.error('AI generation error:', error);
       return {
         success: false,
         error: error.message
@@ -245,221 +393,424 @@ export class OpenRouterService {
   }
 
   /**
-   * Build prompt based on page data and requested sections
-   * Uses simple {{location}} and {{niche}} variables for clarity
+   * Multi-provider failover - tries ALL providers before giving up
+   * Throws AllProvidersRateLimitedError if all providers hit rate limits
+   */
+  static async generateContentWithFailover(
+    request: AIContentRequest,
+    maxRetries: number = 3
+  ): Promise<AIContentResponse & { provider?: string; attempts?: number }> {
+    // Get all active providers
+    const providers = await prisma.aIProvider.findMany({
+      where: { isActive: true },
+      orderBy: { priority: 'asc' }
+    });
+    
+    // Filter providers that have budget available
+    const availableProviders = providers.filter(p => 
+      p.totalBudget === null || p.usedBudget < p.totalBudget
+    );
+    
+    if (availableProviders.length === 0) {
+      return { success: false, error: 'No AI providers with available budget' };
+    }
+    
+    const startIndex = this.currentProviderIndex % availableProviders.length;
+    const triedProviders: string[] = [];
+    let lastError = '';
+    let allRateLimited = true;
+    
+    for (let i = 0; i < availableProviders.length; i++) {
+      const providerIndex = (startIndex + i) % availableProviders.length;
+      const provider = availableProviders[providerIndex];
+      
+      // Skip if already tried this provider in this round
+      if (triedProviders.includes(provider.id)) continue;
+      triedProviders.push(provider.id);
+      
+      try {
+        const result = await this.tryGenerateWithProvider(request, provider);
+        
+        if (result.success) {
+          // Update current index for next call
+          this.currentProviderIndex = (providerIndex + 1) % availableProviders.length;
+          // Track usage
+          await this.trackUsage(provider.id, result.tokensUsed || 0, result.cost || 0);
+          return { ...result, provider: provider.name, attempts: triedProviders.length };
+        }
+        
+        lastError = result.error || 'Unknown error';
+        
+        // Check if this was a rate limit error
+        if (result.rateLimited) {
+          // Mark this provider as rate limited and continue
+          await this.markProviderRateLimited(provider.id);
+          continue;
+        }
+        
+        // Not a rate limit error, don't retry with other providers
+        allRateLimited = false;
+        return { ...result, attempts: triedProviders.length };
+        
+      } catch (error: any) {
+        lastError = error.message;
+        allRateLimited = false;
+        continue;
+      }
+    }
+    
+    // All providers failed
+    if (allRateLimited) {
+      throw new AllProvidersRateLimitedError(
+        `All ${availableProviders.length} providers have hit rate limits. Last error: ${lastError}`
+      );
+    }
+    
+    return {
+      success: false,
+      error: `All ${availableProviders.length} providers failed. Last error: ${lastError}`,
+      attempts: triedProviders.length
+    };
+  }
+
+  /**
+   * Mark a provider as rate limited with timestamp
+   */
+  private static async markProviderRateLimited(providerId: string) {
+    try {
+      await prisma.aIProvider.update({
+        where: { id: providerId },
+        data: {
+          lastError: 'RATE_LIMITED',
+          lastErrorAt: new Date(),
+          // Store when it will reset (24 hours from now for OpenRouter)
+          metadata: {
+            rateLimitResetAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
+          }
+        }
+      });
+    } catch (e) {
+      // Non-critical error
+      console.warn('Failed to mark provider as rate limited:', e);
+    }
+  }
+
+  /**
+   * Generate AI content for a page
+   */
+  static async generateContent(request: AIContentRequest): Promise<AIContentResponse> {
+    return this.generateContentWithFailover(request);
+  }
+
+  /**
+   * Build prompt from request
    */
   private static buildPrompt(request: AIContentRequest): string {
-    const { pageData, sections } = request;
+    const { pageData, sections, templatePrompts, keywordConfig } = request;
+    const locationName = pageData.city 
+      ? `${pageData.city}, ${pageData.state || ''}`
+      : pageData.state || pageData.insuranceType;
 
-    // Build location string - city, state or just state
-    const location = pageData.city
-      ? `${pageData.city}, ${pageData.state}`
-      : pageData.state || 'the United States';
-
-    // Niche is the insurance type
-    const niche = pageData.insuranceType;
-
-    let prompt = `You are writing content for a ${niche} page targeting ${location}.
-
-VARIABLES:
-- Location: ${location}
-- Niche: ${niche}
-
-Generate unique, SEO-optimized content. Make it specific to ${location} and relevant to ${niche}.
-
-`;
-
-    // Add context from customData if available
-    if (pageData.customData) {
-      const { avg_premium, min_coverage, population } = pageData.customData;
-      if (avg_premium || min_coverage || population) {
-        prompt += `LOCAL DATA:\n`;
-        if (avg_premium) prompt += `- Average premium in ${location}: ${avg_premium}\n`;
-        if (min_coverage) prompt += `- Minimum coverage: ${JSON.stringify(min_coverage)}\n`;
-        if (population) prompt += `- Population: ${population}\n`;
-        prompt += `\n`;
+    const prompts: string[] = [];
+    
+    // Main instruction - FOCUS ON "cheapest {niche} in {location}"
+    prompts.push(`Generate SEO-optimized content targeting "cheapest ${pageData.insuranceType.toLowerCase()} in ${locationName}".`);
+    prompts.push(`\nGenerate the following sections: ${sections.join(', ')}`);
+    prompts.push(`\n\n=== CONTENT FOCUS ===`);
+    prompts.push(`The MAIN GOAL is to help readers find the CHEAPEST, most AFFORDABLE ${pageData.insuranceType} options in ${locationName}.`);
+    prompts.push(`Every section should provide value toward saving money and finding low-cost options.`);
+    
+    // Add keyword-optimized prompts if keywordConfig is provided
+    if (keywordConfig) {
+      prompts.push(`\n\n=== SEO KEYWORD OPTIMIZATION ===`);
+      prompts.push(`MAIN TARGET: "${keywordConfig.primaryKeyword}" (MUST use ${keywordConfig.targetDensity}% density, max ${keywordConfig.maxDensity}%)`);
+      
+      if (keywordConfig.secondaryKeywords.length > 0) {
+        prompts.push(`Supporting Keywords: ${keywordConfig.secondaryKeywords.join(', ')}`);
       }
+      
+      // Add keyword requirements
+      const requirements: string[] = [];
+      if (keywordConfig.requireInTitle) requirements.push(`MUST include "${keywordConfig.primaryKeyword}" in the first 60 characters`);
+      if (keywordConfig.requireInH1) requirements.push(`MUST include "${keywordConfig.primaryKeyword}" in the main heading (H1)`);
+      if (keywordConfig.requireInFirst100) requirements.push(`MUST include "${keywordConfig.primaryKeyword}" within first 100 words`);
+      if (keywordConfig.requireInMeta) requirements.push(`MUST include "${keywordConfig.primaryKeyword}" in meta description`);
+      
+      if (requirements.length > 0) {
+        prompts.push(`\nCRITICAL Keyword Placement Requirements:`);
+        requirements.forEach(r => prompts.push(`- ${r}`));
+      }
+      
+      prompts.push(`\nWriting Style:`);
+      prompts.push(`- Start sentences with the main keyword when natural: "${keywordConfig.primaryKeyword} is..." or "Finding ${keywordConfig.primaryKeyword} can..."`);
+      prompts.push(`- Use action words: save, compare, find, get, lower, reduce`);
+      prompts.push(`- Focus on VALUE and SAVINGS throughout`);
+      prompts.push(`- Write for humans first, but ensure main keyword appears naturally`);
+    } else {
+      // Default keyword guidance
+      prompts.push(`\n\n=== DEFAULT KEYWORD TARGET ===`);
+      prompts.push(`Main Keyword: "cheapest ${pageData.insuranceType.toLowerCase()} in ${locationName}"`);
+      prompts.push(`Use this phrase naturally 2-3 times in the content.`);
+      prompts.push(`Also use variations: "cheap ${pageData.insuranceType.toLowerCase()}", "affordable ${pageData.insuranceType.toLowerCase()}", "low cost ${pageData.insuranceType.toLowerCase()}"`);
     }
+    
+    // Add section-specific prompts from template if available
+    sections.forEach(section => {
+      const templatePrompt = this.getTemplatePromptForSection(section, templatePrompts);
+      
+      // Build base section prompt
+      let sectionPrompt = templatePrompt || this.getDefaultSectionPrompt(section, pageData.insuranceType, locationName);
+      
+      // Enhance with keyword optimization if available
+      if (keywordConfig) {
+        sectionPrompt = KeywordContentService.buildKeywordPrompt(
+          sectionPrompt,
+          keywordConfig,
+          section,
+          locationName,
+          pageData.insuranceType
+        );
+      }
+      
+      prompts.push(`\n${section.toUpperCase()}:`);
+      prompts.push(sectionPrompt.replace(/\{\{location\}\}/g, locationName).replace(/\{\{niche\}\}/g, pageData.insuranceType));
+    });
+    
+    prompts.push(`\nReturn the content in JSON format with the following structure:`);
+    prompts.push(JSON.stringify(this.getExpectedStructure(sections), null, 2));
+    
+    return prompts.join('\n');
+  }
+  
+  /**
+   * Get default prompt for a section
+   * FOCUS: "cheapest {niche} in {location}" as main keyword
+   */
+  private static getDefaultSectionPrompt(section: AIContentSection, insuranceType: string, location: string): string {
+    const mainKeyword = `cheapest ${insuranceType.toLowerCase()} in ${location.toLowerCase()}`;
+    
+    switch (section) {
+      case 'intro':
+        return `Write an engaging introduction targeting "${mainKeyword}". 
+Focus on helping readers find the most affordable ${insuranceType} options in {{location}}. 
+Hook: Start with "Looking for ${mainKeyword}?" or similar.
+Explain why finding cheap ${insuranceType} matters and what money-saving tips they'll learn.`;
 
-    prompt += `Generate the following in JSON format:\n\n`;
+      case 'requirements':
+        return `List the minimum requirements for ${insuranceType} in {{location}}.
+Focus on: What coverage is legally required vs optional (cheaper options).
+Explain how meeting minimum requirements can lower costs.
+Include: Documentation needed, state-specific requirements, how to get the cheapest legal coverage.`;
 
-    if (sections.includes('intro')) {
-      prompt += `"intro": Write 2-3 engaging paragraphs about ${niche} in ${location}. Include why residents need it, local factors that affect rates, and what makes ${location} unique for ${niche}.\n\n`;
+      case 'faqs':
+        return `Create 5 FAQs focused on finding cheapest ${insuranceType} in {{location}}:
+1. "How do I find ${mainKeyword}?"
+2. "What factors affect ${insuranceType} rates in {{location}}?"
+3. "How can I lower my ${insuranceType} premiums?"
+4. "What discounts are available for ${insuranceType} in {{location}}?"
+5. "Is minimum coverage enough or should I get more?"
+Each answer should provide actionable money-saving advice.`;
+
+      case 'tips':
+        return `Provide 7 money-saving tips for ${insuranceType} in {{location}}:
+- How to compare quotes effectively
+- Discounts to ask for
+- Coverage levels that save money
+- When to shop around
+- Bundle options
+- Deductible strategies
+- Credit score impact
+Title each tip with action words like "Save", "Compare", "Find".`;
+
+      case 'costBreakdown':
+        return `Explain ${insuranceType} costs in {{location}} with focus on finding cheapest options:
+- Average cost range (cheap vs expensive)
+- What makes rates higher or lower
+- Minimum coverage costs
+- Money-saving factors (good driving record, bundles, etc.)
+- How to get quotes and compare
+- Hidden fees to avoid
+Include realistic dollar amounts where possible.`;
+
+      case 'discounts':
+        return `List all available ${insuranceType} discounts in {{location}}:
+- Safe driver discounts
+- Multi-policy/bundle discounts
+- Good student discounts
+- Low mileage discounts
+- Defensive driving course discounts
+- Loyalty discounts
+- Payment method discounts (pay in full, auto-pay)
+- Occupation/membership discounts
+Include how much each can save (percentages if known).`;
+
+      case 'comparison':
+        return `Compare ${insuranceType} options in {{location}} focusing on value and price:
+- Minimum coverage (cheapest option)
+- Standard coverage (best value)
+- Full coverage (most protection)
+Compare 3-5 top providers known for competitive rates.
+For each: Price range, coverage highlights, best for (who should choose this).`;
+
+      case 'localStats':
+        return `Provide ${insuranceType} statistics for {{location}} relevant to saving money:
+- Average premium costs (vs national average)
+- What percentage of drivers choose minimum coverage
+- Most common discounts used
+- How rates compare to neighboring areas
+- Best times to shop for quotes
+- Local factors that affect pricing`;
+
+      case 'buyersGuide':
+        return `Create a step-by-step guide: "How to Find ${mainKeyword}"
+Steps should include:
+1. Assess your coverage needs
+2. Gather your information
+3. Get multiple quotes (how many, where)
+4. Compare apples to apples
+5. Ask about ALL discounts
+6. Review the policy before buying
+7. Re-shop every 6-12 months
+Make it actionable and focused on saving money.`;
+
+      case 'coverageGuide':
+        return `Explain ${insuranceType} coverage types with focus on cost vs protection:
+- Liability only (cheapest)
+- Minimum required coverage
+- Recommended coverage levels
+- Full coverage (most expensive but most protection)
+Help readers choose the right balance of cost and protection for their budget.`;
+
+      case 'metaTags':
+        return `Generate SEO meta tags targeting "${mainKeyword}":
+- Title: Include "${mainKeyword}" or variation (under 60 chars)
+- Description: Include "cheap", "affordable", "save", "compare" + location (under 160 chars)
+- Keywords: Focus on cost-saving terms`;
+
+      default:
+        return `Write about ${section} for ${insuranceType} in {{location}} with focus on finding cheapest options and saving money.`;
     }
-
-    if (sections.includes('requirements')) {
-      prompt += `"requirements": Explain ${niche} requirements and laws specific to ${location}. Include minimum coverage, penalties, and compliance details.\n\n`;
-    }
-
-    if (sections.includes('faqs')) {
-      prompt += `"faqs": Create 5-7 FAQs as array of {question, answer} objects. Questions should be specific to ${niche} in ${location}.\n\n`;
-    }
-
-    if (sections.includes('tips')) {
-      prompt += `"tips": List 5-8 practical tips as string array for saving money on ${niche} in ${location}.\n\n`;
-    }
-
-    // NEW SEO SECTIONS
-    if (sections.includes('costBreakdown')) {
-      prompt += `"costBreakdown": Create a detailed cost breakdown for ${niche} in ${location}. Return array of 5-7 objects with: {"factor": "factor name", "impact": "increases/decreases by X%", "description": "brief explanation"}. Include local factors like crime rate, weather, traffic patterns.\n\n`;
-    }
-
-    if (sections.includes('comparison')) {
-      prompt += `"comparison": Compare top 4-5 insurance providers for ${niche} in ${location}. Return array with: {"name": "provider name", "strengths": ["strength1", "strength2"], "weaknesses": ["weakness1"], "bestFor": "who this is best for", "priceRange": "$X-$Y/month"}.\n\n`;
-    }
-
-    if (sections.includes('discounts')) {
-      prompt += `"discounts": List 6-8 available discounts for ${niche} in ${location}. Return array with: {"name": "discount name", "savings": "5-15%", "qualification": "how to qualify", "isLocal": true/false}.\n\n`;
-    }
-
-    if (sections.includes('localStats')) {
-      prompt += `"localStats": Provide 5-6 location-specific statistics for ${niche} in ${location}. Return array with: {"stat": "statistic name", "value": "the value", "impact": "how it affects insurance", "comparison": "compared to state/national average"}.\n\n`;
-    }
-
-    if (sections.includes('coverageGuide')) {
-      prompt += `"coverageGuide": Explain 4-6 coverage types for ${niche} in ${location}. Return array with: {"type": "coverage type", "description": "what it covers", "recommended": "recommended amount", "whenNeeded": "when to consider this"}.\n\n`;
-    }
-
-    if (sections.includes('claimsProcess')) {
-      prompt += `"claimsProcess": Explain how to file a ${niche} claim in ${location}. Return object: {"steps": ["step1", "step2", ...], "documents": ["doc1", "doc2", ...], "timeline": "expected timeline", "resources": ["local resource 1", ...]}.\n\n`;
-    }
-
-    if (sections.includes('buyersGuide')) {
-      prompt += `"buyersGuide": Create a buying guide for ${niche} in ${location}. Return object: {"steps": ["step1", "step2", ...], "lookFor": ["what to look for 1", ...], "redFlags": ["red flag 1", ...], "questions": ["question to ask 1", ...]}.\n\n`;
-    }
-
-    if (sections.includes('metaTags')) {
-      prompt += `"metaTags": Generate SEO-optimized meta tags for this ${niche} page in ${location}. Return object: {"metaTitle": "compelling title 50-60 chars with location", "metaDescription": "engaging description 150-160 chars with CTA", "metaKeywords": ["keyword1", "keyword2", ...], "ogTitle": "social media title", "ogDescription": "social media description"}.\n\n`;
-    }
-
-    prompt += `Return ONLY valid JSON. No markdown, no code blocks.`;
-
-    return prompt;
   }
 
   /**
-   * Parse AI response into structured content
+   * Get template prompt for a section
    */
-  private static parseAIResponse(responseText: string, sections: string[]): any {
+  private static getTemplatePromptForSection(
+    section: AIContentSection, 
+    templatePrompts?: AIContentRequest['templatePrompts']
+  ): string | undefined {
+    if (!templatePrompts) return undefined;
+    
+    switch (section) {
+      case 'intro': return templatePrompts.introPrompt;
+      case 'requirements': return templatePrompts.requirementsPrompt;
+      case 'faqs': return templatePrompts.faqsPrompt;
+      case 'tips': return templatePrompts.tipsPrompt;
+      case 'costBreakdown': return templatePrompts.costBreakdownPrompt;
+      case 'comparison': return templatePrompts.comparisonPrompt;
+      case 'discounts': return templatePrompts.discountsPrompt;
+      case 'localStats': return templatePrompts.localStatsPrompt;
+      case 'coverageGuide': return templatePrompts.coverageGuidePrompt;
+      case 'claimsProcess': return templatePrompts.claimsProcessPrompt;
+      case 'buyersGuide': return templatePrompts.buyersGuidePrompt;
+      case 'metaTags': return templatePrompts.metaTagsPrompt;
+      default: return undefined;
+    }
+  }
+
+  /**
+   * Get expected JSON structure for sections
+   */
+  private static getExpectedStructure(sections: AIContentSection[]): any {
+    const structure: any = {};
+    
+    sections.forEach(section => {
+      switch (section) {
+        case 'intro':
+          structure.intro = 'string';
+          break;
+        case 'requirements':
+          structure.requirements = 'string';
+          break;
+        case 'faqs':
+          structure.faqs = [{ question: 'string', answer: 'string' }];
+          break;
+        case 'tips':
+          structure.tips = ['string'];
+          break;
+        case 'costBreakdown':
+          structure.costBreakdown = [{ factor: 'string', impact: 'string', description: 'string' }];
+          break;
+        case 'comparison':
+          structure.comparison = [{ name: 'string', strengths: ['string'], weaknesses: ['string'], bestFor: 'string', priceRange: 'string' }];
+          break;
+        case 'discounts':
+          structure.discounts = [{ name: 'string', savings: 'string', qualification: 'string', isLocal: true }];
+          break;
+        case 'localStats':
+          structure.localStats = [{ stat: 'string', value: 'string', impact: 'string', comparison: 'string' }];
+          break;
+        case 'coverageGuide':
+          structure.coverageGuide = [{ type: 'string', description: 'string', recommended: 'string', whenNeeded: 'string' }];
+          break;
+        case 'claimsProcess':
+          structure.claimsProcess = { steps: ['string'], documents: ['string'], timeline: 'string', resources: ['string'] };
+          break;
+        case 'buyersGuide':
+          structure.buyersGuide = { steps: ['string'], lookFor: ['string'], redFlags: ['string'], questions: ['string'] };
+          break;
+        case 'metaTags':
+          structure.metaTags = { 
+            metaTitle: 'string', 
+            metaDescription: 'string', 
+            metaKeywords: ['string'],
+            ogTitle: 'string',
+            ogDescription: 'string'
+          };
+          break;
+      }
+    });
+    
+    return structure;
+  }
+
+  /**
+   * Parse content from API response
+   */
+  private static parseContent(content: string, sections: AIContentSection[]): any {
     try {
-      // Remove markdown code blocks if present
-      let cleaned = responseText.trim();
-      cleaned = cleaned.replace(/^```json\n?/i, '').replace(/\n?```$/i, '');
-      cleaned = cleaned.trim();
-
-      const parsed = JSON.parse(cleaned);
-
-      // Validate required sections
-      const content: any = {};
-
-      if (sections.includes('intro') && parsed.intro) {
-        content.intro = parsed.intro;
-      }
-
-      if (sections.includes('requirements') && parsed.requirements) {
-        content.requirements = parsed.requirements;
-      }
-
-      if (sections.includes('faqs') && Array.isArray(parsed.faqs)) {
-        content.faqs = parsed.faqs;
-      }
-
-      if (sections.includes('tips') && Array.isArray(parsed.tips)) {
-        content.tips = parsed.tips;
-      }
-
-      // NEW SEO SECTIONS
-      if (sections.includes('costBreakdown') && Array.isArray(parsed.costBreakdown)) {
-        content.costBreakdown = parsed.costBreakdown;
-      }
-
-      if (sections.includes('comparison') && Array.isArray(parsed.comparison)) {
-        content.comparison = parsed.comparison;
-      }
-
-      if (sections.includes('discounts') && Array.isArray(parsed.discounts)) {
-        content.discounts = parsed.discounts;
-      }
-
-      if (sections.includes('localStats') && Array.isArray(parsed.localStats)) {
-        content.localStats = parsed.localStats;
-      }
-
-      if (sections.includes('coverageGuide') && Array.isArray(parsed.coverageGuide)) {
-        content.coverageGuide = parsed.coverageGuide;
-      }
-
-      if (sections.includes('claimsProcess') && parsed.claimsProcess) {
-        content.claimsProcess = parsed.claimsProcess;
-      }
-
-      if (sections.includes('buyersGuide') && parsed.buyersGuide) {
-        content.buyersGuide = parsed.buyersGuide;
-      }
-
-      if (sections.includes('metaTags') && parsed.metaTags) {
-        content.metaTags = parsed.metaTags;
-      }
-
-      return content;
-    } catch (error) {
-      console.error('Failed to parse AI response:', error);
-      console.error('Response text:', responseText);
-
-      // Fallback: try to extract sections manually
-      return this.fallbackParse(responseText, sections);
+      // Try to parse as JSON
+      const parsed = JSON.parse(content);
+      return parsed;
+    } catch (e) {
+      // If not valid JSON, try to extract sections manually
+      const result: any = {};
+      
+      sections.forEach(section => {
+        const regex = new RegExp(`##?\\s*${section}[:\s]*([^#]+)`, 'i');
+        const match = content.match(regex);
+        if (match) {
+          result[section] = match[1].trim();
+        }
+      });
+      
+      return result;
     }
   }
 
   /**
-   * Fallback parsing if JSON fails
+   * Estimate cost based on tokens used
+   * Returns 0 for free models (protects your deposit!)
    */
-  private static fallbackParse(text: string, sections: string[]): any {
-    const content: any = {};
-
-    // Try to extract intro
-    if (sections.includes('intro')) {
-      const introMatch = text.match(/"intro":\s*"([^"]+)"/);
-      if (introMatch) content.intro = introMatch[1];
+  private static estimateCost(tokens: number, model?: string): number {
+    // Free models cost $0!
+    if (model && this.isFreeModel(model)) {
+      return 0;
     }
-
-    // Try to extract requirements
-    if (sections.includes('requirements')) {
-      const reqMatch = text.match(/"requirements":\s*"([^"]+)"/);
-      if (reqMatch) content.requirements = reqMatch[1];
-    }
-
-    return content;
-  }
-
-  /**
-   * Calculate cost based on tokens and model
-   */
-  private static calculateCost(tokens: number, model: string): number {
-    // OpenRouter pricing (approximate - updated Jan 2026)
-    const pricing: Record<string, number> = {
-      // FREE MODELS (Xiaomi, DeepSeek, etc.)
-      'xiaomi/mimo-v2-flash': 0.00, // FREE - HIGH QUALITY (deprecating Jan 26!)
-      'deepseek/deepseek-chat': 0.00, // FREE
-      'deepseek/deepseek-r1': 0.00, // FREE (Xiaomi's DeepSeek model)
-      'qwen/qwen-2.5-72b-instruct': 0.00, // FREE
-      'microsoft/phi-3-medium-128k-instruct': 0.00, // FREE
-      'meta-llama/llama-3.2-3b-instruct': 0.00, // FREE
-
-      // ULTRA CHEAP MODELS (<$0.10/M tokens)
-      'google/gemini-flash-1.5': 0.075 / 1_000_000, // $0.075 per 1M
-      'google/gemini-2.0-flash-exp': 0.00, // FREE (experimental)
-      'openai/gpt-4o-mini': 0.15 / 1_000_000,
-      'deepseek/deepseek-coder': 0.00, // FREE
-
-      // CHEAP MODELS
-      'anthropic/claude-haiku': 0.25 / 1_000_000,
-      'anthropic/claude-haiku-3.5': 0.80 / 1_000_000,
-      'openai/gpt-3.5-turbo': 0.50 / 1_000_000,
-      'meta-llama/llama-3.1-70b-instruct': 0.20 / 1_000_000,
-    };
-
-    const rate = pricing[model.toLowerCase()] || pricing[model] || 0.00; // Default to free
+    
+    // Paid models - rough estimate
+    // GPT-4o-mini: $0.15/1M input + $0.60/1M output ≈ $0.000375 per 1K tokens avg
+    const rate = 0.000000375;
     return tokens * rate;
   }
 
@@ -476,11 +827,104 @@ Generate unique, SEO-optimized content. Make it specific to ${location} and rele
       }
     });
   }
+
+  /**
+   * Check if any providers have available capacity (not rate limited)
+   */
+  static async hasAvailableProviders(): Promise<boolean> {
+    const providers = await prisma.aIProvider.findMany({
+      where: { isActive: true }
+    });
+    
+    for (const provider of providers) {
+      // Check budget
+      if (provider.totalBudget !== null && provider.usedBudget >= provider.totalBudget) {
+        continue;
+      }
+      
+      // Check if rate limited
+      const metadata = provider.metadata as any;
+      if (metadata?.rateLimitResetAt) {
+        const resetAt = new Date(metadata.rateLimitResetAt);
+        if (resetAt > new Date()) {
+          continue; // Still rate limited
+        }
+      }
+      
+      // Check last error
+      if (provider.lastError === 'RATE_LIMITED' && provider.lastErrorAt) {
+        const errorAge = Date.now() - new Date(provider.lastErrorAt).getTime();
+        if (errorAge < 24 * 60 * 60 * 1000) {
+          continue; // Error less than 24 hours ago
+        }
+      }
+      
+      return true; // Found at least one available provider
+    }
+    
+    return false;
+  }
+
+  /**
+   * Clear rate limit status for all providers (call when resuming after 24 hours)
+   */
+  static async clearRateLimitStatus(): Promise<void> {
+    await prisma.aIProvider.updateMany({
+      where: { lastError: 'RATE_LIMITED' },
+      data: {
+        lastError: null,
+        lastErrorAt: null,
+        metadata: {}
+      }
+    });
+  }
+
+  /**
+   * Get when the next provider will be available
+   */
+  static async getNextAvailableTime(): Promise<Date | null> {
+    const providers = await prisma.aIProvider.findMany({
+      where: { 
+        isActive: true,
+        lastError: 'RATE_LIMITED'
+      }
+    });
+    
+    let earliestReset: Date | null = null;
+    
+    for (const provider of providers) {
+      const metadata = provider.metadata as any;
+      if (metadata?.rateLimitResetAt) {
+        const resetAt = new Date(metadata.rateLimitResetAt);
+        if (!earliestReset || resetAt < earliestReset) {
+          earliestReset = resetAt;
+        }
+      } else if (provider.lastErrorAt) {
+        // Default to 24 hours after last error
+        const resetAt = new Date(new Date(provider.lastErrorAt).getTime() + 24 * 60 * 60 * 1000);
+        if (!earliestReset || resetAt < earliestReset) {
+          earliestReset = resetAt;
+        }
+      }
+    }
+    
+    return earliestReset;
+  }
 }
 
 /**
- * Batch process multiple pages
+ * Batch process multiple pages with pause/resume support
  */
+export interface BatchProgress {
+  processed: number;
+  total: number;
+  successful: number;
+  failed: number;
+  paused?: boolean;
+  resumeAt?: Date;
+  lastProcessedIndex?: number;
+}
+
 export async function batchGenerateContent(
   pageIds: string[],
   sections: AIContentSection[],
@@ -488,27 +932,69 @@ export async function batchGenerateContent(
     batchSize?: number;
     delayBetweenBatches?: number;
     model?: string;
-    onProgress?: (processed: number, total: number) => void;
+    forceFreeModels?: boolean; // Default: true (protects deposit!)
+    templatePrompts?: AIContentRequest['templatePrompts'];
+    keywordConfig?: AIContentRequest['keywordConfig'];
+    onProgress?: (progress: BatchProgress) => void;
+    startIndex?: number; // For resuming
   } = {}
-): Promise<{ successful: number; failed: number; errors: any[] }> {
+): Promise<{ 
+  successful: number; 
+  failed: number; 
+  errors: any[];
+  paused?: boolean;
+  resumeAt?: Date;
+  lastProcessedIndex?: number;
+}> {
   const {
     batchSize = 10,
     delayBetweenBatches = 1000,
     model,
-    onProgress
+    forceFreeModels = true, // Default to true to protect your deposit!
+    templatePrompts,
+    keywordConfig,
+    onProgress,
+    startIndex = 0
   } = options;
 
   const results = {
     successful: 0,
     failed: 0,
     errors: [] as any[],
-    stopped: false,
-    stopReason: ''
+    paused: false,
+    resumeAt: undefined as Date | undefined,
+    lastProcessedIndex: startIndex
   };
 
-  // Process in batches
-  for (let i = 0; i < pageIds.length; i += batchSize) {
+  // Process in batches starting from startIndex
+  for (let i = startIndex; i < pageIds.length; i += batchSize) {
     const batch = pageIds.slice(i, i + batchSize);
+    results.lastProcessedIndex = i;
+
+    // Check if any providers are available before starting batch
+    const hasProviders = await OpenRouterService.hasAvailableProviders();
+    if (!hasProviders) {
+      // All providers rate limited - pause the job
+      const resumeAt = await OpenRouterService.getNextAvailableTime();
+      results.paused = true;
+      results.resumeAt = resumeAt || new Date(Date.now() + 24 * 60 * 60 * 1000);
+      
+      console.warn(`⏸️ All providers rate limited. Pausing job. Will resume at ${results.resumeAt}`);
+      
+      if (onProgress) {
+        onProgress({
+          processed: i,
+          total: pageIds.length,
+          successful: results.successful,
+          failed: results.failed,
+          paused: true,
+          resumeAt: results.resumeAt,
+          lastProcessedIndex: i
+        });
+      }
+      
+      break;
+    }
 
     // Fetch page data
     const pages = await prisma.page.findMany({
@@ -533,7 +1019,10 @@ export async function batchGenerateContent(
             customData: page.customData
           },
           sections,
-          model
+          model,
+          forceFreeModels,
+          templatePrompts,
+          keywordConfig
         });
 
         if (response.success && response.content) {
@@ -566,43 +1055,66 @@ export async function batchGenerateContent(
 
           results.successful++;
         } else {
-          // Check if it's a rate limit error
-          if (response.error && response.error.includes('Rate limit')) {
-            results.stopped = true;
-            results.stopReason = 'RATE_LIMIT';
-            results.errors.push({
-              pageId: page.id,
-              error: response.error,
-              severity: 'CRITICAL'
-            });
-            // Don't count as failed, just stopped
-            return; // Exit this promise early
-          }
-
           results.failed++;
           results.errors.push({ pageId: page.id, error: response.error });
         }
       } catch (error: any) {
+        // Check if this is an AllProvidersRateLimitedError
+        if (error.name === 'AllProvidersRateLimitedError') {
+          // Re-throw to be caught at batch level
+          throw error;
+        }
+        
         results.failed++;
         results.errors.push({ pageId: page.id, error: error.message });
       }
     });
 
-    await Promise.all(promises);
-
-    // Check if we hit rate limit and should STOP
-    if (results.stopped) {
-      console.warn(`⚠️ Batch generation stopped due to: ${results.stopReason}`);
-      break; // Exit the for loop immediately
+    try {
+      await Promise.all(promises);
+    } catch (error: any) {
+      if (error.name === 'AllProvidersRateLimitedError') {
+        // Pause the job
+        const resumeAt = await OpenRouterService.getNextAvailableTime();
+        results.paused = true;
+        results.resumeAt = resumeAt || new Date(Date.now() + 24 * 60 * 60 * 1000);
+        results.lastProcessedIndex = i;
+        
+        console.warn(`⏸️ All providers rate limited during batch. Pausing at index ${i}. Will resume at ${results.resumeAt}`);
+        
+        if (onProgress) {
+          onProgress({
+            processed: i,
+            total: pageIds.length,
+            successful: results.successful,
+            failed: results.failed,
+            paused: true,
+            resumeAt: results.resumeAt,
+            lastProcessedIndex: i
+          });
+        }
+        
+        break;
+      }
+      
+      // Other error, log but continue
+      console.error('Batch processing error:', error);
+      results.errors.push({ batchIndex: i, error: error.message });
     }
 
     // Progress callback
     if (onProgress) {
-      onProgress(Math.min(i + batchSize, pageIds.length), pageIds.length);
+      onProgress({
+        processed: Math.min(i + batchSize, pageIds.length),
+        total: pageIds.length,
+        successful: results.successful,
+        failed: results.failed,
+        lastProcessedIndex: i + batch.length
+      });
     }
 
-    // Delay between batches
-    if (i + batchSize < pageIds.length) {
+    // Delay between batches (skip if paused)
+    if (!results.paused && i + batchSize < pageIds.length) {
       await new Promise(resolve => setTimeout(resolve, delayBetweenBatches));
     }
   }

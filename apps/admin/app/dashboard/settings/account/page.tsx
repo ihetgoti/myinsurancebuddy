@@ -5,8 +5,14 @@ import { useSession } from 'next-auth/react';
 import AdminLayout from '@/components/AdminLayout';
 import { User, Lock, Eye, EyeOff, CheckCircle2, AlertCircle } from 'lucide-react';
 
+// Prevent static generation - this page requires authentication
+export const runtime = 'nodejs';
+
 export default function AccountSettingsPage() {
-  const { data: session } = useSession();
+  // useSession may return undefined during build, handle gracefully
+  const sessionResult = useSession();
+  const data = sessionResult?.data;
+  const status = sessionResult?.status || 'loading';
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -79,6 +85,24 @@ export default function AccountSettingsPage() {
 
   const passwordStrength = getPasswordStrength(passwordForm.newPassword);
 
+  // Show loading state while session is loading or during SSR
+  if (status === 'loading' || !data) {
+    return (
+      <AdminLayout>
+        <div className="max-w-2xl">
+          <div className="mb-8">
+            <h1 className="text-2xl font-bold text-slate-900">Account Settings</h1>
+            <p className="text-slate-500 mt-1">Manage your account and security settings.</p>
+          </div>
+          <div className="bg-white rounded-xl border border-slate-200 p-12 text-center">
+            <div className="animate-spin w-8 h-8 border-2 border-slate-900 border-t-transparent rounded-full mx-auto mb-4"></div>
+            <p className="text-slate-500">Loading...</p>
+          </div>
+        </div>
+      </AdminLayout>
+    );
+  }
+
   return (
     <AdminLayout>
       <div className="max-w-2xl">
@@ -96,16 +120,16 @@ export default function AccountSettingsPage() {
           <div className="space-y-3">
             <div className="flex items-center justify-between py-2 border-b border-slate-100">
               <span className="text-slate-600">Name</span>
-              <span className="font-medium text-slate-900">{session?.user?.name || 'Not set'}</span>
+              <span className="font-medium text-slate-900">{data?.user?.name || 'Not set'}</span>
             </div>
             <div className="flex items-center justify-between py-2 border-b border-slate-100">
               <span className="text-slate-600">Email</span>
-              <span className="font-medium text-slate-900">{session?.user?.email || 'Not set'}</span>
+              <span className="font-medium text-slate-900">{data?.user?.email || 'Not set'}</span>
             </div>
             <div className="flex items-center justify-between py-2">
               <span className="text-slate-600">Role</span>
               <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded text-sm font-medium">
-                {session?.user?.role || 'Unknown'}
+                {data?.user?.role || 'Unknown'}
               </span>
             </div>
           </div>

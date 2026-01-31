@@ -31,11 +31,30 @@ export async function GET(
 
     // Parse filters to get some context
     const filters = job.filters as any;
+    const resumeState = job.resumeState as any;
 
     // Calculate percentage
     const percentComplete = job.totalPages > 0
       ? Math.round((job.processedPages / job.totalPages) * 100)
       : 0;
+
+    // Calculate estimated time remaining (if processing)
+    let estimatedTimeRemaining = null;
+    if (job.status === 'PROCESSING' && job.startedAt && job.processedPages > 0) {
+      const elapsed = Date.now() - new Date(job.startedAt).getTime();
+      const rate = job.processedPages / elapsed; // pages per ms
+      const remaining = job.totalPages - job.processedPages;
+      const remainingMs = remaining / rate;
+      estimatedTimeRemaining = Math.round(remainingMs / 1000 / 60); // minutes
+    }
+
+    // Calculate time until auto-resume (if paused)
+    let timeUntilResume = null;
+    if (job.status === 'PAUSED' && job.autoResumeAt) {
+      const resumeTime = new Date(job.autoResumeAt).getTime();
+      const now = Date.now();
+      timeUntilResume = Math.max(0, Math.round((resumeTime - now) / 1000 / 60)); // minutes
+    }
 
     return NextResponse.json({
       id: job.id,
@@ -50,9 +69,27 @@ export async function GET(
       tokensUsed: job.totalTokensUsed,
       estimatedCost: job.estimatedCost,
       errorLog: job.errorLog,
+      
+      // Pause/Resume info
+      isPaused: job.status === 'PAUSED',
+      canResume: job.status === 'PAUSED',
+      autoResumeAt: job.autoResumeAt,
+      timeUntilResume,
+      pausedAt: job.pausedAt,
+      resumedAt: job.resumedAt,
+      resumeState: resumeState ? {
+        lastProcessedStateId: resumeState.lastProcessedStateId,
+        lastProcessedCityId: resumeState.lastProcessedCityId,
+        processedCount: resumeState.processedCount
+      } : null,
+      
+      // Timing info
+      estimatedTimeRemaining,
       createdAt: job.createdAt,
       startedAt: job.startedAt,
       completedAt: job.completedAt,
+      
+      // Config
       filters,
       sections: job.sections,
       model: job.model
@@ -69,7 +106,7 @@ export async function GET(
 
 /**
  * DELETE /api/auto-generate/[id]/status
- * Cancel a running job
+ * Cancel a running or paused job
  */
 export async function DELETE(
   request: NextRequest,
@@ -91,7 +128,7 @@ export async function DELETE(
       return NextResponse.json({ error: 'Job not found' }, { status: 404 });
     }
 
-    if (job.status !== 'PROCESSING' && job.status !== 'PENDING') {
+    if (job.status !== 'PROCESSING' && job.status !== 'PENDING' && job.status !== 'PAUSED') {
       return NextResponse.json({
         error: `Cannot cancel job with status: ${job.status}`
       }, { status: 400 });

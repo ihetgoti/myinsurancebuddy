@@ -8,18 +8,75 @@ import LeadCaptureForm from '@/components/LeadCaptureForm';
 import { 
     BadgeCheck, MapPin, Shield, ArrowRight, Car, Home, Heart, 
     Stethoscope, Dog, Briefcase, CheckCircle, Star, TrendingDown,
-    FileText, Award, Users, Building2, TrendingUp, Search, Clock
+    FileText, Award, Users, Building2, TrendingUp, Search, Clock,
+    Umbrella, Zap, Plane, Smartphone, Truck, Leaf, Sparkles, ArrowUpRight
 } from 'lucide-react';
 
 const getIconForType = (slug: string, className?: string) => {
-    const baseClass = className || "w-6 h-6 text-slate-400 group-hover:text-blue-600 transition-colors stroke-[1.5]";
+    const baseClass = className || "w-7 h-7 transition-colors stroke-[1.5]";
     if (slug.includes('auto') || slug.includes('car')) return <Car className={baseClass} />;
     if (slug.includes('home')) return <Home className={baseClass} />;
     if (slug.includes('life')) return <Heart className={baseClass} />;
     if (slug.includes('health') || slug.includes('med')) return <Stethoscope className={baseClass} />;
     if (slug.includes('pet') || slug.includes('dog')) return <Dog className={baseClass} />;
     if (slug.includes('business')) return <Briefcase className={baseClass} />;
+    if (slug.includes('renters')) return <Umbrella className={baseClass} />;
+    if (slug.includes('motorcycle')) return <Zap className={baseClass} />;
+    if (slug.includes('travel')) return <Plane className={baseClass} />;
+    if (slug.includes('phone') || slug.includes('mobile')) return <Smartphone className={baseClass} />;
+    if (slug.includes('commercial') || slug.includes('truck')) return <Truck className={baseClass} />;
     return <Shield className={baseClass} />;
+};
+
+const getIconStyle = (slug: string) => {
+    if (slug.includes('auto') || slug.includes('car')) return {
+        bg: 'bg-blue-100 group-hover:bg-blue-600',
+        icon: 'text-blue-600 group-hover:text-white',
+        accent: 'bg-blue-600',
+        text: 'text-blue-600'
+    };
+    if (slug.includes('home') || slug.includes('renters')) return {
+        bg: 'bg-emerald-100 group-hover:bg-emerald-600',
+        icon: 'text-emerald-600 group-hover:text-white',
+        accent: 'bg-emerald-600',
+        text: 'text-emerald-600'
+    };
+    if (slug.includes('life')) return {
+        bg: 'bg-rose-100 group-hover:bg-rose-600',
+        icon: 'text-rose-600 group-hover:text-white',
+        accent: 'bg-rose-600',
+        text: 'text-rose-600'
+    };
+    if (slug.includes('health')) return {
+        bg: 'bg-cyan-100 group-hover:bg-cyan-600',
+        icon: 'text-cyan-600 group-hover:text-white',
+        accent: 'bg-cyan-600',
+        text: 'text-cyan-600'
+    };
+    if (slug.includes('pet')) return {
+        bg: 'bg-amber-100 group-hover:bg-amber-600',
+        icon: 'text-amber-600 group-hover:text-white',
+        accent: 'bg-amber-600',
+        text: 'text-amber-600'
+    };
+    if (slug.includes('business') || slug.includes('commercial')) return {
+        bg: 'bg-violet-100 group-hover:bg-violet-600',
+        icon: 'text-violet-600 group-hover:text-white',
+        accent: 'bg-violet-600',
+        text: 'text-violet-600'
+    };
+    if (slug.includes('motorcycle')) return {
+        bg: 'bg-orange-100 group-hover:bg-orange-600',
+        icon: 'text-orange-600 group-hover:text-white',
+        accent: 'bg-orange-600',
+        text: 'text-orange-600'
+    };
+    return {
+        bg: 'bg-slate-100 group-hover:bg-slate-600',
+        icon: 'text-slate-600 group-hover:text-white',
+        accent: 'bg-slate-600',
+        text: 'text-slate-600'
+    };
 };
 
 export const dynamic = 'force-dynamic';
@@ -50,7 +107,7 @@ async function getHomeData() {
             }).catch(() => []),
             prisma.affiliatePartner.findMany({
                 where: { isActive: true },
-                orderBy: [{ isFeatured: 'desc' }, { displayOrder: 'asc' }],
+                orderBy: [{ priority: 'desc' }, { createdAt: 'desc' }],
                 take: 6,
             }).catch(() => []),
             prisma.state.findMany({
@@ -164,32 +221,53 @@ export default async function HomePage() {
                 </div>
             </section>
 
-            {/* Insurance Categories - Minimalist */}
-            <section className="py-20 bg-white">
+            {/* Insurance Categories - Professional & Refined */}
+            <section className="py-20 bg-slate-50">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="max-w-xl mx-auto text-center mb-16">
-                        <h2 className="text-2xl md:text-3xl font-bold text-slate-900 mb-4 tracking-tight">Browse by Category</h2>
-                        <p className="text-slate-500 font-light leading-relaxed">
-                            Research coverage options and find the best policies for your needs.
+                    <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 mb-12">
+                        <div>
+                            <span className="text-sm font-semibold text-blue-600 uppercase tracking-widest mb-3 block">
+                                Insurance Types
+                            </span>
+                            <h2 className="text-3xl font-bold text-slate-900 tracking-tight">Browse by Category</h2>
+                        </div>
+                        <p className="text-slate-500 max-w-md">
+                            Research coverage options and find the best policies for your specific needs.
                         </p>
                     </div>
 
-                    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto">
-                        {insuranceTypes.map((type) => (
+                    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {insuranceTypes.map((type, index) => (
                             <Link
                                 key={type.id}
                                 href={`/${type.slug}`}
-                                className="group flex items-center p-6 bg-white rounded-xl border border-slate-200 hover:border-blue-500 hover:shadow-lg transition-all duration-300"
+                                className="group relative bg-white rounded-xl border border-slate-200 p-6 transition-all duration-300 hover:border-blue-200 hover:shadow-lg"
                             >
-                                <div className="w-12 h-12 bg-slate-50 rounded-xl flex items-center justify-center mr-5 group-hover:bg-blue-50 transition-colors">
-                                    {getIconForType(type.slug)}
-                                </div>
-                                <div className="flex-1">
-                                    <h3 className="font-semibold text-slate-900 group-hover:text-blue-700 transition-colors flex items-center gap-2">
-                                        {type.name}
-                                        <ArrowRight className="w-4 h-4 opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300 text-blue-600" />
-                                    </h3>
-                                    <p className="text-sm text-slate-400 mt-1">Compare rates & coverage</p>
+                                {/* Subtle hover indicator line */}
+                                <div className="absolute left-0 top-6 bottom-6 w-1 bg-blue-600 rounded-r-full scale-y-0 group-hover:scale-y-100 transition-transform duration-300 origin-center"></div>
+                                
+                                <div className="flex items-start gap-4">
+                                    {/* Icon - Monochromatic slate, turns blue on hover */}
+                                    <div className="w-12 h-12 rounded-xl bg-slate-100 flex items-center justify-center flex-shrink-0 transition-colors duration-300 group-hover:bg-blue-50">
+                                        <div className="text-slate-500 group-hover:text-blue-600 transition-colors duration-300">
+                                            {getIconForType(type.slug, "w-6 h-6")}
+                                        </div>
+                                    </div>
+                                    
+                                    <div className="flex-1 min-w-0">
+                                        <h3 className="font-semibold text-slate-900 group-hover:text-blue-700 transition-colors flex items-center gap-2">
+                                            {type.name}
+                                        </h3>
+                                        <p className="text-sm text-slate-500 mt-1 line-clamp-2">
+                                            Compare rates & coverage options
+                                        </p>
+                                        
+                                        {/* Learn more link appears on hover */}
+                                        <div className="mt-3 flex items-center gap-1 text-sm font-medium text-blue-600 opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300">
+                                            Explore
+                                            <ArrowRight className="w-4 h-4" />
+                                        </div>
+                                    </div>
                                 </div>
                             </Link>
                         ))}
@@ -353,38 +431,120 @@ export default async function HomePage() {
                 </section>
             )}
 
-            {/* Recent Articles */}
+            {/* Learn & Make Smarter Decisions - Editorial Style */}
             {recentPages.length > 0 && (
-                <section className="py-20 bg-white">
+                <section className="py-24 bg-white">
                     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                        <h2 className="text-3xl font-bold text-slate-900 mb-4 text-center tracking-tight">
-                            Learn & Make Smarter Decisions
-                        </h2>
-                        <p className="text-center text-slate-500 mb-12 max-w-2xl mx-auto">
-                            Expert guides on insurance, financial planning, and protecting what matters most.
-                        </p>
+                        {/* Editorial Header */}
+                        <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 mb-16 pb-8 border-b border-slate-200">
+                            <div className="max-w-xl">
+                                <span className="text-sm font-semibold text-blue-600 uppercase tracking-widest mb-3 block">
+                                    Knowledge Center
+                                </span>
+                                <h2 className="text-4xl md:text-5xl font-bold text-slate-900 tracking-tight leading-tight">
+                                    Learn & Make<br />
+                                    <span className="text-slate-400">Smarter Decisions</span>
+                                </h2>
+                            </div>
+                            <p className="text-slate-500 max-w-md text-lg leading-relaxed md:text-right">
+                                Expert guides and actionable insights on insurance, financial planning, and protecting what matters.
+                            </p>
+                        </div>
 
-                        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            {recentPages.map(page => (
-                                <article key={page.id} className="bg-white rounded-xl overflow-hidden shadow-sm border border-slate-200 hover:shadow-md transition-shadow group flex flex-col">
-                                    <div className="h-40 bg-slate-50 flex items-center justify-center border-b border-slate-50">
-                                        {getIconForType(page.insuranceType?.slug || '', "w-12 h-12 text-slate-300 group-hover:text-blue-500 transition-colors")}
-                                    </div>
-                                    <div className="p-5 flex-1 flex flex-col">
-                                        <div className="flex items-center gap-2 mb-3">
-                                            <span className="text-[10px] uppercase tracking-wider font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded">{page.insuranceType?.name || 'Insurance'}</span>
-                                        </div>
-                                        <h3 className="text-base font-bold text-slate-900 mb-2 leading-snug group-hover:text-blue-600 transition-colors">
-                                            <Link href={page.slug ? `/${page.slug}` : `/${page.insuranceType?.slug || 'insurance'}${page.country ? `/${page.country.code}` : ''}${page.state ? `/${page.state.slug}` : ''}${page.city ? `/${page.city.slug}` : ''}`}>
-                                                {page.title || `${page.insuranceType?.name || 'Insurance'} in ${page.city?.name || page.state?.name || 'Your Area'}`}
-                                            </Link>
-                                        </h3>
-                                        <div className="mt-auto pt-4 flex items-center text-sm font-semibold text-slate-400 group-hover:text-blue-600 transition-colors">
-                                            Read Guide <ArrowRight className="w-4 h-4 ml-1" />
-                                        </div>
-                                    </div>
-                                </article>
-                            ))}
+                        {/* Editorial Grid - Balanced 3-Column Layout */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            {recentPages.slice(0, 6).map((page, index) => {
+                                const style = getIconStyle(page.insuranceType?.slug || '');
+                                
+                                return (
+                                    <article 
+                                        key={page.id} 
+                                        className="group"
+                                    >
+                                        <Link 
+                                            href={page.slug ? `/${page.slug}` : `/${page.insuranceType?.slug || 'insurance'}${page.country ? `/${page.country.code}` : ''}${page.state ? `/${page.state.slug}` : ''}${page.city ? `/${page.city.slug}` : ''}`}
+                                            className="block h-full"
+                                        >
+                                            <div className="relative h-full bg-slate-50 rounded-lg overflow-hidden transition-all duration-300 ease-out hover:shadow-xl hover:shadow-slate-200/50 min-h-[320px]">
+                                                {/* Content Container */}
+                                                <div className="absolute inset-0 flex flex-col">
+                                                    {/* Top Bar with Number & Category */}
+                                                    <div className="flex items-center justify-between px-6 py-5 border-b border-slate-200/60">
+                                                        <span className="text-4xl font-bold text-slate-200 group-hover:text-slate-300 transition-colors">
+                                                            {String(index + 1).padStart(2, '0')}
+                                                        </span>
+                                                        <span className={`inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wider ${style.text}`}>
+                                                            {getIconForType(page.insuranceType?.slug || '', "w-4 h-4")}
+                                                            {page.insuranceType?.name || 'Guide'}
+                                                        </span>
+                                                    </div>
+
+                                                    {/* Main Content */}
+                                                    <div className="flex-1 p-6 flex flex-col">
+                                                        {/* Title */}
+                                                        <h3 className="font-bold text-slate-900 mb-3 leading-tight text-xl group-hover:text-blue-700 transition-colors duration-300 line-clamp-2">
+                                                            {page.title || `${page.insuranceType?.name || 'Insurance'} in ${page.city?.name || page.state?.name || 'Your Area'}`}
+                                                        </h3>
+
+                                                        {/* Description */}
+                                                        {page.metaDescription && (
+                                                            <p className="text-slate-500 text-sm leading-relaxed mb-4 flex-1 line-clamp-3">
+                                                                {page.metaDescription}
+                                                            </p>
+                                                        )}
+
+                                                        {/* Bottom Meta */}
+                                                        <div className="flex items-center justify-between pt-4 mt-auto border-t border-slate-200/60">
+                                                            <div className="flex items-center gap-4">
+                                                                {/* Read Time */}
+                                                                <span className="text-xs text-slate-400 font-medium">
+                                                                    5 min read
+                                                                </span>
+                                                                
+                                                                {/* Expert Badge */}
+                                                                <span className="inline-flex items-center gap-1.5 text-xs text-slate-500">
+                                                                    <div className="w-5 h-5 rounded-full bg-slate-200 flex items-center justify-center text-[9px] font-bold text-slate-600">
+                                                                        {['J', 'M', 'S', 'A'][index % 4]}
+                                                                    </div>
+                                                                    Expert
+                                                                </span>
+                                                            </div>
+
+                                                            {/* Arrow Link */}
+                                                            <div className="w-8 h-8 rounded-full border border-slate-300 flex items-center justify-center group-hover:bg-slate-900 group-hover:border-slate-900 transition-all duration-300">
+                                                                <ArrowUpRight className="w-4 h-4 text-slate-400 group-hover:text-white transition-colors" />
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Accent Line - animates on hover */}
+                                                    <div className={`absolute bottom-0 left-0 h-1 ${style.accent} w-0 group-hover:w-full transition-all duration-500 ease-out`}></div>
+                                                </div>
+
+                                                {/* Subtle Grid Pattern Overlay */}
+                                                <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{
+                                                    backgroundImage: `linear-gradient(to right, #000 1px, transparent 1px), linear-gradient(to bottom, #000 1px, transparent 1px)`,
+                                                    backgroundSize: '20px 20px'
+                                                }}></div>
+                                            </div>
+                                        </Link>
+                                    </article>
+                                );
+                            })}
+                        </div>
+
+                        {/* View All - Minimal */}
+                        <div className="mt-16 flex items-center justify-between border-t border-slate-200 pt-8">
+                            <p className="text-slate-500 text-sm">
+                                Browse our complete library of {recentPages.length}+ expert guides
+                            </p>
+                            <Link 
+                                href="/resources" 
+                                className="inline-flex items-center gap-2 text-sm font-semibold text-slate-900 hover:text-blue-600 transition-colors group"
+                            >
+                                View All Resources
+                                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                            </Link>
                         </div>
                     </div>
                 </section>

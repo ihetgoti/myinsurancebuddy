@@ -57,7 +57,7 @@ export default function AutoGeneratePage() {
     stateIds: [] as string[],
     geoLevels: ['STATE', 'CITY'] as string[],
     templateId: '',
-    model: 'xiaomi/mimo-v2-flash',
+    model: 'deepseek/deepseek-r1:free',
     sections: {
       intro: true,
       requirements: true,
@@ -581,7 +581,7 @@ export default function AutoGeneratePage() {
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg"
               >
                 <optgroup label="FREE Models">
-                  <option value="xiaomi/mimo-v2-flash">MiMo-V2-Flash (FREE - BEST!)</option>
+                  <option value="deepseek/deepseek-r1:free">DeepSeek R1 (Free)</option>
                   <option value="deepseek/deepseek-r1">DeepSeek R1 (FREE)</option>
                   <option value="deepseek/deepseek-chat">DeepSeek Chat (FREE)</option>
                   <option value="google/gemini-2.0-flash-exp">Gemini 2.0 Flash (FREE)</option>

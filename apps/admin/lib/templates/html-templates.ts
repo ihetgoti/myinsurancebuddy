@@ -121,7 +121,7 @@ const STATE_PAGE_TEMPLATE: HtmlTemplate = {
     <article class="main-content">
       <h1>{{insurance_type}} in {{state}} ({{year}} Guide)</h1>
       
-      <p class="meta">Last updated: {{year}} • Average rate: {{avg_rate}}/month</p>
+      <p class="meta">Average rate: {{avg_rate}}/month</p>
       
       <p>Looking for the best <strong>{{insurance_type}}</strong> in <strong>{{state}}</strong>? 
       You've come to the right place. Our comprehensive guide covers everything you need to know 

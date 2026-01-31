@@ -5,8 +5,6 @@ import { prisma } from '@/lib/prisma';
 
 export const dynamic = 'force-dynamic';
 
-
-
 async function getData() {
     const [insuranceTypes, states] = await Promise.all([
         prisma.insuranceType.findMany({ where: { isActive: true }, orderBy: { sortOrder: 'asc' } }),
@@ -35,63 +33,65 @@ export default async function BestRentersInsurancePage() {
         <div className="min-h-screen bg-white">
             <Header insuranceTypes={insuranceTypes} states={states} />
 
-            <section className="bg-gradient-to-br from-[#0B1B34] via-[#0F2847] to-[#1A3A5C] py-20">
-                <div className="container mx-auto px-4 text-center">
-                    <p className="text-teal-400 font-medium mb-4">UPDATED DECEMBER 2024</p>
-                    <h1 className="text-4xl md:text-5xl font-bold text-white mb-6 tracking-tight">
+            {/* Hero */}
+            <section className="bg-gradient-to-br from-[#0B1B34] via-[#0F2847] to-[#1A3A5C] py-16 sm:py-20">
+                <div className="container mx-auto px-4 sm:px-6 text-center">
+                    <p className="text-blue-400 font-medium mb-3 sm:mb-4 text-sm sm:text-base">UPDATED DECEMBER 2024</p>
+                    <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-4 sm:mb-6 tracking-tight">
                         Best Renters Insurance Companies
                     </h1>
-                    <p className="text-xl text-white/70 max-w-2xl mx-auto">
+                    <p className="text-lg sm:text-xl text-white/70 max-w-2xl mx-auto px-2 sm:px-0">
                         Find the best renters insurance based on coverage, price, and customer satisfaction.
                     </p>
                 </div>
             </section>
 
-            <section className="py-20">
-                <div className="container mx-auto px-4">
-                    <div className="max-w-4xl mx-auto space-y-6">
+            {/* Companies List */}
+            <section className="py-16 sm:py-20">
+                <div className="container mx-auto px-4 sm:px-6">
+                    <div className="max-w-4xl mx-auto space-y-4 sm:space-y-6">
                         {companies.map((company) => (
-                            <div key={company.rank} className={`bg-white rounded-xl border ${company.rank === 1 ? 'border-teal-500 ring-2 ring-teal-500/20' : 'border-slate-200'} overflow-hidden`}>
+                            <div key={company.rank} className={`bg-white rounded-xl border ${company.rank === 1 ? 'border-blue-500 ring-2 ring-blue-500/20' : 'border-slate-200'} overflow-hidden`}>
                                 {company.rank === 1 && (
-                                    <div className="bg-teal-600 text-white text-center py-2 text-sm font-semibold">
+                                    <div className="bg-blue-600 text-white text-center py-2 text-sm font-semibold">
                                         🏆 BEST OVERALL
                                     </div>
                                 )}
-                                <div className="p-6">
-                                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
-                                        <div className="flex items-center gap-4">
-                                            <div className="w-10 h-10 bg-slate-100 rounded-lg flex items-center justify-center text-xl font-bold text-slate-400">
+                                <div className="p-4 sm:p-6">
+                                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 mb-3 sm:mb-4">
+                                        <div className="flex items-center gap-3 sm:gap-4">
+                                            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-slate-100 rounded-lg flex items-center justify-center text-lg sm:text-xl font-bold text-slate-400 flex-shrink-0">
                                                 {company.rank}
                                             </div>
                                             <div>
-                                                <h3 className="text-xl font-bold text-slate-900">{company.name}</h3>
-                                                <p className="text-sm text-slate-500">Best for: {company.bestFor}</p>
+                                                <h3 className="text-lg sm:text-xl font-bold text-slate-900">{company.name}</h3>
+                                                <p className="text-xs sm:text-sm text-slate-500">Best for: {company.bestFor}</p>
                                             </div>
                                         </div>
-                                        <div className="flex items-center gap-4">
+                                        <div className="flex items-center justify-between sm:justify-end gap-3 sm:gap-4">
                                             <div className="text-center">
-                                                <div className="font-bold text-slate-900">{company.avgRate}</div>
+                                                <div className="font-bold text-slate-900 text-sm sm:text-base">{company.avgRate}</div>
                                                 <span className="text-xs text-slate-500">Avg. Rate</span>
                                             </div>
-                                            <Link href="/get-quote" className="bg-teal-600 text-white px-6 py-2 rounded-lg font-semibold hover:bg-teal-700 transition">
+                                            <Link href="/get-quote" className="bg-blue-600 text-white px-4 sm:px-6 py-2 rounded-lg font-semibold hover:bg-blue-700 transition text-sm sm:text-base">
                                                 Get Quote
                                             </Link>
                                         </div>
                                     </div>
-                                    <div className="grid md:grid-cols-2 gap-4 pt-4 border-t border-slate-100">
+                                    <div className="grid sm:grid-cols-2 gap-3 sm:gap-4 pt-3 sm:pt-4 border-t border-slate-100">
                                         <div>
-                                            <h4 className="text-sm font-semibold text-green-600 mb-2">✓ Pros</h4>
-                                            <ul className="space-y-1">
+                                            <h4 className="text-sm font-semibold text-green-600 mb-1 sm:mb-2">✓ Pros</h4>
+                                            <ul className="space-y-0.5 sm:space-y-1">
                                                 {company.pros.map((pro, i) => (
-                                                    <li key={i} className="text-sm text-slate-600">• {pro}</li>
+                                                    <li key={i} className="text-xs sm:text-sm text-slate-600">• {pro}</li>
                                                 ))}
                                             </ul>
                                         </div>
                                         <div>
-                                            <h4 className="text-sm font-semibold text-red-600 mb-2">✗ Cons</h4>
-                                            <ul className="space-y-1">
+                                            <h4 className="text-sm font-semibold text-red-600 mb-1 sm:mb-2">✗ Cons</h4>
+                                            <ul className="space-y-0.5 sm:space-y-1">
                                                 {company.cons.map((con, i) => (
-                                                    <li key={i} className="text-sm text-slate-600">• {con}</li>
+                                                    <li key={i} className="text-xs sm:text-sm text-slate-600">• {con}</li>
                                                 ))}
                                             </ul>
                                         </div>
@@ -103,11 +103,12 @@ export default async function BestRentersInsurancePage() {
                 </div>
             </section>
 
-            <section className="py-16 bg-gradient-to-r from-teal-600 to-teal-700">
-                <div className="container mx-auto px-4 text-center">
-                    <h2 className="text-3xl font-bold text-white mb-4">Compare Renters Insurance Quotes</h2>
-                    <p className="text-teal-100 mb-8">Find the best rate for your situation.</p>
-                    <Link href="/get-quote" className="inline-block bg-white text-teal-700 px-8 py-4 rounded-xl font-bold hover:bg-teal-50 transition shadow-lg">
+            {/* CTA */}
+            <section className="py-12 sm:py-16 bg-gradient-to-r from-blue-600 to-blue-700">
+                <div className="container mx-auto px-4 sm:px-6 text-center">
+                    <h2 className="text-2xl sm:text-3xl font-bold text-white mb-3 sm:mb-4">Compare Renters Insurance Quotes</h2>
+                    <p className="text-blue-100 mb-6 sm:mb-8 text-sm sm:text-base">Find the best rate for your situation.</p>
+                    <Link href="/get-quote" className="inline-block bg-white text-blue-700 px-6 sm:px-8 py-3 sm:py-4 rounded-xl font-bold hover:bg-blue-50 transition shadow-lg text-sm sm:text-base">
                         Get Your Free Quotes
                     </Link>
                 </div>
@@ -117,4 +118,3 @@ export default async function BestRentersInsurancePage() {
         </div>
     );
 }
-

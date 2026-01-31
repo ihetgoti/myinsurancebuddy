@@ -5,8 +5,6 @@ import { prisma } from '@/lib/prisma';
 
 export const dynamic = 'force-dynamic';
 
-
-
 async function getData() {
     const [insuranceTypes, states] = await Promise.all([
         prisma.insuranceType.findMany({ where: { isActive: true }, orderBy: { sortOrder: 'asc' } }),
@@ -39,30 +37,32 @@ export default async function HealthInsurancePage() {
         <div className="min-h-screen bg-white">
             <Header insuranceTypes={insuranceTypes} states={states} />
 
-            <section className="bg-gradient-to-br from-[#0B1B34] via-[#0F2847] to-[#1A3A5C] py-20">
-                <div className="container mx-auto px-4 text-center">
-                    <p className="text-teal-400 font-medium mb-4">HEALTHCARE COSTS</p>
-                    <h1 className="text-4xl md:text-5xl font-bold text-white mb-6 tracking-tight">
+            {/* Hero */}
+            <section className="bg-gradient-to-br from-[#0B1B34] via-[#0F2847] to-[#1A3A5C] py-16 sm:py-20 lg:py-24">
+                <div className="container mx-auto px-4 sm:px-6 lg:px-8 text-center">
+                    <p className="text-blue-400 font-medium mb-4 text-sm sm:text-base">HEALTHCARE COSTS</p>
+                    <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-4 sm:mb-6 tracking-tight">
                         Health Insurance Guide
                     </h1>
-                    <p className="text-xl text-white/70 max-w-2xl mx-auto">
+                    <p className="text-lg sm:text-xl text-white/70 max-w-2xl mx-auto">
                         Understand healthcare costs and find the right coverage for you and your family.
                     </p>
                 </div>
             </section>
 
-            <section className="py-20">
-                <div className="container mx-auto px-4">
+            {/* Cost Guides */}
+            <section className="py-16 sm:py-20 lg:py-24">
+                <div className="container mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="max-w-4xl mx-auto">
-                        <h2 className="text-3xl font-bold text-slate-900 mb-8 text-center">Healthcare Cost Guides</h2>
-                        <p className="text-slate-600 text-center mb-12 max-w-2xl mx-auto">
+                        <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-slate-900 mb-6 sm:mb-8 text-center">Healthcare Cost Guides</h2>
+                        <p className="text-slate-600 text-center mb-8 sm:mb-12 max-w-2xl mx-auto text-sm sm:text-base">
                             Understanding healthcare costs can help you make informed decisions about your coverage and care.
                         </p>
 
-                        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
                             {costGuides.map((guide, i) => (
-                                <Link key={i} href={guide.slug} className="bg-white rounded-xl p-5 border border-slate-200 hover:shadow-lg hover:border-teal-500 transition group">
-                                    <h3 className="font-semibold text-slate-900 group-hover:text-teal-600 transition">{guide.title}</h3>
+                                <Link key={i} href={guide.slug} className="bg-white rounded-xl p-4 sm:p-5 border border-slate-200 hover:shadow-lg hover:border-blue-500 transition group">
+                                    <h3 className="font-semibold text-slate-900 group-hover:text-blue-600 transition text-sm sm:text-base">{guide.title}</h3>
                                 </Link>
                             ))}
                         </div>
@@ -70,21 +70,22 @@ export default async function HealthInsurancePage() {
                 </div>
             </section>
 
-            <section className="py-20 bg-slate-50">
-                <div className="container mx-auto px-4">
+            {/* Types of Health Insurance */}
+            <section className="py-16 sm:py-20 lg:py-24 bg-blue-50">
+                <div className="container mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="max-w-4xl mx-auto">
-                        <h2 className="text-3xl font-bold text-slate-900 mb-8 text-center">Types of Health Insurance</h2>
+                        <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-slate-900 mb-6 sm:mb-8 text-center">Types of Health Insurance</h2>
 
-                        <div className="grid md:grid-cols-2 gap-6">
+                        <div className="grid sm:grid-cols-2 gap-4 sm:gap-6">
                             {[
                                 { title: 'Employer-Sponsored', desc: 'Health insurance provided through your workplace, often with shared premium costs.' },
                                 { title: 'Individual/Family Plans', desc: 'Plans purchased directly from insurers or through the ACA marketplace.' },
                                 { title: 'Medicare', desc: 'Federal health insurance for people 65+ and those with certain disabilities.' },
                                 { title: 'Medicaid', desc: 'State and federal program providing coverage for low-income individuals.' },
                             ].map((type, i) => (
-                                <div key={i} className="bg-white rounded-xl p-6 border border-slate-200">
-                                    <h3 className="font-bold text-slate-900 mb-2">{type.title}</h3>
-                                    <p className="text-sm text-slate-600">{type.desc}</p>
+                                <div key={i} className="bg-white rounded-xl p-4 sm:p-6 border border-slate-200">
+                                    <h3 className="font-bold text-slate-900 mb-2 text-base sm:text-lg">{type.title}</h3>
+                                    <p className="text-sm sm:text-base text-slate-600">{type.desc}</p>
                                 </div>
                             ))}
                         </div>
@@ -92,24 +93,26 @@ export default async function HealthInsurancePage() {
                 </div>
             </section>
 
-            <section className="py-20">
-                <div className="container mx-auto px-4">
+            {/* Alternatives Section */}
+            <section className="py-16 sm:py-20 lg:py-24">
+                <div className="container mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="max-w-3xl mx-auto">
-                        <h2 className="text-3xl font-bold text-slate-900 mb-8 text-center">Alternatives to Health Insurance</h2>
-                        <Link href="/health-insurance/alternatives-to-health-insurance" className="block bg-white rounded-xl p-6 border border-slate-200 hover:shadow-lg transition">
-                            <h3 className="font-bold text-slate-900 mb-2">Explore Health Insurance Alternatives</h3>
-                            <p className="text-slate-600 mb-4">Learn about health sharing ministries, short-term plans, and other options if traditional health insurance isn't right for you.</p>
-                            <span className="text-teal-600 font-semibold">Read Guide →</span>
+                        <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-slate-900 mb-6 sm:mb-8 text-center">Alternatives to Health Insurance</h2>
+                        <Link href="/health-insurance/alternatives-to-health-insurance" className="block bg-white rounded-xl p-4 sm:p-6 border border-slate-200 hover:shadow-lg transition">
+                            <h3 className="font-bold text-slate-900 mb-2 text-base sm:text-lg">Explore Health Insurance Alternatives</h3>
+                            <p className="text-slate-600 mb-4 text-sm sm:text-base">Learn about health sharing ministries, short-term plans, and other options if traditional health insurance isn&apos;t right for you.</p>
+                            <span className="text-blue-600 font-semibold">Read Guide →</span>
                         </Link>
                     </div>
                 </div>
             </section>
 
-            <section className="py-16 bg-gradient-to-r from-teal-600 to-teal-700">
-                <div className="container mx-auto px-4 text-center">
-                    <h2 className="text-3xl font-bold text-white mb-4">Need Help Finding Coverage?</h2>
-                    <p className="text-teal-100 mb-8">Compare insurance options and find the right plan for your needs.</p>
-                    <Link href="/get-quote" className="inline-block bg-white text-teal-700 px-8 py-4 rounded-xl font-bold hover:bg-teal-50 transition shadow-lg">
+            {/* CTA */}
+            <section className="py-16 sm:py-20 bg-gradient-to-r from-blue-600 to-blue-700">
+                <div className="container mx-auto px-4 sm:px-6 lg:px-8 text-center">
+                    <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-4">Need Help Finding Coverage?</h2>
+                    <p className="text-blue-100 mb-6 sm:mb-8 text-sm sm:text-base">Compare insurance options and find the right plan for your needs.</p>
+                    <Link href="/get-quote" className="inline-block bg-white text-blue-700 px-6 sm:px-8 py-3 sm:py-4 rounded-xl font-bold hover:bg-blue-50 transition shadow-lg text-sm sm:text-base">
                         Get Started
                     </Link>
                 </div>
@@ -119,4 +122,3 @@ export default async function HealthInsurancePage() {
         </div>
     );
 }
-

@@ -63,7 +63,7 @@ export default function AIContentPage() {
       // Meta tags
       metaTags: false
     },
-    model: 'xiaomi/mimo-v2-flash', // Default to FREE PREMIUM model (until Jan 26!)
+    model: 'deepseek/deepseek-r1:free', // Default to free model
     batchSize: 10,
     delayBetweenBatches: 1000
   });
@@ -203,32 +203,12 @@ export default function AIContentPage() {
           </p>
         </div>
 
-        {/* URGENT: Limited Time Offer Banner */}
-        <div className="mb-6 bg-gradient-to-r from-red-50 to-orange-50 border-2 border-orange-300 rounded-lg p-4 shadow-lg">
-          <div className="flex items-start gap-3">
-            <div className="bg-orange-500 text-white rounded-full p-2 flex-shrink-0">
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </div>
-            <div className="flex-1">
-              <h3 className="font-bold text-orange-900 text-lg">🔥 URGENT: Premium FREE Model Available - Act Now!</h3>
-              <p className="text-orange-800 mt-1">
-                <strong>MiMo-V2-Flash by Xiaomi</strong> is FREE and comparable to Claude Sonnet 4.5 quality!
-                <br />
-                ⚠️ <strong className="text-red-700">Only available until January 26, 2026 (2 days left!)</strong>
-              </p>
-              <div className="mt-2 flex gap-4 text-sm">
-                <span className="text-orange-700">✓ FREE ($0/M tokens)</span>
-                <span className="text-orange-700">✓ 262K context</span>
-                <span className="text-orange-700">✓ Claude Sonnet 4.5 quality</span>
-                <span className="text-orange-700">✓ #1 on SWE-bench</span>
-              </div>
-              <p className="mt-2 text-sm font-bold text-red-700">
-                💡 Generate your 500k pages NOW before this model disappears! After Jan 26, fall back to DeepSeek R1.
-              </p>
-            </div>
-          </div>
+        {/* Info Banner */}
+        <div className="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <p className="text-blue-800">
+            Generate unique content for your insurance pages using free AI models. 
+            Only models ending with <code>:free</code> will be used to protect your deposit.
+          </p>
         </div>
 
         {/* Workflow Guide */}
@@ -514,7 +494,7 @@ export default function AIContentPage() {
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg"
                   >
                     <optgroup label="🆓 FREE Models">
-                      <option value="xiaomi/mimo-v2-flash">🔥 MiMo-V2-Flash (FREE - BEST!) ⚠️ URGENT: Ends Jan 26</option>
+                      <option value="deepseek/deepseek-r1:free">DeepSeek R1 (Free)</option>
                       <option value="deepseek/deepseek-r1">DeepSeek R1 (FREE - Xiaomi) ⭐</option>
                       <option value="deepseek/deepseek-chat">DeepSeek Chat (FREE)</option>
                       <option value="google/gemini-2.0-flash-exp">Gemini 2.0 Flash (FREE)</option>
@@ -693,11 +673,8 @@ export default function AIContentPage() {
             <p className="text-lg font-bold text-green-900 mb-2">
               🎉 FREE MODELS - Generate UNLIMITED pages at $0 cost!
             </p>
-            <p className="text-orange-700 font-bold">
-              <strong>🔥 MiMo-V2-Flash (Xiaomi):</strong> FREE - BEST QUALITY! ⚠️ Until Jan 26 only!
-            </p>
             <p>
-              <strong>DeepSeek R1 (Xiaomi):</strong> FREE - Unlimited pages! ⭐ Use after Jan 26
+              <strong>DeepSeek R1:</strong> FREE - Unlimited pages! ⭐
             </p>
             <p>
               <strong>DeepSeek Chat:</strong> FREE - Unlimited pages!

@@ -3,93 +3,201 @@ import { prisma } from '@/lib/prisma';
 
 export const dynamic = 'force-dynamic';
 
-const DEFAULT_OG_IMAGE = 'https://myinsurancebuddies.com/og-default.jpg';
-const SITE_URL = 'https://myinsurancebuddies.com';
+const DEFAULT_OG_IMAGE = process.env.DEFAULT_OG_IMAGE || 'https://myinsurancebuddies.com/og-default.jpg';
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://myinsurancebuddies.com';
+
+// Batch size for processing to avoid memory issues
+const BATCH_SIZE = 100;
 
 export async function POST(req: NextRequest) {
     try {
         const body = await req.json();
-        const { fixCanonical = true, fixOgImage = true, dryRun = false } = body;
+        const { 
+            fixCanonical = true, 
+            fixOgImage = true,
+            fixMetaTitle = false,
+            fixMetaDesc = false,
+            dryRun = false,
+            batchSize = BATCH_SIZE,
+        } = body;
 
         let updatedCount = 0;
-        const updates: { id: string; slug: string; fixes: string[] }[] = [];
+        let errorCount = 0;
+        const updates: { id: string; slug: string; fixes: string[]; error?: string }[] = [];
+        const errors: { slug: string; error: string }[] = [];
 
-        // Get pages missing canonical or OG image
-        const pagesQuery: any = {
-            where: {
-                isPublished: true,
-                OR: [],
-            },
-            select: {
-                id: true,
-                slug: true,
-                canonicalTag: true,
-                ogImage: true,
-                title: true,
-            },
-        };
-
+        // Build where clause dynamically
+        const whereConditions: any[] = [];
+        
         if (fixCanonical) {
-            pagesQuery.where.OR.push({ canonicalTag: null });
-            pagesQuery.where.OR.push({ canonicalTag: '' });
+            whereConditions.push({ canonicalTag: null });
         }
-
         if (fixOgImage) {
-            pagesQuery.where.OR.push({ ogImage: null });
-            pagesQuery.where.OR.push({ ogImage: '' });
+            whereConditions.push({ ogImage: null });
         }
-
-        // Only query if we have conditions
-        if (pagesQuery.where.OR.length === 0) {
-            return NextResponse.json({
-                message: 'No fixes requested',
-                updated: 0,
+        if (fixMetaTitle) {
+            whereConditions.push({
+                OR: [{ metaTitle: null }, { metaTitle: '' }]
+            });
+        }
+        if (fixMetaDesc) {
+            whereConditions.push({
+                OR: [{ metaDescription: null }, { metaDescription: '' }]
             });
         }
 
-        const pages = await prisma.page.findMany(pagesQuery);
+        // Get total count for progress tracking
+        const totalCount = await prisma.page.count({
+            where: {
+                isPublished: true,
+                OR: whereConditions,
+            },
+        });
 
-        for (const page of pages) {
-            const fixes: string[] = [];
-            const updateData: any = {};
+        if (totalCount === 0) {
+            return NextResponse.json({
+                message: 'No pages need fixing',
+                updated: 0,
+                totalFound: 0,
+                fixes: [],
+            });
+        }
 
-            // Fix canonical URL
-            if (fixCanonical && !page.canonicalTag) {
-                updateData.canonicalTag = `${SITE_URL}/${page.slug}`;
-                fixes.push('canonical');
-            }
+        // Process in batches
+        let processed = 0;
+        let skip = 0;
 
-            // Fix OG Image
-            if (fixOgImage && !page.ogImage) {
-                updateData.ogImage = DEFAULT_OG_IMAGE;
-                // Also set OG title and description if missing
-                if (!page.title) {
-                    updateData.ogTitle = page.title;
-                }
-                fixes.push('ogImage');
-            }
+        while (processed < totalCount) {
+            const pages = await prisma.page.findMany({
+                where: {
+                    isPublished: true,
+                    OR: whereConditions,
+                },
+                select: {
+                    id: true,
+                    slug: true,
+                    title: true,
+                    metaTitle: true,
+                    metaDescription: true,
+                    canonicalTag: true,
+                    ogImage: true,
+                    insuranceType: { select: { name: true } },
+                    state: { select: { name: true } },
+                    city: { select: { name: true } },
+                },
+                take: batchSize,
+                skip,
+            });
 
-            if (fixes.length > 0) {
-                updates.push({ id: page.id, slug: page.slug, fixes });
+            if (pages.length === 0) break;
 
-                if (!dryRun) {
-                    await prisma.page.update({
-                        where: { id: page.id },
-                        data: updateData,
+            // Process batch
+            for (const page of pages) {
+                try {
+                    const pageFixes: string[] = [];
+                    const updateData: any = {};
+
+                    // Fix canonical URL
+                    if (fixCanonical && !page.canonicalTag) {
+                        updateData.canonicalTag = `${SITE_URL}/${page.slug}`;
+                        pageFixes.push('canonical');
+                    }
+
+                    // Fix OG Image
+                    if (fixOgImage && !page.ogImage) {
+                        updateData.ogImage = DEFAULT_OG_IMAGE;
+                        if (page.title && !page.metaTitle) {
+                            updateData.ogTitle = page.title;
+                        }
+                        pageFixes.push('ogImage');
+                    }
+
+                    // Fix missing meta title (generate from page data)
+                    if (fixMetaTitle && (!page.metaTitle || page.metaTitle === '')) {
+                        const generatedTitle = generateMetaTitle(page);
+                        updateData.metaTitle = generatedTitle;
+                        updateData.ogTitle = generatedTitle;
+                        pageFixes.push('metaTitle');
+                    }
+
+                    // Fix missing meta description
+                    if (fixMetaDesc && (!page.metaDescription || page.metaDescription === '')) {
+                        const generatedDesc = generateMetaDescription(page);
+                        updateData.metaDescription = generatedDesc;
+                        updateData.ogDescription = generatedDesc;
+                        pageFixes.push('metaDesc');
+                    }
+
+                    if (pageFixes.length > 0) {
+                        updates.push({ id: page.id, slug: page.slug, fixes: pageFixes });
+
+                        if (!dryRun) {
+                            await prisma.page.update({
+                                where: { id: page.id },
+                                data: updateData,
+                            });
+                            updatedCount++;
+                        }
+                    }
+                } catch (pageError: any) {
+                    errorCount++;
+                    errors.push({
+                        slug: page.slug,
+                        error: pageError.message || 'Unknown error',
                     });
-                    updatedCount++;
                 }
             }
+
+            processed += pages.length;
+            skip += batchSize;
         }
 
         return NextResponse.json({
             message: dryRun ? 'Dry run completed' : 'SEO fixes applied',
             updated: updatedCount,
-            totalFound: pages.length,
-            fixes: updates.slice(0, 20), // Show first 20 for preview
+            totalFound: totalCount,
+            errors: errorCount,
+            errorDetails: errors.slice(0, 10), // Show first 10 errors
+            fixes: updates.slice(0, 20),
+            dryRun,
         });
     } catch (error: any) {
         console.error('SEO fix error:', error);
-        return NextResponse.json({ error: error.message }, { status: 500 });
+        return NextResponse.json(
+            { error: error.message || 'Internal server error' },
+            { status: 500 }
+        );
     }
+}
+
+// Helper: Generate meta title from page context
+function generateMetaTitle(page: any): string {
+    const parts: string[] = [];
+    
+    if (page.insuranceType?.name) {
+        parts.push(page.insuranceType.name);
+    }
+    if (page.city?.name) {
+        parts.push(page.city.name);
+    } else if (page.state?.name) {
+        parts.push(page.state.name);
+    }
+    
+    if (parts.length === 0) {
+        return page.title || 'Insurance Quotes';
+    }
+    
+    return `${parts.join(' in ')} - Get Free Quotes`;
+}
+
+// Helper: Generate meta description from page context
+function generateMetaDescription(page: any): string {
+    const type = page.insuranceType?.name || 'Insurance';
+    const location = page.city?.name || page.state?.name;
+    
+    if (location) {
+        return `Compare ${type} rates in ${location}. Get free quotes from top providers and save on your premiums. Quick, easy, and free comparison.`;
+    }
+    
+    return `Compare ${type} rates and get free quotes from top providers. Find the best coverage at the lowest price. Quick and easy comparison.`;
 }

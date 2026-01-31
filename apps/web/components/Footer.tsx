@@ -1,5 +1,6 @@
 import Link from 'next/link';
-import { Shield, Facebook, Twitter, Instagram, Linkedin, Mail, Phone, MapPin, CheckCircle, Award, Star } from 'lucide-react';
+import { Facebook, Twitter, Instagram, Linkedin, Mail, Phone, MapPin, CheckCircle, Award, Star, Shield } from 'lucide-react';
+import Logo from './Logo';
 
 interface InsuranceType {
     id: string;
@@ -77,17 +78,11 @@ export default function Footer({ insuranceTypes = [] }: FooterProps) {
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-8 lg:gap-12">
                     {/* Brand Column */}
                     <div className="col-span-2">
-                        <Link href="/" className="flex items-center gap-3 mb-6 group">
-                            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-600 to-cyan-500 flex items-center justify-center shadow-lg">
-                                <Shield className="w-7 h-7 text-white" />
-                            </div>
-                            <div>
-                                <span className="block text-xl font-bold text-white tracking-tight">
-                                    MyInsurance<span className="text-blue-400">Buddy</span>
-                                </span>
-                                <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Your Trusted Guide</span>
-                            </div>
-                        </Link>
+                        <div className="mb-6">
+                            <Link href="/" className="inline-block">
+                                <Logo size="lg" variant="full" colorScheme="dark" />
+                            </Link>
+                        </div>
                         <p className="text-sm leading-relaxed mb-6 text-slate-400 max-w-xs">
                             We help you compare quotes from 100+ insurance companies to find the best coverage at the lowest price. Licensed in all 50 states.
                         </p>

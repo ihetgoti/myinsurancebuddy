@@ -5,8 +5,6 @@ import { prisma } from '@/lib/prisma';
 
 export const dynamic = 'force-dynamic';
 
-
-
 async function getData() {
     const [insuranceTypes, states] = await Promise.all([
         prisma.insuranceType.findMany({ where: { isActive: true }, orderBy: { sortOrder: 'asc' } }),
@@ -46,34 +44,34 @@ export default async function DiscountsPage() {
             <Header insuranceTypes={insuranceTypes} states={states} />
 
             {/* Hero */}
-            <section className="bg-gradient-to-br from-[#0B1B34] via-[#0F2847] to-[#1A3A5C] py-20">
-                <div className="container mx-auto px-4 text-center">
-                    <p className="text-teal-400 font-medium mb-4">SAVE MORE MONEY</p>
-                    <h1 className="text-4xl md:text-5xl font-bold text-white mb-6 tracking-tight">
+            <section className="bg-gradient-to-br from-[#0B1B34] via-[#0F2847] to-[#1A3A5C] py-16 sm:py-20">
+                <div className="container mx-auto px-4 sm:px-6 text-center">
+                    <p className="text-blue-400 font-medium mb-3 sm:mb-4 text-sm sm:text-base">SAVE MORE MONEY</p>
+                    <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-4 sm:mb-6 tracking-tight">
                         Car Insurance Discounts
                     </h1>
-                    <p className="text-xl text-white/70 max-w-2xl mx-auto">
+                    <p className="text-lg sm:text-xl text-white/70 max-w-2xl mx-auto px-2 sm:px-0">
                         Most drivers qualify for discounts they don't know about. Here's how to maximize your savings.
                     </p>
                 </div>
             </section>
 
             {/* Summary */}
-            <section className="py-12 bg-slate-50 border-b">
-                <div className="container mx-auto px-4">
+            <section className="py-10 sm:py-12 bg-slate-50 border-b">
+                <div className="container mx-auto px-4 sm:px-6">
                     <div className="max-w-4xl mx-auto">
-                        <div className="grid md:grid-cols-3 gap-6">
-                            <div className="bg-white rounded-xl p-6 border border-slate-200 text-center">
-                                <div className="text-3xl font-bold text-teal-600 mb-2">15+</div>
-                                <p className="text-sm text-slate-600">Common discounts available</p>
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
+                            <div className="bg-white rounded-xl p-4 sm:p-6 border border-slate-200 text-center">
+                                <div className="text-2xl sm:text-3xl font-bold text-blue-600 mb-1 sm:mb-2">15+</div>
+                                <p className="text-xs sm:text-sm text-slate-600">Common discounts available</p>
                             </div>
-                            <div className="bg-white rounded-xl p-6 border border-slate-200 text-center">
-                                <div className="text-3xl font-bold text-teal-600 mb-2">$500+</div>
-                                <p className="text-sm text-slate-600">Potential annual savings</p>
+                            <div className="bg-white rounded-xl p-4 sm:p-6 border border-slate-200 text-center">
+                                <div className="text-2xl sm:text-3xl font-bold text-blue-600 mb-1 sm:mb-2">$500+</div>
+                                <p className="text-xs sm:text-sm text-slate-600">Potential annual savings</p>
                             </div>
-                            <div className="bg-white rounded-xl p-6 border border-slate-200 text-center">
-                                <div className="text-3xl font-bold text-teal-600 mb-2">5-25%</div>
-                                <p className="text-sm text-slate-600">Per discount savings range</p>
+                            <div className="bg-white rounded-xl p-4 sm:p-6 border border-slate-200 text-center">
+                                <div className="text-2xl sm:text-3xl font-bold text-blue-600 mb-1 sm:mb-2">5-25%</div>
+                                <p className="text-xs sm:text-sm text-slate-600">Per discount savings range</p>
                             </div>
                         </div>
                     </div>
@@ -81,32 +79,32 @@ export default async function DiscountsPage() {
             </section>
 
             {/* Discounts Table */}
-            <section className="py-20">
-                <div className="container mx-auto px-4">
+            <section className="py-16 sm:py-20">
+                <div className="container mx-auto px-4 sm:px-6">
                     <div className="max-w-5xl mx-auto">
-                        <h2 className="text-3xl font-bold text-slate-900 mb-8 text-center">All Available Discounts</h2>
+                        <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 mb-6 sm:mb-8 text-center">All Available Discounts</h2>
 
-                        <div className="overflow-x-auto">
-                            <table className="w-full bg-white rounded-xl border border-slate-200 overflow-hidden">
+                        <div className="overflow-x-auto -mx-4 sm:mx-0 px-4 sm:px-0">
+                            <table className="w-full min-w-[600px] bg-white rounded-xl border border-slate-200 overflow-hidden">
                                 <thead className="bg-slate-50">
                                     <tr>
-                                        <th className="text-left py-4 px-4 font-semibold text-slate-900">Discount</th>
-                                        <th className="text-center py-4 px-4 font-semibold text-slate-900">Savings</th>
-                                        <th className="text-left py-4 px-4 font-semibold text-slate-900">Description</th>
-                                        <th className="text-left py-4 px-4 font-semibold text-slate-900">Availability</th>
+                                        <th className="text-left py-3 sm:py-4 px-3 sm:px-4 font-semibold text-slate-900 text-sm">Discount</th>
+                                        <th className="text-center py-3 sm:py-4 px-3 sm:px-4 font-semibold text-slate-900 text-sm">Savings</th>
+                                        <th className="text-left py-3 sm:py-4 px-3 sm:px-4 font-semibold text-slate-900 text-sm">Description</th>
+                                        <th className="text-left py-3 sm:py-4 px-3 sm:px-4 font-semibold text-slate-900 text-sm">Availability</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {discounts.map((discount, index) => (
                                         <tr key={index} className="border-t border-slate-100 hover:bg-slate-50">
-                                            <td className="py-4 px-4 font-medium text-slate-900">{discount.name}</td>
-                                            <td className="py-4 px-4 text-center">
-                                                <span className="bg-teal-100 text-teal-700 px-2 py-1 rounded-full text-sm font-semibold">
+                                            <td className="py-3 sm:py-4 px-3 sm:px-4 font-medium text-slate-900 text-sm">{discount.name}</td>
+                                            <td className="py-3 sm:py-4 px-3 sm:px-4 text-center">
+                                                <span className="bg-blue-100 text-blue-700 px-2 py-1 rounded-full text-xs sm:text-sm font-semibold">
                                                     {discount.savings}
                                                 </span>
                                             </td>
-                                            <td className="py-4 px-4 text-sm text-slate-600">{discount.desc}</td>
-                                            <td className="py-4 px-4 text-sm text-slate-500">{discount.availability}</td>
+                                            <td className="py-3 sm:py-4 px-3 sm:px-4 text-xs sm:text-sm text-slate-600">{discount.desc}</td>
+                                            <td className="py-3 sm:py-4 px-3 sm:px-4 text-xs sm:text-sm text-slate-500">{discount.availability}</td>
                                         </tr>
                                     ))}
                                 </tbody>
@@ -117,21 +115,21 @@ export default async function DiscountsPage() {
             </section>
 
             {/* Tips */}
-            <section className="py-20 bg-slate-50">
-                <div className="container mx-auto px-4">
+            <section className="py-16 sm:py-20 bg-slate-50">
+                <div className="container mx-auto px-4 sm:px-6">
                     <div className="max-w-4xl mx-auto">
-                        <h2 className="text-3xl font-bold text-slate-900 mb-8 text-center">How to Maximize Discounts</h2>
+                        <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 mb-6 sm:mb-8 text-center">How to Maximize Discounts</h2>
 
-                        <div className="space-y-6">
+                        <div className="space-y-4 sm:space-y-6">
                             {[
                                 { title: 'Ask directly', desc: 'Call your insurer and ask about all available discounts. Many aren\'t automatically applied.' },
                                 { title: 'Bundle policies', desc: 'Combining auto and home insurance is often the biggest discount available.' },
                                 { title: 'Take a driving course', desc: 'A few hours of online learning can save you 5-10% for years.' },
                                 { title: 'Review annually', desc: 'Your eligibility for discounts can change. Review your policy every year.' },
                             ].map((tip, i) => (
-                                <div key={i} className="bg-white rounded-xl p-6 border border-slate-200">
-                                    <h3 className="font-bold text-slate-900 mb-2">{tip.title}</h3>
-                                    <p className="text-slate-600">{tip.desc}</p>
+                                <div key={i} className="bg-white rounded-xl p-4 sm:p-6 border border-slate-200">
+                                    <h3 className="font-bold text-slate-900 mb-1 sm:mb-2 text-base sm:text-lg">{tip.title}</h3>
+                                    <p className="text-slate-600 text-sm sm:text-base">{tip.desc}</p>
                                 </div>
                             ))}
                         </div>
@@ -140,13 +138,13 @@ export default async function DiscountsPage() {
             </section>
 
             {/* CTA */}
-            <section className="py-16 bg-gradient-to-r from-teal-600 to-teal-700">
-                <div className="container mx-auto px-4 text-center">
-                    <h2 className="text-3xl font-bold text-white mb-4">Find Your Discounts</h2>
-                    <p className="text-teal-100 mb-8 max-w-2xl mx-auto">
+            <section className="py-12 sm:py-16 bg-gradient-to-r from-blue-600 to-blue-700">
+                <div className="container mx-auto px-4 sm:px-6 text-center">
+                    <h2 className="text-2xl sm:text-3xl font-bold text-white mb-3 sm:mb-4">Find Your Discounts</h2>
+                    <p className="text-blue-100 mb-6 sm:mb-8 text-sm sm:text-base max-w-2xl mx-auto">
                         Compare quotes and see which discounts you qualify for.
                     </p>
-                    <Link href="/get-quote" className="inline-block bg-white text-teal-700 px-8 py-4 rounded-xl font-bold hover:bg-teal-50 transition shadow-lg">
+                    <Link href="/get-quote" className="inline-block bg-white text-blue-700 px-6 sm:px-8 py-3 sm:py-4 rounded-xl font-bold hover:bg-blue-50 transition shadow-lg text-sm sm:text-base">
                         Get Your Free Quotes
                     </Link>
                 </div>
@@ -156,4 +154,3 @@ export default async function DiscountsPage() {
         </div>
     );
 }
-

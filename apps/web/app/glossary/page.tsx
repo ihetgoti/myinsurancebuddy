@@ -1,294 +1,399 @@
-'use client';
-
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import Link from 'next/link';
-import { useState } from 'react';
-import { Search, BookOpen, Car, Home, Heart, Stethoscope, Building2, ChevronRight } from 'lucide-react';
+import { prisma } from '@/lib/prisma';
+import { 
+  BookOpen, ArrowRight, Search, Filter, Shield, Car, Home, Heart,
+  Briefcase, Umbrella, FileText, Info
+} from 'lucide-react';
+
+export const dynamic = 'force-dynamic';
+
+export const metadata = {
+  title: 'Insurance Glossary | MyInsuranceBuddy - Learn Insurance Terms',
+  description: 'Comprehensive insurance glossary explaining key terms and definitions. Understand deductibles, premiums, liability, coverage types, and more.',
+  keywords: 'insurance glossary, insurance terms, insurance definitions, what is deductible, premium definition, liability insurance meaning',
+  openGraph: {
+    title: 'Insurance Glossary - Key Terms Explained',
+    description: 'Understand insurance jargon with our comprehensive glossary.',
+  },
+};
+
+async function getData() {
+  const [insuranceTypes, states] = await Promise.all([
+    prisma.insuranceType.findMany({ 
+      where: { isActive: true }, 
+      orderBy: { sortOrder: 'asc' } 
+    }),
+    prisma.state.findMany({ 
+      where: { isActive: true }, 
+      include: { country: true }, 
+      take: 12 
+    }),
+  ]);
+  return { insuranceTypes, states };
+}
 
 const glossaryTerms = [
-    // A
-    { term: 'Actual Cash Value (ACV)', definition: 'The value of your property at the time of loss, calculated as replacement cost minus depreciation. Used to determine claim payouts.', category: 'General' },
-    { term: 'Adjuster', definition: 'An insurance professional who investigates claims, assesses damage, and determines the appropriate payout amount on behalf of the insurance company.', category: 'General' },
-    { term: 'Agent', definition: 'A licensed professional who sells insurance policies and provides guidance on coverage options. Can be independent (representing multiple insurers) or captive (representing one company).', category: 'General' },
-
-    // B
-    { term: 'Beneficiary', definition: 'The person or entity designated to receive the death benefit from a life insurance policy when the insured person passes away.', category: 'Life' },
-    { term: 'Binder', definition: 'A temporary agreement that provides insurance coverage until the formal policy is issued. Commonly used in auto and home insurance.', category: 'General' },
-    { term: 'Bodily Injury Liability', definition: 'Auto insurance coverage that pays for injuries you cause to others in an accident, including medical expenses, lost wages, and legal fees.', category: 'Auto' },
-
-    // C
-    { term: 'Claim', definition: 'A formal request to your insurance company for coverage or compensation for a covered loss or damage.', category: 'General' },
-    { term: 'Coinsurance', definition: 'Your share of the costs of a covered service, calculated as a percentage (e.g., 20%) of the allowed amount after you meet your deductible.', category: 'Health' },
-    { term: 'Collision Coverage', definition: 'Auto insurance that pays for damage to your vehicle from a collision with another vehicle or object, regardless of who is at fault.', category: 'Auto' },
-    { term: 'Comprehensive Coverage', definition: 'Auto insurance that covers damage to your vehicle from non-collision events such as theft, vandalism, fire, natural disasters, or animal strikes.', category: 'Auto' },
-    { term: 'Copay (Copayment)', definition: 'A fixed amount you pay for a covered health care service at the time you receive the service (e.g., $25 for a doctor visit).', category: 'Health' },
-    { term: 'Coverage Limit', definition: 'The maximum amount your insurance company will pay for a covered claim. Can be per incident, per person, or aggregate.', category: 'General' },
-
-    // D
-    { term: 'Declarations Page', definition: 'The first page of your insurance policy summarizing your coverage, limits, deductibles, premium, and policy period.', category: 'General' },
-    { term: 'Deductible', definition: 'The amount you pay out of pocket before your insurance coverage kicks in. Higher deductibles typically mean lower premiums.', category: 'General' },
-    { term: 'Depreciation', definition: 'The decrease in value of property over time due to age, wear, and tear. Used in calculating actual cash value payouts.', category: 'General' },
-    { term: 'Dwelling Coverage', definition: 'Home insurance coverage that pays to repair or rebuild your home if it is damaged by a covered peril like fire, wind, or hail.', category: 'Home' },
-
-    // E
-    { term: 'Endorsement', definition: 'A written amendment to your insurance policy that adds, removes, or modifies coverage. Also called a rider or floater.', category: 'General' },
-    { term: 'Exclusion', definition: 'Specific conditions, circumstances, or types of damage that are not covered by your insurance policy.', category: 'General' },
-
-    // F
-    { term: 'Filing', definition: 'A document (like SR-22) that proves you have the required minimum insurance coverage, often required after serious driving violations.', category: 'Auto' },
-    { term: 'Floater', definition: 'Additional coverage for valuable items (jewelry, art, electronics) that exceed standard policy limits.', category: 'Home' },
-
-    // G
-    { term: 'Grace Period', definition: 'A set time after your premium due date during which you can make a payment without losing coverage or incurring penalties.', category: 'General' },
-    { term: 'Guaranteed Renewal', definition: 'A policy provision ensuring the insurer cannot cancel your coverage as long as you pay premiums on time.', category: 'Health' },
-
-    // H
-    { term: 'HO-3 Policy', definition: 'The most common type of homeowners insurance, providing open-peril coverage for the dwelling and named-peril coverage for personal property.', category: 'Home' },
-
-    // I
-    { term: 'Indemnity', definition: 'The principle of restoring the insured to the same financial position they were in before the loss occurred, without profiting from the claim.', category: 'General' },
-    { term: 'Insured', definition: 'The person or entity protected by an insurance policy. Also called the policyholder.', category: 'General' },
-
-    // L
-    { term: 'Liability Coverage', definition: 'Insurance that pays for damage or injuries you cause to others. Required in most states for auto insurance.', category: 'Auto' },
-    { term: 'Loss of Use', definition: 'Coverage that pays for additional living expenses if your home becomes uninhabitable due to a covered loss.', category: 'Home' },
-
-    // M
-    { term: 'Medical Payments Coverage', definition: 'Coverage that pays for medical expenses for you and your passengers regardless of fault in an auto accident.', category: 'Auto' },
-
-    // N
-    { term: 'Named Perils', definition: 'A policy that only covers losses from specific causes listed in the policy (e.g., fire, theft, windstorm).', category: 'General' },
-    { term: 'No-Fault Insurance', definition: 'Auto insurance system where your own insurer pays for your injuries regardless of who caused the accident. Required in some states.', category: 'Auto' },
-
-    // O
-    { term: 'Out-of-Pocket Maximum', definition: 'The most you have to pay for covered health services in a year. After reaching this limit, insurance pays 100% of covered services.', category: 'Health' },
-
-    // P
-    { term: 'Personal Injury Protection (PIP)', definition: 'Auto coverage that pays for medical expenses, lost wages, and other costs regardless of fault. Required in no-fault states.', category: 'Auto' },
-    { term: 'Personal Property Coverage', definition: 'Home insurance that covers your belongings (furniture, clothing, electronics) if damaged, destroyed, or stolen.', category: 'Home' },
-    { term: 'Policy', definition: 'The written contract between you and the insurance company detailing coverage, terms, conditions, and exclusions.', category: 'General' },
-    { term: 'Policy Limit', definition: 'The maximum amount your insurance company will pay for a single claim or all claims during the policy period.', category: 'General' },
-    { term: 'Premium', definition: 'The amount you pay for your insurance policy, typically on a monthly, quarterly, or annual basis.', category: 'General' },
-    { term: 'Property Damage Liability', definition: 'Auto insurance that pays for damage you cause to another person\'s property (vehicle, fence, building) in an accident.', category: 'Auto' },
-
-    // R
-    { term: 'Replacement Cost', definition: 'Coverage that pays to replace damaged property with new items of similar kind and quality, without deducting for depreciation.', category: 'General' },
-    { term: 'Rider', definition: 'An add-on to your insurance policy that provides additional coverage or benefits beyond the standard policy.', category: 'General' },
-
-    // S
-    { term: 'SR-22', definition: 'A certificate of financial responsibility filed with the state proving you have minimum required auto insurance. Often required after DUI or driving without insurance.', category: 'Auto' },
-    { term: 'Subrogation', definition: 'The process where your insurance company seeks reimbursement from the at-fault party after paying your claim.', category: 'General' },
-
-    // T
-    { term: 'Term Life Insurance', definition: 'Life insurance that provides coverage for a specific period (10, 20, or 30 years). If you die during the term, beneficiaries receive the death benefit.', category: 'Life' },
-    { term: 'Total Loss', definition: 'When damage to your vehicle or property exceeds its actual cash value, making it more economical to replace than repair.', category: 'Auto' },
-
-    // U
-    { term: 'Umbrella Insurance', definition: 'Extra liability coverage that kicks in when you exceed the limits of your auto, home, or other policies. Provides broader protection.', category: 'General' },
-    { term: 'Underinsured Motorist Coverage', definition: 'Coverage that pays when the at-fault driver has insurance, but not enough to cover all your damages.', category: 'Auto' },
-    { term: 'Underwriting', definition: 'The process insurers use to evaluate risk, determine eligibility, and set your premium based on factors like age, health, driving record, etc.', category: 'General' },
-    { term: 'Uninsured Motorist Coverage', definition: 'Coverage that pays for your injuries and damages when hit by a driver who has no insurance.', category: 'Auto' },
-
-    // W
-    { term: 'Waiting Period', definition: 'The time between when coverage begins and when certain benefits become available. Common in health and disability insurance.', category: 'Health' },
-    { term: 'Whole Life Insurance', definition: 'Permanent life insurance that covers you for your entire life and includes a cash value component that grows over time.', category: 'Life' },
+  // A
+  {
+    letter: 'A',
+    terms: [
+      { term: 'Actual Cash Value (ACV)', definition: 'The value of property at the time of loss, calculated as replacement cost minus depreciation.', category: 'General' },
+      { term: 'Actuary', definition: 'A professional who analyzes financial risk using mathematics, statistics, and financial theory.', category: 'General' },
+      { term: 'Additional Insured', definition: 'A person or organization added to an insurance policy who receives coverage under the policy.', category: 'General' },
+      { term: 'Adjuster', definition: 'A professional who investigates insurance claims to determine the extent of liability.', category: 'General' },
+      { term: 'Adverse Selection', definition: 'When high-risk individuals are more likely to purchase insurance than low-risk individuals.', category: 'General' },
+      { term: 'Agent', definition: 'A licensed professional who represents an insurance company and sells its products.', category: 'General' },
+      { term: 'Aggregate Limit', definition: 'The maximum amount an insurer will pay for all covered losses during a policy period.', category: 'General' },
+      { term: 'All-Risk Coverage', definition: 'Insurance that covers all risks except those specifically excluded in the policy.', category: 'Property' },
+      { term: 'Annual Policy', definition: 'An insurance policy that provides coverage for one year.', category: 'General' },
+      { term: 'Appraisal', definition: 'An evaluation of property to determine its value for insurance purposes.', category: 'General' },
+      { term: 'Assigned Risk', definition: 'A high-risk driver who cannot obtain insurance through normal channels and is assigned to an insurer by the state.', category: 'Auto' },
+      { term: 'Auto Insurance', definition: 'Insurance that provides financial protection against physical damage and bodily injury from traffic collisions.', category: 'Auto' },
+    ]
+  },
+  // B
+  {
+    letter: 'B',
+    terms: [
+      { term: 'Beneficiary', definition: 'A person or entity designated to receive benefits from an insurance policy.', category: 'Life' },
+      { term: 'Binder', definition: 'A temporary insurance contract that provides coverage until a permanent policy is issued.', category: 'General' },
+      { term: 'Bodily Injury Liability', definition: 'Coverage that pays for injuries to others when you are at fault in an accident.', category: 'Auto' },
+      { term: 'Broker', definition: 'An independent insurance professional who represents clients and shops multiple insurers for the best rates.', category: 'General' },
+      { term: 'Bundling', definition: 'Purchasing multiple insurance policies from the same company to receive a discount.', category: 'General' },
+      { term: 'Business Interruption Insurance', definition: 'Coverage that compensates for lost income when business operations are suspended.', category: 'Business' },
+    ]
+  },
+  // C
+  {
+    letter: 'C',
+    terms: [
+      { term: 'Claim', definition: 'A formal request to an insurance company for payment or compensation for a covered loss.', category: 'General' },
+      { term: 'Collision Coverage', definition: 'Auto insurance that pays for damage to your vehicle from collisions with other vehicles or objects.', category: 'Auto' },
+      { term: 'Comprehensive Coverage', definition: 'Auto insurance that covers damage to your vehicle from non-collision events like theft, vandalism, or natural disasters.', category: 'Auto' },
+      { term: 'Coinsurance', definition: 'A provision requiring the insured to share costs with the insurer after the deductible is met.', category: 'Health' },
+      { term: 'Conditions', definition: 'The portion of an insurance policy that specifies the obligations of both the insurer and insured.', category: 'General' },
+      { term: 'Copayment (Copay)', definition: 'A fixed amount paid by the insured for covered services, typically at the time of service.', category: 'Health' },
+      { term: 'Coverage', definition: 'The scope of protection provided under an insurance policy.', category: 'General' },
+      { term: 'Coverage Limit', definition: 'The maximum amount an insurance company will pay for a covered loss.', category: 'General' },
+    ]
+  },
+  // D
+  {
+    letter: 'D',
+    terms: [
+      { term: 'Deductible', definition: 'The amount you must pay out-of-pocket before your insurance coverage kicks in.', category: 'General' },
+      { term: 'Declarations Page', definition: 'A summary page of your insurance policy containing key information about coverage, limits, and premiums.', category: 'General' },
+      { term: 'Defensive Driving', definition: 'A driving technique that reduces risk by anticipating dangerous situations and making safe decisions.', category: 'Auto' },
+      { term: 'Depreciation', definition: 'The decrease in value of property over time due to wear, age, or obsolescence.', category: 'General' },
+      { term: 'Disability Insurance', definition: 'Coverage that provides income replacement if you cannot work due to illness or injury.', category: 'Health' },
+      { term: 'Dwelling Coverage', definition: 'Insurance that covers the physical structure of your home.', category: 'Home' },
+    ]
+  },
+  // E
+  {
+    letter: 'E',
+    terms: [
+      { term: 'Endorsement', definition: 'A written amendment to an insurance policy that changes the coverage or terms.', category: 'General' },
+      { term: 'Exclusion', definition: 'Specific conditions or circumstances listed in a policy that are not covered.', category: 'General' },
+      { term: 'Experience Modification Factor', definition: 'A multiplier used to calculate workers compensation premiums based on claims history.', category: 'Business' },
+      { term: 'Exposure', definition: 'The possibility of loss or damage.', category: 'General' },
+      { term: 'Extended Coverage', definition: 'Additional protection beyond standard policy limits.', category: 'General' },
+    ]
+  },
+  // F
+  {
+    letter: 'F',
+    terms: [
+      { term: 'Face Value', definition: 'The amount of money payable to beneficiaries upon the death of the insured in a life insurance policy.', category: 'Life' },
+      { term: 'FAIR Plan', definition: 'A state-run insurance pool providing coverage for high-risk properties.', category: 'Property' },
+      { term: 'Floater', definition: 'Additional coverage for movable property regardless of location.', category: 'Property' },
+      { term: 'Flood Insurance', definition: 'Coverage for damage caused by flooding, typically not covered by standard homeowners policies.', category: 'Home' },
+      { term: 'Full Coverage', definition: 'Auto insurance that includes liability, collision, and comprehensive coverage.', category: 'Auto' },
+    ]
+  },
+  // G
+  {
+    letter: 'G',
+    terms: [
+      { term: 'GAP Insurance', definition: 'Coverage that pays the difference between what you owe on a vehicle and its actual cash value if totaled.', category: 'Auto' },
+      { term: 'General Liability Insurance', definition: 'Business insurance that covers bodily injury, property damage, and personal injury claims.', category: 'Business' },
+      { term: 'Grace Period', definition: 'The time after a premium due date during which coverage continues without penalty.', category: 'General' },
+      { term: 'Guaranteed Replacement Cost', definition: 'Coverage that pays to rebuild your home regardless of policy limits.', category: 'Home' },
+    ]
+  },
+  // H
+  {
+    letter: 'H',
+    terms: [
+      { term: 'Hazard', definition: 'A condition that increases the likelihood or severity of a loss.', category: 'General' },
+      { term: 'Health Insurance', definition: 'Coverage that pays for medical and surgical expenses.', category: 'Health' },
+      { term: 'High-Risk Driver', definition: 'A driver with a history of accidents, violations, or other factors indicating higher probability of future claims.', category: 'Auto' },
+      { term: 'HMO (Health Maintenance Organization)', definition: 'A health insurance plan that requires members to use a network of providers.', category: 'Health' },
+      { term: 'Homeowners Insurance', definition: 'Coverage that protects your home and belongings against various perils.', category: 'Home' },
+      { term: 'Hurricane Deductible', definition: 'A separate, typically higher deductible that applies specifically to hurricane damage.', category: 'Home' },
+    ]
+  },
+  // I
+  {
+    letter: 'I',
+    terms: [
+      { term: 'Indemnity', definition: 'Compensation for damages or loss.', category: 'General' },
+      { term: 'Independent Agent', definition: 'An insurance agent who represents multiple insurance companies.', category: 'General' },
+      { term: 'Inflation Guard', definition: 'An endorsement that automatically increases coverage limits to keep pace with inflation.', category: 'General' },
+      { term: 'Insurable Interest', definition: 'The financial stake a person has in property or life being insured.', category: 'General' },
+      { term: 'Insurance Score', definition: 'A numerical rating based on credit information used to predict insurance risk.', category: 'General' },
+      { term: 'Insured', definition: 'The person or entity covered by an insurance policy.', category: 'General' },
+      { term: 'Insurer', definition: 'The company that provides insurance coverage and pays claims.', category: 'General' },
+    ]
+  },
+  // L
+  {
+    letter: 'L',
+    terms: [
+      { term: 'Lapse', definition: 'The termination of an insurance policy due to non-payment of premiums.', category: 'General' },
+      { term: 'Liability Coverage', definition: 'Insurance that pays for bodily injury or property damage you cause to others.', category: 'General' },
+      { term: 'Libel', definition: 'Written defamation that damages a person\'s reputation.', category: 'General' },
+      { term: 'Life Insurance', definition: 'Coverage that pays a benefit to beneficiaries upon the death of the insured.', category: 'Life' },
+      { term: 'Limit of Liability', definition: 'The maximum amount an insurer will pay for a covered claim.', category: 'General' },
+      { term: 'Loss', definition: 'Physical damage to property or bodily injury that triggers insurance coverage.', category: 'General' },
+      { term: 'Loss of Use', definition: 'Coverage that pays additional living expenses when your home is uninhabitable due to a covered loss.', category: 'Home' },
+    ]
+  },
+  // M
+  {
+    letter: 'M',
+    terms: [
+      { term: 'Medical Payments Coverage', definition: 'Auto insurance that pays medical expenses for you and passengers regardless of fault.', category: 'Auto' },
+      { term: 'Medicare', definition: 'Federal health insurance program for people aged 65+ and certain younger people with disabilities.', category: 'Health' },
+      { term: 'Medicaid', definition: 'State and federal program providing health coverage for low-income individuals.', category: 'Health' },
+      { term: 'Mitigation', definition: 'Actions taken to reduce the severity of a loss.', category: 'General' },
+      { term: 'Mortgage Insurance', definition: 'Coverage that pays the lender if the borrower defaults on a mortgage.', category: 'Home' },
+    ]
+  },
+  // N
+  {
+    letter: 'N',
+    terms: [
+      { term: 'Named Peril', definition: 'A specific risk or cause of loss listed in an insurance policy that is covered.', category: 'General' },
+      { term: 'Negligence', definition: 'Failure to exercise reasonable care, resulting in damage or injury.', category: 'General' },
+      { term: 'No-Fault Insurance', definition: 'Auto insurance that pays for your injuries regardless of who caused the accident.', category: 'Auto' },
+      { term: 'Non-Renewal', definition: 'When an insurer chooses not to renew a policy at the end of its term.', category: 'General' },
+    ]
+  },
+  // P
+  {
+    letter: 'P',
+    terms: [
+      { term: 'Peril', definition: 'A specific cause of loss covered by an insurance policy.', category: 'General' },
+      { term: 'Personal Articles Floater', definition: 'Additional coverage for valuable personal property.', category: 'Property' },
+      { term: 'Personal Injury Protection (PIP)', definition: 'Auto insurance that covers medical expenses and lost wages regardless of fault.', category: 'Auto' },
+      { term: 'Personal Liability', definition: 'Coverage that protects you against claims for bodily injury or property damage you cause.', category: 'General' },
+      { term: 'Policy', definition: 'A written contract between an insurer and insured detailing coverage terms.', category: 'General' },
+      { term: 'Policyholder', definition: 'The person or entity who owns an insurance policy.', category: 'General' },
+      { term: 'Premium', definition: 'The amount paid for an insurance policy, typically monthly, quarterly, or annually.', category: 'General' },
+      { term: 'Proof of Loss', definition: 'A formal statement provided by the insured to the insurer detailing a claim.', category: 'General' },
+      { term: 'Property Damage Liability', definition: 'Auto insurance that pays for damage you cause to others\' property.', category: 'Auto' },
+      { term: 'PPO (Preferred Provider Organization)', definition: 'A health plan that offers more flexibility in choosing healthcare providers.', category: 'Health' },
+    ]
+  },
+  // R
+  {
+    letter: 'R',
+    terms: [
+      { term: 'Rate', definition: 'The cost of insurance per unit of coverage.', category: 'General' },
+      { term: 'Rated Policy', definition: 'An insurance policy issued with higher premiums due to increased risk.', category: 'General' },
+      { term: 'Reinstatement', definition: 'Restoring a lapsed insurance policy to active status.', category: 'General' },
+      { term: 'Renewal', definition: 'Continuing an insurance policy for another term.', category: 'General' },
+      { term: 'Renters Insurance', definition: 'Coverage that protects a tenant\'s personal property and provides liability protection.', category: 'Home' },
+      { term: 'Replacement Cost', definition: 'The cost to replace damaged property with new property of similar kind and quality.', category: 'General' },
+      { term: 'Rider', definition: 'An addition to an insurance policy that modifies coverage or terms.', category: 'General' },
+      { term: 'Risk', definition: 'The chance of loss or damage.', category: 'General' },
+    ]
+  },
+  // S
+  {
+    letter: 'S',
+    terms: [
+      { term: 'SR-22', definition: 'A certificate of financial responsibility required for high-risk drivers.', category: 'Auto' },
+      { term: 'Schedule', definition: 'A list of items covered under a policy, often with specific values.', category: 'General' },
+      { term: 'Slander', definition: 'Spoken defamation that damages a person\'s reputation.', category: 'General' },
+      { term: 'Subrogation', definition: 'The insurer\'s right to pursue a third party that caused an insurance loss.', category: 'General' },
+      { term: 'Supplemental Coverage', definition: 'Additional insurance beyond primary coverage.', category: 'General' },
+      { term: 'Surety Bond', definition: 'A guarantee that specific obligations will be fulfilled.', category: 'Business' },
+    ]
+  },
+  // T
+  {
+    letter: 'T',
+    terms: [
+      { term: 'Term Life Insurance', definition: 'Life insurance that provides coverage for a specific period of time.', category: 'Life' },
+      { term: 'Total Loss', definition: 'When damage to property exceeds its value, or repair is not feasible.', category: 'General' },
+      { term: 'Towing and Labor Coverage', definition: 'Auto insurance that pays for towing and minor roadside repairs.', category: 'Auto' },
+      { term: 'Umbrella Insurance', definition: 'Extra liability coverage that goes beyond the limits of other policies.', category: 'General' },
+      { term: 'Underinsured Motorist Coverage', definition: 'Auto insurance that pays when the at-fault driver has insufficient coverage.', category: 'Auto' },
+      { term: 'Underwriting', definition: 'The process of evaluating risk and determining whether to provide insurance.', category: 'General' },
+      { term: 'Uninsured Motorist Coverage', definition: 'Auto insurance that pays for injuries caused by a driver with no insurance.', category: 'Auto' },
+    ]
+  },
+  // W
+  {
+    letter: 'W',
+    terms: [
+      { term: 'Waiting Period', definition: 'The time that must pass before certain coverage becomes effective.', category: 'General' },
+      { term: 'Waiver', definition: 'A voluntary relinquishment of a known right.', category: 'General' },
+      { term: 'Whole Life Insurance', definition: 'Permanent life insurance that provides coverage for life and builds cash value.', category: 'Life' },
+      { term: 'Workers Compensation', definition: 'Insurance that provides benefits to employees injured on the job.', category: 'Business' },
+    ]
+  },
 ];
 
-const categories = [
-    { name: 'All', icon: BookOpen, color: 'blue' },
-    { name: 'Auto', icon: Car, color: 'cyan' },
-    { name: 'Home', icon: Home, color: 'orange' },
-    { name: 'Health', icon: Stethoscope, color: 'emerald' },
-    { name: 'Life', icon: Heart, color: 'rose' },
-    { name: 'General', icon: Building2, color: 'slate' },
-];
+const categoryColors: Record<string, string> = {
+  'General': 'bg-slate-100 text-slate-700',
+  'Auto': 'bg-blue-100 text-blue-700',
+  'Home': 'bg-emerald-100 text-emerald-700',
+  'Health': 'bg-rose-100 text-rose-700',
+  'Life': 'bg-violet-100 text-violet-700',
+  'Business': 'bg-amber-100 text-amber-700',
+  'Property': 'bg-cyan-100 text-cyan-700',
+};
 
-export default function GlossaryPage() {
-    const [searchTerm, setSearchTerm] = useState('');
-    const [selectedCategory, setSelectedCategory] = useState('All');
+export default async function GlossaryPage() {
+  const { insuranceTypes, states } = await getData();
 
-    const filteredTerms = glossaryTerms
-        .filter(item => {
-            const matchesSearch = item.term.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                item.definition.toLowerCase().includes(searchTerm.toLowerCase());
-            const matchesCategory = selectedCategory === 'All' || item.category === selectedCategory;
-            return matchesSearch && matchesCategory;
-        })
-        .sort((a, b) => a.term.localeCompare(b.term));
+  return (
+    <div className="min-h-screen bg-slate-50">
+      <Header insuranceTypes={insuranceTypes} states={states} />
 
-    // Group terms by first letter
-    const groupedTerms = filteredTerms.reduce((acc, term) => {
-        const letter = term.term[0].toUpperCase();
-        if (!acc[letter]) acc[letter] = [];
-        acc[letter].push(term);
-        return acc;
-    }, {} as Record<string, typeof glossaryTerms>);
-
-    const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
-
-    return (
-        <div className="min-h-screen bg-slate-50">
-            <Header insuranceTypes={[]} states={[]} />
-
-            {/* Hero Section */}
-            <section className="relative bg-gradient-to-br from-slate-900 via-slate-800 to-blue-900 py-20 overflow-hidden">
-                <div className="absolute inset-0 opacity-10">
-                    <div className="absolute top-20 left-10 w-72 h-72 bg-blue-500 rounded-full blur-3xl"></div>
-                    <div className="absolute bottom-10 right-10 w-96 h-96 bg-purple-500 rounded-full blur-3xl"></div>
-                </div>
-                <div className="container mx-auto px-4 text-center relative z-10">
-                    <div className="inline-flex items-center gap-2 bg-blue-500/20 text-blue-300 px-4 py-2 rounded-full text-sm font-semibold mb-6">
-                        <BookOpen className="w-4 h-4" />
-                        50+ Insurance Terms Explained
-                    </div>
-                    <h1 className="text-4xl md:text-5xl font-bold text-white mb-6 tracking-tight">
-                        Insurance Glossary
-                    </h1>
-                    <p className="text-xl text-slate-300 max-w-2xl mx-auto mb-10">
-                        Understanding insurance terminology is the first step to making informed decisions.
-                        Browse our comprehensive glossary of terms.
-                    </p>
-
-                    {/* Search Bar */}
-                    <div className="max-w-xl mx-auto relative">
-                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-                        <input
-                            type="text"
-                            placeholder="Search for a term..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-full pl-12 pr-4 py-4 rounded-xl bg-white/10 backdrop-blur-sm border border-white/20 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        />
-                    </div>
-                </div>
-            </section>
-
-            {/* Category Filter */}
-            <section className="bg-white border-b border-slate-200 sticky top-16 z-20">
-                <div className="container mx-auto px-4">
-                    <div className="flex items-center gap-2 py-4 overflow-x-auto">
-                        {categories.map((cat) => {
-                            const Icon = cat.icon;
-                            const isActive = selectedCategory === cat.name;
-                            return (
-                                <button
-                                    key={cat.name}
-                                    onClick={() => setSelectedCategory(cat.name)}
-                                    className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold whitespace-nowrap transition-all ${
-                                        isActive
-                                            ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/25'
-                                            : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                                    }`}
-                                >
-                                    <Icon className="w-4 h-4" />
-                                    {cat.name}
-                                </button>
-                            );
-                        })}
-                    </div>
-                </div>
-            </section>
-
-            {/* Alphabet Navigation */}
-            <section className="bg-slate-100 py-3">
-                <div className="container mx-auto px-4">
-                    <div className="flex flex-wrap items-center justify-center gap-1">
-                        {alphabet.map((letter) => {
-                            const hasTerms = groupedTerms[letter]?.length > 0;
-                            return (
-                                <a
-                                    key={letter}
-                                    href={hasTerms ? `#letter-${letter}` : undefined}
-                                    className={`w-8 h-8 flex items-center justify-center rounded text-sm font-bold transition-colors ${
-                                        hasTerms
-                                            ? 'text-slate-700 hover:bg-blue-600 hover:text-white'
-                                            : 'text-slate-300 cursor-not-allowed'
-                                    }`}
-                                >
-                                    {letter}
-                                </a>
-                            );
-                        })}
-                    </div>
-                </div>
-            </section>
-
-            {/* Terms List */}
-            <section className="py-12">
-                <div className="container mx-auto px-4 max-w-4xl">
-                    {filteredTerms.length === 0 ? (
-                        <div className="text-center py-16">
-                            <Search className="w-12 h-12 text-slate-300 mx-auto mb-4" />
-                            <h3 className="text-xl font-bold text-slate-900 mb-2">No terms found</h3>
-                            <p className="text-slate-500">Try adjusting your search or category filter</p>
-                        </div>
-                    ) : (
-                        Object.keys(groupedTerms).sort().map((letter) => (
-                            <div key={letter} id={`letter-${letter}`} className="mb-8 scroll-mt-40">
-                                <div className="sticky top-32 bg-slate-50 py-2 z-10">
-                                    <h2 className="text-2xl font-bold text-blue-600">{letter}</h2>
-                                </div>
-                                <div className="space-y-4 mt-4">
-                                    {groupedTerms[letter].map((item) => (
-                                        <div
-                                            key={item.term}
-                                            className="bg-white p-6 rounded-xl border border-slate-200 hover:border-blue-300 hover:shadow-lg transition-all group"
-                                        >
-                                            <div className="flex items-start justify-between gap-4">
-                                                <div className="flex-1">
-                                                    <div className="flex items-center gap-3 mb-2">
-                                                        <h3 className="text-lg font-bold text-slate-900 group-hover:text-blue-600 transition-colors">
-                                                            {item.term}
-                                                        </h3>
-                                                        <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
-                                                            item.category === 'Auto' ? 'bg-cyan-100 text-cyan-700' :
-                                                            item.category === 'Home' ? 'bg-orange-100 text-orange-700' :
-                                                            item.category === 'Health' ? 'bg-emerald-100 text-emerald-700' :
-                                                            item.category === 'Life' ? 'bg-rose-100 text-rose-700' :
-                                                            'bg-slate-100 text-slate-700'
-                                                        }`}>
-                                                            {item.category}
-                                                        </span>
-                                                    </div>
-                                                    <p className="text-slate-600 leading-relaxed">{item.definition}</p>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        ))
-                    )}
-                </div>
-            </section>
-
-            {/* CTA Section */}
-            <section className="py-16 bg-gradient-to-br from-blue-600 to-indigo-700">
-                <div className="container mx-auto px-4 text-center">
-                    <h2 className="text-3xl font-bold text-white mb-4">Still Have Questions?</h2>
-                    <p className="text-blue-100 mb-8 max-w-xl mx-auto">
-                        Our licensed insurance experts are here to help explain any terms and find the right coverage for you.
-                    </p>
-                    <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-                        <Link
-                            href="/contact"
-                            className="inline-flex items-center gap-2 bg-white text-blue-600 px-8 py-4 rounded-xl font-bold hover:bg-blue-50 transition-colors shadow-lg"
-                        >
-                            Contact an Expert
-                            <ChevronRight className="w-5 h-5" />
-                        </Link>
-                        <Link
-                            href="/get-quote"
-                            className="inline-flex items-center gap-2 bg-blue-500 text-white px-8 py-4 rounded-xl font-bold hover:bg-blue-400 transition-colors"
-                        >
-                            Get Free Quotes
-                        </Link>
-                    </div>
-                </div>
-            </section>
-
-            <Footer insuranceTypes={[]} />
+      {/* Hero Section */}
+      <section className="relative bg-gradient-to-br from-slate-900 via-slate-800 to-blue-900 py-16 sm:py-20 overflow-hidden">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="max-w-3xl mx-auto text-center">
+            <div className="inline-flex items-center gap-2 bg-blue-500/20 text-blue-300 px-3 py-1.5 rounded-full text-xs sm:text-sm font-medium mb-4">
+              <BookOpen className="w-3 h-3 sm:w-4 sm:h-4" />
+              100+ Terms Defined
+            </div>
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-4 tracking-tight">
+              Insurance Glossary
+            </h1>
+            <p className="text-base sm:text-lg text-slate-300 max-w-2xl mx-auto">
+              Understand insurance terminology with our comprehensive glossary. 
+              Clear definitions for complex insurance terms.
+            </p>
+          </div>
         </div>
-    );
+      </section>
+
+      {/* Alphabet Navigation */}
+      <section className="sticky top-0 z-40 bg-white border-y border-slate-200 shadow-sm">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center gap-1 py-3 overflow-x-auto scrollbar-hide">
+            <span className="text-xs text-slate-500 font-medium mr-2 flex-shrink-0">Jump to:</span>
+            {glossaryTerms.map(({ letter }) => (
+              <a
+                key={letter}
+                href={`#letter-${letter}`}
+                className="w-8 h-8 flex items-center justify-center rounded-lg text-sm font-semibold text-slate-600 hover:bg-blue-100 hover:text-blue-700 transition flex-shrink-0"
+              >
+                {letter}
+              </a>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Glossary Content */}
+      <section className="py-8 sm:py-12">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="max-w-4xl mx-auto space-y-8 sm:space-y-12">
+            {glossaryTerms.map(({ letter, terms }) => (
+              <div key={letter} id={`letter-${letter}`} className="scroll-mt-20">
+                <div className="flex items-center gap-3 mb-4 sm:mb-6">
+                  <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
+                    <span className="text-white font-bold text-lg">{letter}</span>
+                  </div>
+                  <div className="flex-1 h-px bg-slate-200"></div>
+                </div>
+                <div className="grid sm:grid-cols-2 gap-3 sm:gap-4">
+                  {terms.map(({ term, definition, category }) => (
+                    <div 
+                      key={term}
+                      className="bg-white rounded-xl p-4 sm:p-5 border border-slate-200 hover:border-blue-300 hover:shadow-md transition"
+                    >
+                      <div className="flex items-start justify-between gap-2 mb-2">
+                        <h3 className="font-bold text-slate-900 text-sm sm:text-base">{term}</h3>
+                        <span className={`px-2 py-0.5 text-xs rounded-full flex-shrink-0 ${categoryColors[category] || 'bg-slate-100 text-slate-700'}`}>
+                          {category}
+                        </span>
+                      </div>
+                      <p className="text-slate-600 text-xs sm:text-sm leading-relaxed">{definition}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Quick Links */}
+      <section className="py-10 sm:py-12 bg-white border-y border-slate-200">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <h2 className="text-xl sm:text-2xl font-bold text-slate-900 mb-6 text-center">Explore More Resources</h2>
+          <div className="grid sm:grid-cols-3 gap-4 sm:gap-6 max-w-3xl mx-auto">
+            <Link 
+              href="/guides"
+              className="flex items-center gap-3 p-4 bg-slate-50 rounded-xl hover:bg-blue-50 transition"
+            >
+              <FileText className="w-6 h-6 text-blue-600" />
+              <div>
+                <h3 className="font-bold text-slate-900 text-sm">Insurance Guides</h3>
+                <p className="text-slate-600 text-xs">In-depth articles & tips</p>
+              </div>
+            </Link>
+            <Link 
+              href="/faq"
+              className="flex items-center gap-3 p-4 bg-slate-50 rounded-xl hover:bg-blue-50 transition"
+            >
+              <Shield className="w-6 h-6 text-emerald-600" />
+              <div>
+                <h3 className="font-bold text-slate-900 text-sm">FAQs</h3>
+                <p className="text-slate-600 text-xs">Common questions</p>
+              </div>
+            </Link>
+            <Link 
+              href="/tools"
+              className="flex items-center gap-3 p-4 bg-slate-50 rounded-xl hover:bg-blue-50 transition"
+            >
+              <Info className="w-6 h-6 text-violet-600" />
+              <div>
+                <h3 className="font-bold text-slate-900 text-sm">Tools</h3>
+                <p className="text-slate-600 text-xs">Calculators & resources</p>
+              </div>
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* CTA */}
+      <section className="py-12 sm:py-16 bg-gradient-to-r from-blue-600 to-blue-700">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <h2 className="text-2xl sm:text-3xl font-bold text-white mb-3">Ready to Find the Right Coverage?</h2>
+          <p className="text-blue-100 mb-6 max-w-xl mx-auto text-sm sm:text-base">
+            Now that you understand the terminology, compare quotes from top-rated providers.
+          </p>
+          <Link 
+            href="/get-quote" 
+            className="inline-flex items-center gap-2 bg-white text-blue-700 px-6 py-2.5 sm:px-8 sm:py-3 rounded-xl font-bold hover:bg-blue-50 transition text-sm sm:text-base"
+          >
+            Get Free Quotes
+            <ArrowRight className="w-4 h-4" />
+          </Link>
+        </div>
+      </section>
+
+      <Footer insuranceTypes={insuranceTypes} />
+    </div>
+  );
 }

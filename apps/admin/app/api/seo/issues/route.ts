@@ -95,6 +95,38 @@ export async function GET() {
             });
         }
 
+        // Check for short descriptions (< 120 chars)
+        const descLengths = await prisma.page.findMany({
+            where: {
+                isPublished: true,
+                metaDescription: { not: null },
+            },
+            select: { slug: true, metaDescription: true },
+        });
+
+        const shortDescPages = descLengths.filter(p => (p.metaDescription?.length || 0) < 120);
+        if (shortDescPages.length > 0) {
+            issues.push({
+                type: 'warning',
+                category: 'Meta Tags',
+                message: 'Pages with short meta descriptions (< 120 chars)',
+                count: shortDescPages.length,
+                pages: shortDescPages.slice(0, 10).map(p => p.slug),
+            });
+        }
+
+        // Check for long descriptions (> 180 chars)
+        const longDescPages = descLengths.filter(p => (p.metaDescription?.length || 0) > 180);
+        if (longDescPages.length > 0) {
+            issues.push({
+                type: 'warning',
+                category: 'Meta Tags',
+                message: 'Pages with long meta descriptions (> 180 chars)',
+                count: longDescPages.length,
+                pages: longDescPages.slice(0, 10).map(p => p.slug),
+            });
+        }
+
         // Check for pages without schema markup
         const noSchema = await prisma.page.count({
             where: {
@@ -164,6 +196,29 @@ export async function GET() {
                 category: 'Technical',
                 message: 'Pages without canonical URL',
                 count: noCanonical,
+            });
+        }
+
+        // Check for pages missing H1 (check title field)
+        const missingH1 = await prisma.page.findMany({
+            where: {
+                isPublished: true,
+                OR: [
+                    { title: null },
+                    { title: '' },
+                ],
+            },
+            select: { slug: true },
+            take: 100,
+        });
+
+        if (missingH1.length > 0) {
+            issues.push({
+                type: 'error',
+                category: 'Content',
+                message: 'Pages missing H1 heading (title)',
+                count: missingH1.length,
+                pages: missingH1.slice(0, 10).map(p => p.slug),
             });
         }
 

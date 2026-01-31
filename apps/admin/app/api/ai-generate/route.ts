@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth';
 import { prisma } from '@/lib/prisma';
 import { batchGenerateContent } from '@/lib/aiContentService';
 import { authOptions } from '@/lib/auth';
+import { KeywordContentService } from '@/lib/keywordContentService';
 
 /**
  * POST /api/ai-generate
@@ -24,7 +25,8 @@ export async function POST(req: NextRequest) {
       delayBetweenBatches = 1000,
       priority = 'all', // 'all', 'major-cities', 'states-only'
       regenerate = false, // Set to true to regenerate AI content for pages that already have it
-      includeDrafts = false // Set to true to include unpublished/draft pages
+      includeDrafts = false, // Set to true to include unpublished/draft pages
+      templateId // Optional template to use for prompts
     } = body;
 
     // Build page query based on filters
@@ -83,6 +85,44 @@ export async function POST(req: NextRequest) {
 
     const pageIds = pages.map(p => p.id);
 
+    // Fetch template if specified
+    let templatePrompts = undefined;
+    if (templateId) {
+      const template = await prisma.aIPromptTemplate.findUnique({
+        where: { id: templateId }
+      });
+      if (template) {
+        templatePrompts = {
+          systemPrompt: template.systemPrompt,
+          introPrompt: template.introPrompt || undefined,
+          requirementsPrompt: template.requirementsPrompt || undefined,
+          faqsPrompt: template.faqsPrompt || undefined,
+          tipsPrompt: template.tipsPrompt || undefined,
+          costBreakdownPrompt: template.costBreakdownPrompt || undefined,
+          comparisonPrompt: template.comparisonPrompt || undefined,
+          discountsPrompt: template.discountsPrompt || undefined,
+          localStatsPrompt: template.localStatsPrompt || undefined,
+          coverageGuidePrompt: template.coverageGuidePrompt || undefined,
+          claimsProcessPrompt: template.claimsProcessPrompt || undefined,
+          buyersGuidePrompt: template.buyersGuidePrompt || undefined,
+          metaTagsPrompt: template.metaTagsPrompt || undefined,
+        };
+      }
+    }
+
+    // Fetch keyword config for the insurance type
+    let keywordConfig = undefined;
+    if (filters?.insuranceTypeId) {
+      const insuranceType = await prisma.insuranceType.findUnique({
+        where: { id: filters.insuranceTypeId }
+      });
+      if (insuranceType) {
+        keywordConfig = await KeywordContentService.getKeywordConfig(filters.insuranceTypeId)
+          || KeywordContentService.generateDefaultKeywords(insuranceType.name);
+        console.log(`🎯 AI Generate API: Using keyword "${keywordConfig.primaryKeyword}"`);
+      }
+    }
+
     // Create AI generation job
     const job = await prisma.aIGenerationJob.create({
       data: {
@@ -91,7 +131,7 @@ export async function POST(req: NextRequest) {
         sections,
         model: model || 'anthropic/claude-haiku',
         promptTemplate: 'Generate unique, location-specific insurance content for {{location}}',
-        filters,
+        filters: { ...filters, templateId },
         batchSize,
         delayBetweenBatches,
         totalPages: pageIds.length,
@@ -106,12 +146,15 @@ export async function POST(req: NextRequest) {
       batchSize,
       delayBetweenBatches,
       model,
-      onProgress: async (processed, total) => {
+      templatePrompts,
+      keywordConfig,
+      onProgress: async (progress) => {
         // Update job progress
         await prisma.aIGenerationJob.update({
           where: { id: job.id },
           data: {
-            processedPages: processed
+            processedPages: progress.processed,
+            status: progress.paused ? 'PAUSED' : 'PROCESSING'
           }
         });
       }
