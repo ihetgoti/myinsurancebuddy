@@ -31,11 +31,12 @@ jobs:
             set -e
             PROJECT_DIR="/var/www/myinsurancebuddies.com"
             
-            echo "🚀 Deploying MyInsuranceBuddies with Docker..."
+            echo "🚀 Deploying MyInsuranceBuddies..."
             
-            # Create directory if it doesn't exist
-            if [ ! -d "$PROJECT_DIR" ]; then
-              echo "📁 Creating project directory..."
+            # Create directory and clone if .git doesn't exist
+            if [ ! -d "$PROJECT_DIR/.git" ]; then
+              echo "📁 Setting up project directory..."
+              rm -rf $PROJECT_DIR
               mkdir -p $PROJECT_DIR
               cd $PROJECT_DIR
               git clone https://github.com/ihetgoti/myinsurancebuddy.git .
