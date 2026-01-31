@@ -1,0 +1,15 @@
+-- AlterTable
+ALTER TABLE "CallOffer" ADD COLUMN     "ctaSubtext" TEXT,
+ADD COLUMN     "ctaText" TEXT NOT NULL DEFAULT 'Get Your Free Quote',
+ADD COLUMN     "displayPrice" DOUBLE PRECISION,
+ADD COLUMN     "displayPriceLabel" TEXT NOT NULL DEFAULT 'Starting from',
+ADD COLUMN     "displayPricePeriod" TEXT NOT NULL DEFAULT '/month',
+ADD COLUMN     "priceDisclaimer" TEXT DEFAULT '*Rates vary based on driver profile',
+ADD COLUMN     "promoEndDate" TIMESTAMP(3),
+ADD COLUMN     "promoHeadline" TEXT,
+ADD COLUMN     "promoStartDate" TIMESTAMP(3),
+ADD COLUMN     "promoSubheadline" TEXT,
+ADD COLUMN     "regularPrice" DOUBLE PRECISION,
+ADD COLUMN     "savingsAmount" DOUBLE PRECISION,
+ADD COLUMN     "savingsPercentage" INTEGER,
+ADD COLUMN     "urgencyText" TEXT;
