@@ -156,6 +156,12 @@ model SiteSettings {
   maintenanceMode       Boolean  @default(false)
   maintenanceMessage    String?
   
+  // Auto Sitemap Submission
+  autoSitemapSubmit     Boolean  @default(false)
+  sitemapSubmitSchedule String   @default("daily") // hourly, daily, weekly
+  sitemapSearchEngines  Json?    @default("[\"google\", \"bing\"]")
+  lastSitemapSubmit     DateTime?
+  
   createdAt             DateTime @default(now())
   updatedAt             DateTime @updatedAt
 }
@@ -219,6 +225,7 @@ model InsuranceType {
   faqs              FAQ[]
   callOffers        CallOffer[]
   affiliatePartners AffiliatePartner[]
+  keywordConfigs    KeywordConfig[] // SEO keyword strategies
   
   @@index([isActive])
   @@index([sortOrder])
@@ -675,6 +682,10 @@ model Page {
   
   // Internal notes
   internalNotes   String?       @db.Text
+  
+  // AI Content Scoring
+  contentScores   Json?         // {overall, readability, seo, etc.}
+  lastScoredAt    DateTime?
   
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
@@ -1288,9 +1299,39 @@ model CallOffer {
   geoLevel        GeoLevel?      // STATE, CITY, etc.
   stateIds        String[]       // Specific state IDs (empty = all)
 
+  // DYNAMIC PRICING - Promotional Rates
+  // These display on pages to attract users
+  displayPrice         Float?    // e.g., 59 - The "Starting from" price shown
+  displayPriceLabel    String    @default("Starting from") // "Starting from", "As low as", "Only"
+  displayPricePeriod   String    @default("/month") // "/month", "/year", ""
+  regularPrice         Float?    // e.g., 150 - Original price for comparison
+  savingsAmount        Float?    // e.g., 91 - How much they save (150 - 59)
+  savingsPercentage    Int?      // e.g., 60 - Savings %
+  priceDisclaimer      String?   @default("*Rates vary based on driver profile") // Small print
+  
+  // Promotional messaging
+  promoHeadline      String?   // e.g., "Limited Time: Save up to 60%"
+  promoSubheadline   String?   // e.g., "Drivers in {state} are qualifying for rates as low as ${displayPrice}"
+  urgencyText        String?   // e.g., "Offer ends soon", "Limited spots available"
+  
+  // CTA Button text
+  ctaText            String    @default("Get Your Free Quote") 
+  ctaSubtext         String?   // e.g., "Takes 2 minutes • No obligation"
+
   // Control
   isActive        Boolean   @default(true)
   priority        Int       @default(0)  // Higher = preferred when multiple match
+  
+  // Schedule (for time-limited offers)
+  promoStartDate   DateTime?  // When promo starts (null = always active)
+  promoEndDate     DateTime?  // When promo ends (null = no end date)
+  
+  // Marketcall Integration
+  marketcallOfferId    String?   // Offer ID from Marketcall
+  marketcallCampaignId String?   // Campaign ID for tracking
+  scriptUrl            String?   // Marketcall script URL (e.g., https://js.marketcall.com/...)
+  scriptCode           String?   @db.Text // The actual JavaScript code to embed
+  phoneNumber          String?   // Fallback phone number (if script doesn't load)
 
   // Notes
   notes           String?   @db.Text
@@ -1326,9 +1367,9 @@ model AIProvider {
   apiKey          String    // Encrypted API key
   apiEndpoint     String    @default("https://openrouter.ai/api/v1/chat/completions")
 
-  // Model preferences
-  preferredModel  String    @default("xiaomi/mimo-v2-flash") // FREE PREMIUM (until Jan 26!), then use deepseek/deepseek-r1
-  fallbackModel   String?   // Backup model if preferred fails (use deepseek/deepseek-r1 after Jan 26)
+  // Model preferences - USE ONLY :free MODELS!
+  preferredModel  String    @default("deepseek/deepseek-r1:free") // FREE MODEL ONLY
+  fallbackModel   String?   // Backup model if preferred fails
 
   // Rate limiting
   maxRequestsPerMinute Int   @default(60)
@@ -1343,6 +1384,11 @@ model AIProvider {
   // Status
   isActive        Boolean   @default(true)
   priority        Int       @default(0) // Lower = used first
+
+  // Error tracking (for rate limit handling)
+  lastError       String?   // Last error message (e.g., "RATE_LIMITED")
+  lastErrorAt     DateTime? // When the last error occurred
+  metadata        Json?     // Additional metadata {rateLimitResetAt, etc.}
 
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
@@ -1364,10 +1410,13 @@ model AIGenerationJob {
   // Content sections to generate
   sections        String[]  // ["intro", "requirements", "faqs", "tips"]
 
+  // SEO Keywords configuration
+  keywords        Json?     // {primary: "auto insurance", secondary: ["car insurance", "vehicle coverage"], density: 2}
+
   // AI settings
   providerId      String?
   provider        AIProvider? @relation(fields: [providerId], references: [id])
-  model           String    @default("xiaomi/mimo-v2-flash") // FREE PREMIUM (until Jan 26!)
+  model           String    @default("deepseek/deepseek-r1:free") // FREE MODEL ONLY
   promptTemplate  String    @db.Text // Template with {{variables}}
   temperature     Float     @default(0.7)
   maxTokens       Int       @default(2000)
@@ -1395,6 +1444,12 @@ model AIGenerationJob {
   startedAt       DateTime?
   completedAt     DateTime?
 
+  // Pause/Resume support
+  pausedAt        DateTime?  // When the job was paused (rate limits)
+  resumedAt       DateTime?  // When the job was last resumed
+  autoResumeAt    DateTime?  // When the job should auto-resume
+  resumeState     Json?      // {lastProcessedStateId, lastProcessedCityId, processedCount}
+
   // Creator
   createdById     String?
   createdBy       User?     @relation(fields: [createdById], references: [id])
@@ -1404,6 +1459,70 @@ model AIGenerationJob {
 
   @@index([status])
   @@index([providerId])
+}
+
+// ============================================
+// FREE AI MODELS - Configurable list of free models
+// ============================================
+
+model FreeAIModel {
+  id          String    @id @default(uuid())
+  modelId     String    @unique // e.g., "deepseek/deepseek-r1:free"
+  name        String    // Display name e.g., "DeepSeek R1 (Free)"
+  provider    String    // e.g., "deepseek", "google", "meta"
+  description String?   // Optional description
+  isActive    Boolean   @default(true)
+  priority    Int       @default(0) // Lower = higher priority
+  
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  
+  @@index([isActive])
+  @@index([priority])
+}
+
+// ============================================
+// KEYWORD CONFIGURATION - SEO keyword strategies
+// ============================================
+
+model KeywordConfig {
+  id          String    @id @default(uuid())
+  name        String    // "Auto Insurance Keywords", "Home Insurance SEO"
+  description String?   @db.Text
+  
+  // Primary keyword - main target
+  primaryKeyword    String    // e.g., "auto insurance california"
+  
+  // Secondary keywords - related terms
+  secondaryKeywords String[]  // e.g., ["car insurance", "vehicle coverage", "auto policy"]
+  
+  // Long-tail keywords - specific phrases
+  longTailKeywords  String[]  // e.g., ["cheap auto insurance california", "best car insurance rates"]
+  
+  // LSI keywords - semantically related
+  lsiKeywords       String[]  // e.g., ["premium", "deductible", "coverage limits"]
+  
+  // Configuration
+  targetDensity     Float     @default(2.0)  // Target keyword density (%)
+  maxDensity        Float     @default(3.0)  // Maximum allowed density (%)
+  
+  // Placement requirements
+  requireInTitle    Boolean   @default(true)
+  requireInH1       Boolean   @default(true)
+  requireInH2       Boolean   @default(true)
+  requireInFirst100 Boolean   @default(true)
+  requireInMeta     Boolean   @default(true)
+  
+  // Insurance type this config applies to
+  insuranceTypeId   String?
+  insuranceType     InsuranceType? @relation(fields: [insuranceTypeId], references: [id])
+  
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  
+  @@index([insuranceTypeId])
+  @@index([isActive])
 }
 
 model AIPromptTemplate {

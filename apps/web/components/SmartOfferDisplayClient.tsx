@@ -1,0 +1,167 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import FallbackLeadForm from './FallbackLeadForm';
+import { Phone, FileText, ArrowRight } from 'lucide-react';
+
+interface SmartOfferDisplayClientProps {
+  insuranceTypeId?: string;
+  stateId?: string;
+  cityId?: string;
+  stateName?: string;
+  cityName?: string;
+  insuranceTypeName?: string;
+  className?: string;
+  // If you already know there's no offer, skip the check
+  forceFallback?: boolean;
+  // Pre-fetched offer data
+  initialOffer?: {
+    hasOffer: boolean;
+    scriptUrl?: string;
+    scriptCode?: string;
+    phoneNumber?: string;
+    formUrl?: string;
+    campaignId?: string;
+  } | null;
+}
+
+/**
+ * Client-side Smart Offer Display
+ * Checks for offer availability and shows appropriate CTA
+ */
+export default function SmartOfferDisplayClient({
+  insuranceTypeId,
+  stateId,
+  cityId,
+  stateName,
+  cityName,
+  insuranceTypeName = 'Insurance',
+  className = '',
+  forceFallback = false,
+  initialOffer,
+}: SmartOfferDisplayClientProps) {
+  const [offer, setOffer] = useState(initialOffer || null);
+  const [loading, setLoading] = useState(!initialOffer && !forceFallback);
+
+  useEffect(() => {
+    // If we already have initial data or forced fallback, don't fetch
+    if (initialOffer || forceFallback) {
+      setLoading(false);
+      return;
+    }
+
+    // Check for offer availability
+    const checkOffer = async () => {
+      try {
+        const params = new URLSearchParams();
+        if (insuranceTypeId) params.set('insuranceTypeId', insuranceTypeId);
+        if (stateId) params.set('stateId', stateId);
+        if (cityId) params.set('cityId', cityId);
+
+        const response = await fetch(`/api/offers/check?${params.toString()}`);
+        const data = await response.json();
+        
+        setOffer(data);
+      } catch (error) {
+        console.error('Failed to check offer:', error);
+        setOffer({ hasOffer: false });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    checkOffer();
+  }, [insuranceTypeId, stateId, cityId, initialOffer, forceFallback]);
+
+  if (loading) {
+    return (
+      <div className={`bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl p-6 shadow-lg ${className}`}>
+        <div className="animate-pulse space-y-4">
+          <div className="h-4 bg-blue-500 rounded w-3/4"></div>
+          <div className="h-12 bg-blue-500 rounded"></div>
+          <div className="h-12 bg-blue-500 rounded"></div>
+        </div>
+      </div>
+    );
+  }
+
+  const hasValidOffer = offer?.hasOffer && (offer.scriptUrl || offer.scriptCode || offer.formUrl || offer.phoneNumber);
+
+  // Show fallback form if no offer
+  if (!hasValidOffer) {
+    return (
+      <FallbackLeadForm
+        insuranceType={insuranceTypeName}
+        state={stateName}
+        city={cityName}
+      />
+    );
+  }
+
+  // Show Marketcall-style offer
+  const displayPhone = offer.phoneNumber || '(800) 555-0123';
+
+  return (
+    <div className={`bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl p-6 shadow-lg ${className}`}>
+      {/* Header */}
+      <div className="flex items-center gap-3 mb-4">
+        <div className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center">
+          <Phone size={24} />
+        </div>
+        <div className="flex-1">
+          <p className="text-sm text-blue-100">Get Your Free Quote</p>
+          <p className="text-lg font-bold">Speak with a Licensed Agent</p>
+        </div>
+      </div>
+
+      {/* Phone Number */}
+      {offer.phoneNumber && (
+        <a
+          href={`tel:${displayPhone.replace(/[^0-9]/g, '')}`}
+          className="block w-full bg-white text-blue-600 font-bold text-center text-2xl py-4 px-6 rounded-lg
+                   hover:bg-blue-50 transition-colors mb-3 shadow-md"
+        >
+          <Phone className="inline mr-2 mb-1" size={28} />
+          {displayPhone}
+        </a>
+      )}
+
+      {/* Form Button */}
+      {offer.formUrl && (
+        <a
+          href={offer.formUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="block w-full bg-white text-blue-600 font-semibold text-center py-3 px-6 rounded-lg
+                   hover:bg-blue-50 transition-colors shadow-md"
+        >
+          <FileText className="inline mr-2 mb-1" size={20} />
+          Complete Online Form
+          <ArrowRight className="inline ml-2 mb-1" size={16} />
+        </a>
+      )}
+
+      {/* Trust Badges */}
+      <div className="flex items-center justify-center gap-4 mt-4 text-sm text-blue-100">
+        <div className="flex items-center gap-1.5">
+          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+          </svg>
+          <span>100% Free</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
+          </svg>
+          <span>2-Min Process</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+            <path fillRule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+          </svg>
+          <span>No Obligation</span>
+        </div>
+      </div>
+    </div>
+  );
+}
