@@ -2,7 +2,7 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import Link from 'next/link';
 import { prisma } from '@/lib/prisma';
-import { 
+import {
   Briefcase, Heart, Users, Zap, Globe, Coffee, Award,
   ArrowRight, MapPin, DollarSign, Clock, CheckCircle,
   Laptop, GraduationCap, HeartHandshake
@@ -12,7 +12,7 @@ export const dynamic = 'force-dynamic';
 
 export const metadata = {
   title: 'Careers at MyInsuranceBuddy | Join Our Team',
-  description: 'Join MyInsuranceBuddy and help millions of Americans find the right insurance. We're hiring across engineering, marketing, sales, and customer success. Competitive benefits and remote-friendly.',
+  description: "Join MyInsuranceBuddy and help millions of Americans find the right insurance. We're hiring across engineering, marketing, sales, and customer success. Competitive benefits and remote-friendly.",
   keywords: 'MyInsuranceBuddy careers, insurance jobs, tech jobs, remote jobs, customer service jobs, sales careers',
   openGraph: {
     title: 'Careers at MyInsuranceBuddy - Join Our Mission',
@@ -22,14 +22,14 @@ export const metadata = {
 
 async function getData() {
   const [insuranceTypes, states] = await Promise.all([
-    prisma.insuranceType.findMany({ 
-      where: { isActive: true }, 
-      orderBy: { sortOrder: 'asc' } 
+    prisma.insuranceType.findMany({
+      where: { isActive: true },
+      orderBy: { sortOrder: 'asc' }
     }),
-    prisma.state.findMany({ 
-      where: { isActive: true }, 
-      include: { country: true }, 
-      take: 12 
+    prisma.state.findMany({
+      where: { isActive: true },
+      include: { country: true },
+      take: 12
     }),
   ]);
   return { insuranceTypes, states };
@@ -125,7 +125,7 @@ export default async function CareersPage() {
               Join Our Mission to Transform Insurance
             </h1>
             <p className="text-base sm:text-lg md:text-xl text-slate-300 max-w-2xl mx-auto leading-relaxed px-2 sm:px-0">
-              Help millions of Americans find the right coverage at the best price. 
+              Help millions of Americans find the right coverage at the best price.
               Join a team that values innovation, transparency, and making a real difference.
             </p>
           </div>
@@ -257,7 +257,7 @@ export default async function CareersPage() {
             <div>
               <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 mb-4">Life at MyInsuranceBuddy</h2>
               <p className="text-slate-600 mb-6 leading-relaxed">
-                We're a remote-first company with team members across the country. While we work hard to help our customers, 
+                We're a remote-first company with team members across the country. While we work hard to help our customers,
                 we also know how to have fun. From virtual game nights to annual retreats, we build connections that go beyond work.
               </p>
               <ul className="space-y-3">
@@ -302,8 +302,8 @@ export default async function CareersPage() {
           <p className="text-blue-100 mb-6 sm:mb-8 max-w-xl mx-auto">
             Take the next step in your career and help millions of Americans save on insurance.
           </p>
-          <Link 
-            href="mailto:careers@myinsurancebuddies.com" 
+          <Link
+            href="mailto:careers@myinsurancebuddies.com"
             className="inline-flex items-center gap-2 bg-white text-blue-700 px-8 py-3 rounded-xl font-bold hover:bg-blue-50 transition"
           >
             View All Positions
