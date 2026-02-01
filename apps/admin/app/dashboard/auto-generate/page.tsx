@@ -75,6 +75,7 @@ export default function AutoGeneratePage() {
   });
 
   useEffect(() => {
+    console.log('AutoGeneratePage mounting...');
     fetchInsuranceTypes();
     fetchStates();
     fetchTemplates();
@@ -394,12 +395,12 @@ export default function AutoGeneratePage() {
             <div className="mb-4">
               <div className="flex justify-between text-sm text-gray-600 mb-1">
                 <span>{activeJob.processedPages} / {activeJob.totalPages} pages</span>
-                <span>{activeJob.percentComplete || Math.round((activeJob.processedPages / activeJob.totalPages) * 100) || 0}%</span>
+                <span>{activeJob.percentComplete || (activeJob.totalPages > 0 ? Math.round((activeJob.processedPages / activeJob.totalPages) * 100) : 0)}%</span>
               </div>
               <div className="h-4 bg-gray-200 rounded-full overflow-hidden">
                 <div
                   className="h-full bg-gradient-to-r from-blue-500 to-purple-500 transition-all duration-300"
-                  style={{ width: `${activeJob.percentComplete || Math.round((activeJob.processedPages / activeJob.totalPages) * 100) || 0}%` }}
+                  style={{ width: `${activeJob.percentComplete || (activeJob.totalPages > 0 ? Math.round((activeJob.processedPages / activeJob.totalPages) * 100) : 0)}%` }}
                 />
               </div>
             </div>
@@ -463,11 +464,10 @@ export default function AutoGeneratePage() {
                   <button
                     key={type.id}
                     onClick={() => setConfig({ ...config, insuranceTypeId: type.id })}
-                    className={`p-4 rounded-lg border-2 text-left transition-all ${
-                      config.insuranceTypeId === type.id
+                    className={`p-4 rounded-lg border-2 text-left transition-all ${config.insuranceTypeId === type.id
                         ? 'border-blue-500 bg-blue-50'
                         : 'border-gray-200 hover:border-gray-300'
-                    }`}
+                      }`}
                   >
                     <div className="font-medium text-gray-900">{type.name}</div>
                     <div className="text-sm text-gray-500">{type.slug}</div>
@@ -494,9 +494,8 @@ export default function AutoGeneratePage() {
                 {states.map((state) => (
                   <label
                     key={state.id}
-                    className={`flex items-center gap-2 p-2 rounded cursor-pointer ${
-                      config.stateIds.includes(state.id) ? 'bg-blue-100' : 'hover:bg-gray-100'
-                    }`}
+                    className={`flex items-center gap-2 p-2 rounded cursor-pointer ${config.stateIds.includes(state.id) ? 'bg-blue-100' : 'hover:bg-gray-100'
+                      }`}
                   >
                     <input
                       type="checkbox"
@@ -523,11 +522,10 @@ export default function AutoGeneratePage() {
                 ].map(({ value, label, desc }) => (
                   <label
                     key={value}
-                    className={`flex-1 p-4 rounded-lg border-2 cursor-pointer ${
-                      config.geoLevels.includes(value)
+                    className={`flex-1 p-4 rounded-lg border-2 cursor-pointer ${config.geoLevels.includes(value)
                         ? 'border-blue-500 bg-blue-50'
                         : 'border-gray-200'
-                    }`}
+                      }`}
                   >
                     <div className="flex items-center gap-2">
                       <input
@@ -660,11 +658,10 @@ export default function AutoGeneratePage() {
               {jobs.map((job) => (
                 <div
                   key={job.id}
-                  className={`p-4 rounded-lg border ${
-                    activeJob?.id === job.id && job.status === 'PROCESSING'
+                  className={`p-4 rounded-lg border ${activeJob?.id === job.id && job.status === 'PROCESSING'
                       ? 'border-blue-500 bg-blue-50'
                       : 'border-gray-200'
-                  }`}
+                    }`}
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
