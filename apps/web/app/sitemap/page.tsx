@@ -2,7 +2,7 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import Link from 'next/link';
 import { prisma } from '@/lib/prisma';
-import { 
+import {
   Map, Car, Home, Heart, Shield, Briefcase, Umbrella,
   FileText, HelpCircle, BookOpen, Users, Mail, Phone
 } from 'lucide-react';
@@ -135,7 +135,7 @@ export default async function SitemapPage() {
                 <ul className="space-y-2">
                   {section.links.map((link) => (
                     <li key={link.href}>
-                      <Link 
+                      <Link
                         href={link.href}
                         className="text-slate-600 hover:text-blue-600 transition text-sm"
                       >
@@ -156,10 +156,10 @@ export default async function SitemapPage() {
                 Coverage by State
               </h2>
               <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-2">
-                {states.slice(0, 24).map((state) => (
-                  <Link 
+                {states.filter(s => s.code && s.country?.code).slice(0, 24).map((state) => (
+                  <Link
                     key={state.id}
-                    href={`/states/${state.country.code.toLowerCase()}/${state.code.toLowerCase()}`}
+                    href={`/states/${state.country.code.toLowerCase()}/${state.code!.toLowerCase()}`}
                     className="text-sm text-slate-600 hover:text-blue-600 transition py-1"
                   >
                     {state.name}
@@ -167,7 +167,7 @@ export default async function SitemapPage() {
                 ))}
               </div>
               <div className="mt-4 text-center">
-                <Link 
+                <Link
                   href="/states"
                   className="text-blue-600 font-semibold hover:underline text-sm"
                 >
@@ -185,19 +185,19 @@ export default async function SitemapPage() {
                 For search engines and crawlers, we provide XML sitemaps:
               </p>
               <div className="flex flex-wrap gap-3">
-                <a 
+                <a
                   href="/sitemap-index.xml"
                   className="px-4 py-2 bg-white rounded-lg text-sm text-blue-600 font-medium border border-blue-200 hover:border-blue-400 transition"
                 >
                   Sitemap Index
                 </a>
-                <a 
+                <a
                   href="/sitemap-main.xml"
                   className="px-4 py-2 bg-white rounded-lg text-sm text-blue-600 font-medium border border-blue-200 hover:border-blue-400 transition"
                 >
                   Main Pages
                 </a>
-                <a 
+                <a
                   href="/sitemap-pages.xml"
                   className="px-4 py-2 bg-white rounded-lg text-sm text-blue-600 font-medium border border-blue-200 hover:border-blue-400 transition"
                 >
@@ -217,15 +217,15 @@ export default async function SitemapPage() {
             Our support team is here to help you navigate our site and find the information you need.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
-            <a 
-              href="/contact" 
+            <a
+              href="/contact"
               className="inline-flex items-center justify-center gap-2 bg-white text-blue-700 px-8 py-3 rounded-xl font-bold hover:bg-blue-50 transition"
             >
               <Mail className="w-4 h-4" />
               Contact Support
             </a>
-            <a 
-              href="tel:1-855-205-2412" 
+            <a
+              href="tel:1-855-205-2412"
               className="inline-flex items-center justify-center gap-2 bg-blue-500/30 text-white px-8 py-3 rounded-xl font-semibold hover:bg-blue-500/40 transition"
             >
               <Phone className="w-4 h-4" />
