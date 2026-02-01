@@ -21,8 +21,7 @@ module.exports = {
         },
         {
             name: 'myinsurancebuddy-admin',
-            script: 'node',
-            args: '.next/standalone/apps/admin/server.js',
+            script: '.next/standalone/apps/admin/server.js',
             cwd: '/var/www/myinsurancebuddies.com/apps/admin',
             env: {
                 NODE_ENV: 'production',
