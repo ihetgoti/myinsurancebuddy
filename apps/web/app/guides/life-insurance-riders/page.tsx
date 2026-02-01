@@ -2,9 +2,9 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import Link from 'next/link';
 import { prisma } from '@/lib/prisma';
-import { 
+import {
   Shield, ArrowRight, CheckCircle, Clock, Star, AlertCircle,
-  Heart, Zap, UserPlus, TrendingUp, DollarSign, FileText,
+  Heart, Zap, UserPlus, Users, TrendingUp, DollarSign, FileText,
   PiggyBank, Baby, Briefcase, Activity
 } from 'lucide-react';
 
@@ -63,8 +63,8 @@ export default async function LifeInsuranceRidersPage() {
           <div className="max-w-3xl mx-auto">
             <div className="prose prose-lg max-w-none">
               <p className="text-xl text-slate-600 leading-relaxed mb-8">
-                A standard life insurance policy provides essential protection, but riders allow you to customize your coverage 
-                to better fit your unique needs. Think of riders as add-ons or upgrades that enhance your policy's benefits 
+                A standard life insurance policy provides essential protection, but riders allow you to customize your coverage
+                to better fit your unique needs. Think of riders as add-ons or upgrades that enhance your policy's benefits
                 for a relatively small additional cost.
               </p>
 
@@ -74,8 +74,8 @@ export default async function LifeInsuranceRidersPage() {
                   What Are Life Insurance Riders?
                 </h3>
                 <p className="text-slate-700">
-                  Riders are optional provisions that can be added to a life insurance policy to provide additional benefits 
-                  or flexibility. They allow you to tailor your coverage without buying a separate policy. Most riders add 
+                  Riders are optional provisions that can be added to a life insurance policy to provide additional benefits
+                  or flexibility. They allow you to tailor your coverage without buying a separate policy. Most riders add
                   between $5 to $50 per month to your premium, depending on the type and amount of coverage.
                 </p>
               </div>
@@ -95,9 +95,9 @@ export default async function LifeInsuranceRidersPage() {
                     </span>
                   </div>
                 </div>
-                
+
                 <p className="text-slate-600 mb-4">
-                  This rider waives your premium payments if you become totally disabled and unable to work. 
+                  This rider waives your premium payments if you become totally disabled and unable to work.
                   Your life insurance coverage continues in full force even though you're no longer paying premiums.
                 </p>
 
@@ -116,7 +116,7 @@ export default async function LifeInsuranceRidersPage() {
 
                 <div className="bg-emerald-50 rounded-lg p-4">
                   <p className="text-sm text-slate-700">
-                    <strong>Best for:</strong> Primary breadwinners, self-employed individuals, and anyone whose family 
+                    <strong>Best for:</strong> Primary breadwinners, self-employed individuals, and anyone whose family
                     depends on their income to maintain insurance coverage.
                   </p>
                 </div>
@@ -135,9 +135,9 @@ export default async function LifeInsuranceRidersPage() {
                     </span>
                   </div>
                 </div>
-                
+
                 <p className="text-slate-600 mb-4">
-                  Also known as a living benefits rider, this allows you to access a portion of your death benefit 
+                  Also known as a living benefits rider, this allows you to access a portion of your death benefit
                   while you're still alive if diagnosed with a terminal illness or specific qualifying conditions.
                 </p>
 
@@ -159,7 +159,7 @@ export default async function LifeInsuranceRidersPage() {
 
                 <div className="bg-rose-50 rounded-lg p-4">
                   <p className="text-sm text-slate-700">
-                    <strong>Best for:</strong> Everyone—many policies include this at no extra cost. If yours doesn't, 
+                    <strong>Best for:</strong> Everyone—many policies include this at no extra cost. If yours doesn't,
                     it's worth adding for peace of mind.
                   </p>
                 </div>
@@ -178,9 +178,9 @@ export default async function LifeInsuranceRidersPage() {
                     </span>
                   </div>
                 </div>
-                
+
                 <p className="text-slate-600 mb-4">
-                  Provides term life insurance coverage for all your children under one rider. Typically covers children 
+                  Provides term life insurance coverage for all your children under one rider. Typically covers children
                   from 15 days old to age 25, with coverage amounts ranging from $5,000 to $25,000 per child.
                 </p>
 
@@ -194,14 +194,14 @@ export default async function LifeInsuranceRidersPage() {
 
                 <h4 className="font-semibold text-slate-900 mb-2">Conversion Options:</h4>
                 <p className="text-slate-600 mb-4">
-                  When a child reaches the maximum age (usually 25), they can convert the coverage to a permanent policy 
-                  at standard rates without proving insurability. This guarantees they can get life insurance even if they 
+                  When a child reaches the maximum age (usually 25), they can convert the coverage to a permanent policy
+                  at standard rates without proving insurability. This guarantees they can get life insurance even if they
                   develop health conditions later.
                 </p>
 
                 <div className="bg-blue-50 rounded-lg p-4">
                   <p className="text-sm text-slate-700">
-                    <strong>Best for:</strong> Parents who want affordable protection for final expenses and guaranteed 
+                    <strong>Best for:</strong> Parents who want affordable protection for final expenses and guaranteed
                     future insurability for their children without buying separate policies.
                   </p>
                 </div>
@@ -220,9 +220,9 @@ export default async function LifeInsuranceRidersPage() {
                     </span>
                   </div>
                 </div>
-                
+
                 <p className="text-slate-600 mb-4">
-                  Also called the guaranteed purchase option, this rider allows you to purchase additional life insurance 
+                  Also called the guaranteed purchase option, this rider allows you to purchase additional life insurance
                   coverage at specified future dates or life events without taking a medical exam or proving insurability.
                 </p>
 
@@ -236,13 +236,13 @@ export default async function LifeInsuranceRidersPage() {
 
                 <h4 className="font-semibold text-slate-900 mb-2">Why It's Valuable:</h4>
                 <p className="text-slate-600 mb-4">
-                  If you develop a serious health condition like diabetes, heart disease, or cancer, you might become 
+                  If you develop a serious health condition like diabetes, heart disease, or cancer, you might become
                   uninsurable. This rider guarantees you can still increase your coverage regardless of health changes.
                 </p>
 
                 <div className="bg-amber-50 rounded-lg p-4">
                   <p className="text-sm text-slate-700">
-                    <strong>Best for:</strong> Young adults who expect their insurance needs to grow, and anyone with 
+                    <strong>Best for:</strong> Young adults who expect their insurance needs to grow, and anyone with
                     a family history of health conditions that might affect future insurability.
                   </p>
                 </div>
@@ -258,7 +258,7 @@ export default async function LifeInsuranceRidersPage() {
                     Spousal Rider
                   </h3>
                   <p className="text-slate-600 text-sm mb-2">
-                    Adds term coverage for your spouse under your policy. Similar to a child rider but for your partner. 
+                    Adds term coverage for your spouse under your policy. Similar to a child rider but for your partner.
                     Typically offers $25,000-$100,000 in coverage.
                   </p>
                   <p className="text-xs text-slate-500">
@@ -272,7 +272,7 @@ export default async function LifeInsuranceRidersPage() {
                     Accidental Death Benefit Rider
                   </h3>
                   <p className="text-slate-600 text-sm mb-2">
-                    Pays an additional death benefit (usually equal to the base amount, effectively doubling the payout) 
+                    Pays an additional death benefit (usually equal to the base amount, effectively doubling the payout)
                     if death occurs due to an accident.
                   </p>
                   <p className="text-xs text-slate-500">
@@ -286,8 +286,8 @@ export default async function LifeInsuranceRidersPage() {
                     Long-Term Care Rider
                   </h3>
                   <p className="text-slate-600 text-sm mb-2">
-                    Allows you to use a portion of your death benefit to pay for long-term care expenses if you need 
-                    assistance with daily living activities. Different from accelerated death benefit—specifically for 
+                    Allows you to use a portion of your death benefit to pay for long-term care expenses if you need
+                    assistance with daily living activities. Different from accelerated death benefit—specifically for
                     chronic care needs.
                   </p>
                   <p className="text-xs text-slate-500">
@@ -301,7 +301,7 @@ export default async function LifeInsuranceRidersPage() {
                     Term Conversion Rider
                   </h3>
                   <p className="text-slate-600 text-sm mb-2">
-                    Guarantees the right to convert your term policy to a permanent policy (whole or universal life) 
+                    Guarantees the right to convert your term policy to a permanent policy (whole or universal life)
                     without a medical exam. Must typically convert before age 65 or within the conversion period specified.
                   </p>
                   <p className="text-xs text-slate-500">
@@ -433,14 +433,14 @@ export default async function LifeInsuranceRidersPage() {
                 <div className="bg-slate-50 rounded-xl p-5 border border-slate-200">
                   <h4 className="font-semibold text-slate-900 mb-2">After Policy Issue</h4>
                   <p className="text-slate-600 text-sm">
-                    Some riders (like child riders) can be added after the policy is in force, usually within the first few years 
+                    Some riders (like child riders) can be added after the policy is in force, usually within the first few years
                     or at specific option dates. May require evidence of insurability for certain riders.
                   </p>
                 </div>
                 <div className="bg-slate-50 rounded-xl p-5 border border-slate-200">
                   <h4 className="font-semibold text-slate-900 mb-2">Life Events</h4>
                   <p className="text-slate-600 text-sm">
-                    Riders with guaranteed insurability provisions can be exercised after qualifying life events like marriage, 
+                    Riders with guaranteed insurability provisions can be exercised after qualifying life events like marriage,
                     birth of a child, or adoption.
                   </p>
                 </div>
@@ -453,7 +453,7 @@ export default async function LifeInsuranceRidersPage() {
               <p className="text-violet-100 mb-6">
                 Compare quotes from top insurers and explore rider options to build the coverage that's right for you.
               </p>
-              <Link 
+              <Link
                 href="/get-quote?type=life"
                 className="inline-flex items-center gap-2 bg-white text-violet-700 px-8 py-3 rounded-xl font-bold hover:bg-violet-50 transition"
               >
@@ -466,28 +466,28 @@ export default async function LifeInsuranceRidersPage() {
             <div className="mt-12 pt-8 border-t border-slate-200">
               <h3 className="font-bold text-slate-900 mb-4">Related Guides</h3>
               <div className="grid sm:grid-cols-2 gap-4">
-                <Link 
+                <Link
                   href="/guides/life-insurance-coverage"
                   className="flex items-center gap-3 p-4 bg-slate-50 rounded-lg hover:bg-violet-50 transition"
                 >
                   <DollarSign className="w-5 h-5 text-violet-600" />
                   <span className="font-medium text-slate-700">How Much Life Insurance Do You Need?</span>
                 </Link>
-                <Link 
+                <Link
                   href="/guides/life-insurance-parents"
                   className="flex items-center gap-3 p-4 bg-slate-50 rounded-lg hover:bg-violet-50 transition"
                 >
                   <Users className="w-5 h-5 text-violet-600" />
                   <span className="font-medium text-slate-700">Life Insurance for Parents</span>
                 </Link>
-                <Link 
+                <Link
                   href="/guides/no-exam-life-insurance"
                   className="flex items-center gap-3 p-4 bg-slate-50 rounded-lg hover:bg-violet-50 transition"
                 >
                   <Heart className="w-5 h-5 text-violet-600" />
                   <span className="font-medium text-slate-700">No-Exam Life Insurance</span>
                 </Link>
-                <Link 
+                <Link
                   href="/guides"
                   className="flex items-center gap-3 p-4 bg-slate-50 rounded-lg hover:bg-violet-50 transition"
                 >
