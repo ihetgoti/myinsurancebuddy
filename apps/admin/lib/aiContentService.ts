@@ -241,6 +241,14 @@ export class OpenRouterService {
       return model;
     }
 
+    // CHECK: Does it exist in free list if we add :free?
+    // This handles cases where the suffix is missing in the request
+    const modelWithSuffix = `${model}:free`;
+    const isFreeWithSuffix = freeModels.some(free => modelWithSuffix === free);
+    if (isFreeWithSuffix) {
+      return modelWithSuffix;
+    }
+
     // 🚨 PAID MODEL DETECTED! Block it!
     const isPaid = PAID_MODELS.some(paid => model.includes(paid) || paid.includes(model));
     if (isPaid) {
