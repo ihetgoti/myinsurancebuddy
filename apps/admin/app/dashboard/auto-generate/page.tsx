@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { Rocket, Loader2, CheckCircle2, Info, XCircle, Clock, RefreshCw, Trash2, Play, Square } from 'lucide-react';
+import { Rocket, Loader2, CheckCircle2, Info, XCircle, Clock, RefreshCw, Trash2, Play, X } from 'lucide-react';
 import AdminLayout from '@/components/AdminLayout';
 
 interface InsuranceType {
@@ -341,7 +341,7 @@ export default function AutoGeneratePage() {
       case 'PROCESSING': return <Loader2 className="w-4 h-4 animate-spin" />;
       case 'PENDING': return <Clock className="w-4 h-4" />;
       case 'FAILED': return <XCircle className="w-4 h-4" />;
-      case 'CANCELLED': return <Square className="w-4 h-4" />;
+      case 'CANCELLED': return <X className="w-4 h-4" />;
       default: return null;
     }
   };
@@ -386,7 +386,7 @@ export default function AutoGeneratePage() {
                 onClick={() => cancelJob(activeJob.id)}
                 className="px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg flex items-center gap-2"
               >
-                <Square className="w-4 h-4" />
+                <X className="w-4 h-4" />
                 Cancel Job
               </button>
             </div>
@@ -465,8 +465,8 @@ export default function AutoGeneratePage() {
                     key={type.id}
                     onClick={() => setConfig({ ...config, insuranceTypeId: type.id })}
                     className={`p-4 rounded-lg border-2 text-left transition-all ${config.insuranceTypeId === type.id
-                        ? 'border-blue-500 bg-blue-50'
-                        : 'border-gray-200 hover:border-gray-300'
+                      ? 'border-blue-500 bg-blue-50'
+                      : 'border-gray-200 hover:border-gray-300'
                       }`}
                   >
                     <div className="font-medium text-gray-900">{type.name}</div>
@@ -523,8 +523,8 @@ export default function AutoGeneratePage() {
                   <label
                     key={value}
                     className={`flex-1 p-4 rounded-lg border-2 cursor-pointer ${config.geoLevels.includes(value)
-                        ? 'border-blue-500 bg-blue-50'
-                        : 'border-gray-200'
+                      ? 'border-blue-500 bg-blue-50'
+                      : 'border-gray-200'
                       }`}
                   >
                     <div className="flex items-center gap-2">
@@ -659,8 +659,8 @@ export default function AutoGeneratePage() {
                 <div
                   key={job.id}
                   className={`p-4 rounded-lg border ${activeJob?.id === job.id && job.status === 'PROCESSING'
-                      ? 'border-blue-500 bg-blue-50'
-                      : 'border-gray-200'
+                    ? 'border-blue-500 bg-blue-50'
+                    : 'border-gray-200'
                     }`}
                 >
                   <div className="flex items-center justify-between">
@@ -679,7 +679,7 @@ export default function AutoGeneratePage() {
                           className="p-1 text-red-600 hover:bg-red-50 rounded"
                           title="Cancel job"
                         >
-                          <Square className="w-4 h-4" />
+                          <X className="w-4 h-4" />
                         </button>
                       ) : job.status === 'PENDING' ? (
                         <button
