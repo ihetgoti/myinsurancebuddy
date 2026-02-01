@@ -2,7 +2,7 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import Link from 'next/link';
 import { prisma } from '@/lib/prisma';
-import { 
+import {
   Home, ArrowRight, CheckCircle, Shield, AlertTriangle,
   DollarSign, FileText, Clock, Calculator, TrendingUp,
   Scale, Package, Building2, HelpCircle, BarChart3
@@ -59,8 +59,8 @@ export default async function HowMuchHomeInsurancePage() {
           <div className="max-w-3xl mx-auto">
             <div className="prose prose-lg max-w-none">
               <p className="text-xl text-slate-600 leading-relaxed mb-8">
-                Buying home insurance isn't just about meeting your mortgage lender's requirements—it's about protecting 
-                your most valuable asset and your family's financial security. But how do you know if you have enough coverage? 
+                Buying home insurance isn't just about meeting your mortgage lender's requirements—it's about protecting
+                your most valuable asset and your family's financial security. But how do you know if you have enough coverage?
                 This comprehensive guide will help you calculate exactly how much home insurance you need.
               </p>
 
@@ -71,7 +71,7 @@ export default async function HowMuchHomeInsurancePage() {
                   Quick Answer: The 80% Rule
                 </h3>
                 <p className="text-slate-700 mb-4">
-                  Most insurance experts recommend carrying dwelling coverage equal to at least <strong>80% of your home's replacement cost</strong>. 
+                  Most insurance experts recommend carrying dwelling coverage equal to at least <strong>80% of your home's replacement cost</strong>.
                   However, for full protection without coinsurance penalties, 100% replacement cost coverage is ideal.
                 </p>
                 <div className="grid sm:grid-cols-2 gap-4 text-sm">
@@ -87,9 +87,9 @@ export default async function HowMuchHomeInsurancePage() {
               </div>
 
               <h2 className="text-2xl font-bold text-slate-900 mt-12 mb-4">Understanding Replacement Cost vs. Market Value</h2>
-              
+
               <p className="text-slate-600 mb-6">
-                One of the biggest mistakes homeowners make is confusing their home's market value with its replacement cost. 
+                One of the biggest mistakes homeowners make is confusing their home's market value with its replacement cost.
                 These are fundamentally different numbers, and understanding the distinction is crucial.
               </p>
 
@@ -100,7 +100,7 @@ export default async function HowMuchHomeInsurancePage() {
                     <h3 className="font-bold text-slate-900">Replacement Cost</h3>
                   </div>
                   <p className="text-slate-600 text-sm mb-3">
-                    The cost to rebuild your home from scratch using similar materials and quality, 
+                    The cost to rebuild your home from scratch using similar materials and quality,
                     at current construction prices.
                   </p>
                   <ul className="text-sm text-slate-600 space-y-1">
@@ -133,8 +133,8 @@ export default async function HowMuchHomeInsurancePage() {
                   <div>
                     <h4 className="font-semibold text-slate-900 mb-2">Why This Matters</h4>
                     <p className="text-slate-600 text-sm">
-                      In many areas, market value is significantly higher than replacement cost due to land values. 
-                      However, in some markets, replacement cost can exceed market value, especially for older homes 
+                      In many areas, market value is significantly higher than replacement cost due to land values.
+                      However, in some markets, replacement cost can exceed market value, especially for older homes
                       or in areas with high construction costs. Your insurance should cover the cost to rebuild, not buy.
                     </p>
                   </div>
@@ -144,7 +144,7 @@ export default async function HowMuchHomeInsurancePage() {
               <h2 className="text-2xl font-bold text-slate-900 mt-12 mb-4">How to Calculate Your Dwelling Coverage</h2>
 
               <p className="text-slate-600 mb-6">
-                Dwelling coverage (Coverage A) is the foundation of your home insurance policy. It covers the physical 
+                Dwelling coverage (Coverage A) is the foundation of your home insurance policy. It covers the physical
                 structure of your home—walls, roof, floors, built-in appliances, and attached structures.
               </p>
 
@@ -164,7 +164,7 @@ export default async function HowMuchHomeInsurancePage() {
 
               <h3 className="text-xl font-bold text-slate-900 mt-8 mb-3">Method 2: Professional Appraisal</h3>
               <p className="text-slate-600 mb-4">
-                For the most accurate estimate, hire a professional appraiser or contractor who specializes in 
+                For the most accurate estimate, hire a professional appraiser or contractor who specializes in
                 reconstruction costs. They'll consider:
               </p>
               <ul className="list-disc pl-6 text-slate-600 mb-6 space-y-2">
@@ -177,7 +177,7 @@ export default async function HowMuchHomeInsurancePage() {
 
               <h3 className="text-xl font-bold text-slate-900 mt-8 mb-3">Method 3: Insurance Company Evaluation</h3>
               <p className="text-slate-600 mb-6">
-                Most insurers use their own valuation tools and may send an inspector to verify your home's features. 
+                Most insurers use their own valuation tools and may send an inspector to verify your home's features.
                 This is often the most practical approach since they're the ones providing the coverage.
               </p>
 
@@ -206,7 +206,7 @@ export default async function HowMuchHomeInsurancePage() {
               <h2 className="text-2xl font-bold text-slate-900 mt-12 mb-4">Coverage Limits: Breaking Down Your Policy</h2>
 
               <p className="text-slate-600 mb-6">
-                A standard homeowners policy includes several types of coverage, each with its own limit. 
+                A standard homeowners policy includes several types of coverage, each with its own limit.
                 Understanding these helps ensure complete protection.
               </p>
 
@@ -293,7 +293,7 @@ export default async function HowMuchHomeInsurancePage() {
               <h2 className="text-2xl font-bold text-slate-900 mt-12 mb-4">Personal Property Coverage: How Much Do You Really Have?</h2>
 
               <p className="text-slate-600 mb-6">
-                Most people underestimate the value of their belongings. A typical household contains $50,000 to $150,000 
+                Most people underestimate the value of their belongings. A typical household contains $50,000 to $150,000
                 worth of personal property. Here's how to ensure you have enough coverage:
               </p>
 
@@ -361,7 +361,7 @@ export default async function HowMuchHomeInsurancePage() {
                   <div>
                     <h4 className="font-bold text-slate-900">Extended/Guaranteed Replacement Cost</h4>
                     <p className="text-slate-600 text-sm mt-1">
-                      Provides 20-50% above your dwelling limit (extended) or unlimited coverage (guaranteed) 
+                      Provides 20-50% above your dwelling limit (extended) or unlimited coverage (guaranteed)
                       if rebuilding costs exceed expectations due to inflation or disasters.
                     </p>
                   </div>
@@ -408,11 +408,11 @@ export default async function HowMuchHomeInsurancePage() {
 
               <div className="grid sm:grid-cols-2 gap-4 mb-8">
                 {[
-                  'You haven't reviewed your coverage in 3+ years',
-                  'You've made significant home improvements without updating your policy',
+                  "You haven't reviewed your coverage in 3+ years",
+                  "You've made significant home improvements without updating your policy",
                   'Construction costs in your area have risen significantly',
                   'Your dwelling coverage is less than 80% of replacement cost',
-                  'You don't have extended replacement cost coverage',
+                  "You don't have extended replacement cost coverage",
                   'Your personal property limit seems low compared to your inventory',
                   'You have valuable items without scheduled coverage',
                 ].map((sign, i) => (
@@ -465,7 +465,7 @@ export default async function HowMuchHomeInsurancePage() {
               <p className="text-emerald-100 mb-6">
                 Compare home insurance quotes and find the perfect coverage for your needs.
               </p>
-              <Link 
+              <Link
                 href="/get-quote?type=home"
                 className="inline-flex items-center gap-2 bg-white text-emerald-700 px-8 py-3 rounded-xl font-bold hover:bg-emerald-50 transition"
               >
@@ -478,28 +478,28 @@ export default async function HowMuchHomeInsurancePage() {
             <div className="mt-12 pt-8 border-t border-slate-200">
               <h3 className="font-bold text-slate-900 mb-4">Related Guides</h3>
               <div className="grid sm:grid-cols-2 gap-4">
-                <Link 
+                <Link
                   href="/guides/renters-insurance-worth"
                   className="flex items-center gap-3 p-4 bg-slate-50 rounded-lg hover:bg-emerald-50 transition"
                 >
                   <Home className="w-5 h-5 text-emerald-600" />
                   <span className="font-medium text-slate-700">Is Renters Insurance Worth It?</span>
                 </Link>
-                <Link 
+                <Link
                   href="/guides/flood-insurance-guide"
                   className="flex items-center gap-3 p-4 bg-slate-50 rounded-lg hover:bg-emerald-50 transition"
                 >
                   <AlertTriangle className="w-5 h-5 text-blue-600" />
                   <span className="font-medium text-slate-700">Flood Insurance Guide</span>
                 </Link>
-                <Link 
+                <Link
                   href="/guides/home-insurance-claims"
                   className="flex items-center gap-3 p-4 bg-slate-50 rounded-lg hover:bg-emerald-50 transition"
                 >
                   <FileText className="w-5 h-5 text-violet-600" />
                   <span className="font-medium text-slate-700">Filing Home Insurance Claims</span>
                 </Link>
-                <Link 
+                <Link
                   href="/guides/lower-home-premium"
                   className="flex items-center gap-3 p-4 bg-slate-50 rounded-lg hover:bg-emerald-50 transition"
                 >
