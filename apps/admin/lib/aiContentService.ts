@@ -45,21 +45,21 @@ const CACHE_TTL = 60000; // 1 minute
  */
 async function getFreeModelsFromDB(): Promise<string[]> {
   const now = Date.now();
-  
+
   // Return cached if still valid
   if (cachedFreeModels && (now - cacheTime) < CACHE_TTL) {
     return cachedFreeModels;
   }
-  
+
   try {
     const models = await prisma.freeAIModel.findMany({
       where: { isActive: true },
       orderBy: { priority: 'asc' }
     });
-    
+
     cachedFreeModels = models.map(m => m.modelId);
     cacheTime = now;
-    
+
     return cachedFreeModels;
   } catch (e) {
     console.warn('Failed to fetch free models from DB, using fallback:', e);
@@ -205,34 +205,42 @@ export class OpenRouterService {
     // Get current free models from DB
     const freeModels = await getFreeModelsFromDB();
     const defaultModel = freeModels[0] || FALLBACK_FREE_MODELS[0];
-    
+
     // If not forcing free, return whatever was requested
     if (!forceFree) {
       return model || defaultModel;
     }
-    
+
     // If no model specified, use first free model
     if (!model) {
       return defaultModel;
     }
-    
+
     // STRICT CHECK: Model MUST end with ':free' to be considered free
     // This prevents accidental usage of paid models!
     if (model.endsWith(':free')) {
-      // Also check if it's in our approved list
+      // Check if it's in our approved list
       const isApproved = freeModels.some(free => model === free);
       if (isApproved) {
         return model;
       }
-      console.warn(`⚠️ Model "${model}" ends with :free but not in approved list. Using approved model.`);
+      console.warn(`⚠️ Model "${model}" ends with :free but not in approved list. Using fallback.`);
+
+      // FALLBACK LOGIC: If specific free model not found, try to map to a known good one
+      // This fixes "No endpoints found" when a specific provider/model is offline or removed
+      if (model.includes('deepseek')) return freeModels.find(m => m.includes('deepseek')) || defaultModel;
+      if (model.includes('gemini')) return freeModels.find(m => m.includes('gemini')) || defaultModel;
+      if (model.includes('llama')) return freeModels.find(m => m.includes('llama')) || defaultModel;
+
+      return defaultModel;
     }
-    
+
     // Check if it's explicitly in our free list
     const isFree = freeModels.some(free => model === free);
     if (isFree) {
       return model;
     }
-    
+
     // 🚨 PAID MODEL DETECTED! Block it!
     const isPaid = PAID_MODELS.some(paid => model.includes(paid) || paid.includes(model));
     if (isPaid) {
@@ -241,14 +249,7 @@ export class OpenRouterService {
     } else {
       console.warn(`⚠️ Unknown model "${model}" - treating as paid for safety.`);
     }
-    
-    // Try to find equivalent free model
-    if (model.includes('deepseek')) return freeModels.find(m => m.includes('deepseek')) || defaultModel;
-    if (model.includes('gemini')) return freeModels.find(m => m.includes('gemini')) || defaultModel;
-    if (model.includes('llama')) return freeModels.find(m => m.includes('llama')) || defaultModel;
-    if (model.includes('mistral')) return freeModels.find(m => m.includes('mistral')) || defaultModel;
-    if (model.includes('mimo') || model.includes('xiaomi')) return freeModels.find(m => m.includes('deepseek')) || defaultModel;
-    
+
     // Default to first free model
     return defaultModel;
   }
@@ -261,7 +262,7 @@ export class OpenRouterService {
     // Strict check: must end with :free
     return model.endsWith(':free');
   }
-  
+
   /**
    * Get all free models from DB
    */
@@ -295,10 +296,10 @@ export class OpenRouterService {
 
     // Get the next provider in rotation
     const provider = availableProviders[this.currentProviderIndex % availableProviders.length];
-    
+
     // Move to next for subsequent calls
     this.currentProviderIndex = (this.currentProviderIndex + 1) % availableProviders.length;
-    
+
     return provider;
   }
 
@@ -341,7 +342,7 @@ export class OpenRouterService {
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         const errorMessage = errorData.error?.message || `HTTP ${response.status}`;
-        
+
         // Check for rate limit errors
         if (response.status === 429 || errorMessage.includes('Rate limit') || errorMessage.includes('rate limit')) {
           return {
@@ -350,7 +351,7 @@ export class OpenRouterService {
             rateLimited: true
           };
         }
-        
+
         // Check for insufficient credits
         if (response.status === 402 || errorMessage.includes('Insufficient credits')) {
           return {
@@ -359,12 +360,12 @@ export class OpenRouterService {
             rateLimited: true
           };
         }
-        
+
         throw new Error(`API error: ${errorMessage}`);
       }
 
       const data = await response.json();
-      
+
       if (!data.choices?.[0]?.message?.content) {
         throw new Error('Invalid response format from API');
       }
@@ -405,32 +406,32 @@ export class OpenRouterService {
       where: { isActive: true },
       orderBy: { priority: 'asc' }
     });
-    
+
     // Filter providers that have budget available
-    const availableProviders = providers.filter(p => 
+    const availableProviders = providers.filter(p =>
       p.totalBudget === null || p.usedBudget < p.totalBudget
     );
-    
+
     if (availableProviders.length === 0) {
       return { success: false, error: 'No AI providers with available budget' };
     }
-    
+
     const startIndex = this.currentProviderIndex % availableProviders.length;
     const triedProviders: string[] = [];
     let lastError = '';
     let allRateLimited = true;
-    
+
     for (let i = 0; i < availableProviders.length; i++) {
       const providerIndex = (startIndex + i) % availableProviders.length;
       const provider = availableProviders[providerIndex];
-      
+
       // Skip if already tried this provider in this round
       if (triedProviders.includes(provider.id)) continue;
       triedProviders.push(provider.id);
-      
+
       try {
         const result = await this.tryGenerateWithProvider(request, provider);
-        
+
         if (result.success) {
           // Update current index for next call
           this.currentProviderIndex = (providerIndex + 1) % availableProviders.length;
@@ -438,34 +439,34 @@ export class OpenRouterService {
           await this.trackUsage(provider.id, result.tokensUsed || 0, result.cost || 0);
           return { ...result, provider: provider.name, attempts: triedProviders.length };
         }
-        
+
         lastError = result.error || 'Unknown error';
-        
+
         // Check if this was a rate limit error
         if (result.rateLimited) {
           // Mark this provider as rate limited and continue
           await this.markProviderRateLimited(provider.id);
           continue;
         }
-        
+
         // Not a rate limit error, don't retry with other providers
         allRateLimited = false;
         return { ...result, attempts: triedProviders.length };
-        
+
       } catch (error: any) {
         lastError = error.message;
         allRateLimited = false;
         continue;
       }
     }
-    
+
     // All providers failed
     if (allRateLimited) {
       throw new AllProvidersRateLimitedError(
         `All ${availableProviders.length} providers have hit rate limits. Last error: ${lastError}`
       );
     }
-    
+
     return {
       success: false,
       error: `All ${availableProviders.length} providers failed. Last error: ${lastError}`,
@@ -507,40 +508,40 @@ export class OpenRouterService {
    */
   private static buildPrompt(request: AIContentRequest): string {
     const { pageData, sections, templatePrompts, keywordConfig } = request;
-    const locationName = pageData.city 
+    const locationName = pageData.city
       ? `${pageData.city}, ${pageData.state || ''}`
       : pageData.state || pageData.insuranceType;
 
     const prompts: string[] = [];
-    
+
     // Main instruction - FOCUS ON "cheapest {niche} in {location}"
     prompts.push(`Generate SEO-optimized content targeting "cheapest ${pageData.insuranceType.toLowerCase()} in ${locationName}".`);
     prompts.push(`\nGenerate the following sections: ${sections.join(', ')}`);
     prompts.push(`\n\n=== CONTENT FOCUS ===`);
     prompts.push(`The MAIN GOAL is to help readers find the CHEAPEST, most AFFORDABLE ${pageData.insuranceType} options in ${locationName}.`);
     prompts.push(`Every section should provide value toward saving money and finding low-cost options.`);
-    
+
     // Add keyword-optimized prompts if keywordConfig is provided
     if (keywordConfig) {
       prompts.push(`\n\n=== SEO KEYWORD OPTIMIZATION ===`);
       prompts.push(`MAIN TARGET: "${keywordConfig.primaryKeyword}" (MUST use ${keywordConfig.targetDensity}% density, max ${keywordConfig.maxDensity}%)`);
-      
+
       if (keywordConfig.secondaryKeywords.length > 0) {
         prompts.push(`Supporting Keywords: ${keywordConfig.secondaryKeywords.join(', ')}`);
       }
-      
+
       // Add keyword requirements
       const requirements: string[] = [];
       if (keywordConfig.requireInTitle) requirements.push(`MUST include "${keywordConfig.primaryKeyword}" in the first 60 characters`);
       if (keywordConfig.requireInH1) requirements.push(`MUST include "${keywordConfig.primaryKeyword}" in the main heading (H1)`);
       if (keywordConfig.requireInFirst100) requirements.push(`MUST include "${keywordConfig.primaryKeyword}" within first 100 words`);
       if (keywordConfig.requireInMeta) requirements.push(`MUST include "${keywordConfig.primaryKeyword}" in meta description`);
-      
+
       if (requirements.length > 0) {
         prompts.push(`\nCRITICAL Keyword Placement Requirements:`);
         requirements.forEach(r => prompts.push(`- ${r}`));
       }
-      
+
       prompts.push(`\nWriting Style:`);
       prompts.push(`- Start sentences with the main keyword when natural: "${keywordConfig.primaryKeyword} is..." or "Finding ${keywordConfig.primaryKeyword} can..."`);
       prompts.push(`- Use action words: save, compare, find, get, lower, reduce`);
@@ -553,14 +554,14 @@ export class OpenRouterService {
       prompts.push(`Use this phrase naturally 2-3 times in the content.`);
       prompts.push(`Also use variations: "cheap ${pageData.insuranceType.toLowerCase()}", "affordable ${pageData.insuranceType.toLowerCase()}", "low cost ${pageData.insuranceType.toLowerCase()}"`);
     }
-    
+
     // Add section-specific prompts from template if available
     sections.forEach(section => {
       const templatePrompt = this.getTemplatePromptForSection(section, templatePrompts);
-      
+
       // Build base section prompt
       let sectionPrompt = templatePrompt || this.getDefaultSectionPrompt(section, pageData.insuranceType, locationName);
-      
+
       // Enhance with keyword optimization if available
       if (keywordConfig) {
         sectionPrompt = KeywordContentService.buildKeywordPrompt(
@@ -571,24 +572,24 @@ export class OpenRouterService {
           pageData.insuranceType
         );
       }
-      
+
       prompts.push(`\n${section.toUpperCase()}:`);
       prompts.push(sectionPrompt.replace(/\{\{location\}\}/g, locationName).replace(/\{\{niche\}\}/g, pageData.insuranceType));
     });
-    
+
     prompts.push(`\nReturn the content in JSON format with the following structure:`);
     prompts.push(JSON.stringify(this.getExpectedStructure(sections), null, 2));
-    
+
     return prompts.join('\n');
   }
-  
+
   /**
    * Get default prompt for a section
    * FOCUS: "cheapest {niche} in {location}" as main keyword
    */
   private static getDefaultSectionPrompt(section: AIContentSection, insuranceType: string, location: string): string {
     const mainKeyword = `cheapest ${insuranceType.toLowerCase()} in ${location.toLowerCase()}`;
-    
+
     switch (section) {
       case 'intro':
         return `Write an engaging introduction targeting "${mainKeyword}". 
@@ -696,11 +697,11 @@ Help readers choose the right balance of cost and protection for their budget.`;
    * Get template prompt for a section
    */
   private static getTemplatePromptForSection(
-    section: AIContentSection, 
+    section: AIContentSection,
     templatePrompts?: AIContentRequest['templatePrompts']
   ): string | undefined {
     if (!templatePrompts) return undefined;
-    
+
     switch (section) {
       case 'intro': return templatePrompts.introPrompt;
       case 'requirements': return templatePrompts.requirementsPrompt;
@@ -723,7 +724,7 @@ Help readers choose the right balance of cost and protection for their budget.`;
    */
   private static getExpectedStructure(sections: AIContentSection[]): any {
     const structure: any = {};
-    
+
     sections.forEach(section => {
       switch (section) {
         case 'intro':
@@ -760,9 +761,9 @@ Help readers choose the right balance of cost and protection for their budget.`;
           structure.buyersGuide = { steps: ['string'], lookFor: ['string'], redFlags: ['string'], questions: ['string'] };
           break;
         case 'metaTags':
-          structure.metaTags = { 
-            metaTitle: 'string', 
-            metaDescription: 'string', 
+          structure.metaTags = {
+            metaTitle: 'string',
+            metaDescription: 'string',
             metaKeywords: ['string'],
             ogTitle: 'string',
             ogDescription: 'string'
@@ -770,7 +771,7 @@ Help readers choose the right balance of cost and protection for their budget.`;
           break;
       }
     });
-    
+
     return structure;
   }
 
@@ -785,7 +786,7 @@ Help readers choose the right balance of cost and protection for their budget.`;
     } catch (e) {
       // If not valid JSON, try to extract sections manually
       const result: any = {};
-      
+
       sections.forEach(section => {
         const regex = new RegExp(`##?\\s*${section}[:\s]*([^#]+)`, 'i');
         const match = content.match(regex);
@@ -793,7 +794,7 @@ Help readers choose the right balance of cost and protection for their budget.`;
           result[section] = match[1].trim();
         }
       });
-      
+
       return result;
     }
   }
@@ -807,7 +808,7 @@ Help readers choose the right balance of cost and protection for their budget.`;
     if (model && this.isFreeModel(model)) {
       return 0;
     }
-    
+
     // Paid models - rough estimate
     // GPT-4o-mini: $0.15/1M input + $0.60/1M output ≈ $0.000375 per 1K tokens avg
     const rate = 0.000000375;
@@ -835,13 +836,13 @@ Help readers choose the right balance of cost and protection for their budget.`;
     const providers = await prisma.aIProvider.findMany({
       where: { isActive: true }
     });
-    
+
     for (const provider of providers) {
       // Check budget
       if (provider.totalBudget !== null && provider.usedBudget >= provider.totalBudget) {
         continue;
       }
-      
+
       // Check if rate limited
       const metadata = provider.metadata as any;
       if (metadata?.rateLimitResetAt) {
@@ -850,7 +851,7 @@ Help readers choose the right balance of cost and protection for their budget.`;
           continue; // Still rate limited
         }
       }
-      
+
       // Check last error
       if (provider.lastError === 'RATE_LIMITED' && provider.lastErrorAt) {
         const errorAge = Date.now() - new Date(provider.lastErrorAt).getTime();
@@ -858,10 +859,10 @@ Help readers choose the right balance of cost and protection for their budget.`;
           continue; // Error less than 24 hours ago
         }
       }
-      
+
       return true; // Found at least one available provider
     }
-    
+
     return false;
   }
 
@@ -884,14 +885,14 @@ Help readers choose the right balance of cost and protection for their budget.`;
    */
   static async getNextAvailableTime(): Promise<Date | null> {
     const providers = await prisma.aIProvider.findMany({
-      where: { 
+      where: {
         isActive: true,
         lastError: 'RATE_LIMITED'
       }
     });
-    
+
     let earliestReset: Date | null = null;
-    
+
     for (const provider of providers) {
       const metadata = provider.metadata as any;
       if (metadata?.rateLimitResetAt) {
@@ -907,7 +908,7 @@ Help readers choose the right balance of cost and protection for their budget.`;
         }
       }
     }
-    
+
     return earliestReset;
   }
 }
@@ -938,9 +939,9 @@ export async function batchGenerateContent(
     onProgress?: (progress: BatchProgress) => void;
     startIndex?: number; // For resuming
   } = {}
-): Promise<{ 
-  successful: number; 
-  failed: number; 
+): Promise<{
+  successful: number;
+  failed: number;
   errors: any[];
   paused?: boolean;
   resumeAt?: Date;
@@ -978,9 +979,9 @@ export async function batchGenerateContent(
       const resumeAt = await OpenRouterService.getNextAvailableTime();
       results.paused = true;
       results.resumeAt = resumeAt || new Date(Date.now() + 24 * 60 * 60 * 1000);
-      
+
       console.warn(`⏸️ All providers rate limited. Pausing job. Will resume at ${results.resumeAt}`);
-      
+
       if (onProgress) {
         onProgress({
           processed: i,
@@ -992,7 +993,7 @@ export async function batchGenerateContent(
           lastProcessedIndex: i
         });
       }
-      
+
       break;
     }
 
@@ -1064,7 +1065,7 @@ export async function batchGenerateContent(
           // Re-throw to be caught at batch level
           throw error;
         }
-        
+
         results.failed++;
         results.errors.push({ pageId: page.id, error: error.message });
       }
@@ -1079,9 +1080,9 @@ export async function batchGenerateContent(
         results.paused = true;
         results.resumeAt = resumeAt || new Date(Date.now() + 24 * 60 * 60 * 1000);
         results.lastProcessedIndex = i;
-        
+
         console.warn(`⏸️ All providers rate limited during batch. Pausing at index ${i}. Will resume at ${results.resumeAt}`);
-        
+
         if (onProgress) {
           onProgress({
             processed: i,
@@ -1093,10 +1094,10 @@ export async function batchGenerateContent(
             lastProcessedIndex: i
           });
         }
-        
+
         break;
       }
-      
+
       // Other error, log but continue
       console.error('Batch processing error:', error);
       results.errors.push({ batchIndex: i, error: error.message });

@@ -74,7 +74,7 @@ export async function POST(
       }).catch(console.error);
     });
 
-    const message = job.status === 'PAUSED' 
+    const message = job.status === 'PAUSED'
       ? 'Job resumed from pause. Poll /api/auto-generate/' + jobId + '/status for progress.'
       : 'Job started. Poll /api/auto-generate/' + jobId + '/status for progress.';
 
@@ -117,9 +117,9 @@ async function processAutoGenerateJob(job: any) {
   }
 
   // Fetch keyword config for this insurance type
-  const keywordConfig = await KeywordContentService.getKeywordConfig(filters.insuranceTypeId) 
+  const keywordConfig = await KeywordContentService.getKeywordConfig(filters.insuranceTypeId)
     || KeywordContentService.generateDefaultKeywords(insuranceType.name);
-  
+
   console.log(`🎯 Using keyword config: "${keywordConfig.primaryKeyword}" for ${insuranceType.name}`);
 
   // Fetch template if specified
@@ -173,7 +173,7 @@ async function processAutoGenerateJob(job: any) {
   let totalTokensUsed = job.totalTokensUsed || 0;
   let estimatedCost = job.estimatedCost || 0;
   const errorLog = (job.errorLog as any[]) || [];
-  
+
   // Track if we've hit rate limits
   let isPaused = false;
   let pauseState: {
@@ -233,7 +233,7 @@ async function processAutoGenerateJob(job: any) {
             if (result.error?.includes('All providers') || result.error?.includes('rate limit')) {
               throw new AllProvidersRateLimitedError(result.error);
             }
-            
+
             failedPages++;
             errorLog.push({
               slug: `${insuranceType.slug}/${state.slug}`,
@@ -293,7 +293,7 @@ async function processAutoGenerateJob(job: any) {
             if (result.error?.includes('All providers') || result.error?.includes('rate limit')) {
               throw new AllProvidersRateLimitedError(result.error);
             }
-            
+
             failedPages++;
             errorLog.push({
               slug: `${insuranceType.slug}/${state.slug}/${city.slug}`,
@@ -338,9 +338,9 @@ async function processAutoGenerateJob(job: any) {
     // Check if this is a rate limit pause
     if (error.name === 'AllProvidersRateLimitedError') {
       const resumeAt = await OpenRouterService.getNextAvailableTime();
-      
+
       console.warn(`⏸️ Job ${job.id} paused due to rate limits. Will resume at ${resumeAt}`);
-      
+
       // Mark job as paused with resume state
       await prisma.aIGenerationJob.update({
         where: { id: job.id },
@@ -357,13 +357,13 @@ async function processAutoGenerateJob(job: any) {
           autoResumeAt: resumeAt || new Date(Date.now() + 24 * 60 * 60 * 1000)
         }
       });
-      
+
       // Schedule auto-resume (this would be handled by a cron job or similar)
       scheduleAutoResume(job.id, resumeAt);
-      
+
       return;
     }
-    
+
     // Other error - mark as failed
     throw error;
   }
@@ -375,12 +375,12 @@ async function processAutoGenerateJob(job: any) {
 function scheduleAutoResume(jobId: string, resumeAt: Date | null) {
   const delay = resumeAt ? resumeAt.getTime() - Date.now() : 24 * 60 * 60 * 1000;
   const resumeTime = new Date(Date.now() + delay);
-  
+
   console.log(`⏰ Scheduled auto-resume for job ${jobId} at ${resumeTime}`);
-  
+
   // In production, you'd use a job queue like Bull/BullMQ or a cron job
   // For now, we just log it. The admin can manually resume or a cron can check.
-  
+
   // Example: Set a timeout (only works if server stays running)
   // setTimeout(async () => {
   //   await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/auto-generate/${jobId}/execute`, {
@@ -460,6 +460,10 @@ async function processPage(
       });
 
       if (!response.success || !response.content) {
+        // ROLLBACK: Delete the empty page so we don't end up with ghost pages
+        console.warn(`⚠️ Generation failed for ${slug}, deleting empty page.`);
+        await prisma.page.delete({ where: { id: page.id } });
+
         return {
           success: false,
           error: response.error || 'Failed to generate AI content'
@@ -508,7 +512,7 @@ async function processPage(
         error: error.message
       };
     }
-    
+
     return {
       success: false,
       error: error.message

@@ -88,24 +88,32 @@ export async function PATCH(
             }
         });
 
-        // Trigger web revalidation
-        const path = page.slug.startsWith('/') ? page.slug : `/${page.slug}`;
-        await revalidateWebPath(path);
+        // Trigger web revalidation (non-blocking / safe)
+        try {
+            const path = page.slug.startsWith('/') ? page.slug : `/${page.slug}`;
+            await revalidateWebPath(path);
+        } catch (revError) {
+            console.error('Revalidation failed but page updated:', revError);
+        }
 
-        // Create audit log for update
-        await prisma.auditLog.create({
-            data: {
-                userId: session.user.id,
-                action: 'UPDATE',
-                entityType: 'Page',
-                entityId: params.id,
-                entityName: page.title || page.slug,
-                changes: {
-                    ...(heroTitle !== undefined && { title: { old: currentPage.title, new: heroTitle } }),
-                    ...(isPublished !== undefined && { isPublished: { old: currentPage.isPublished, new: isPublished } }),
+        // Create audit log for update (non-blocking / safe)
+        try {
+            await prisma.auditLog.create({
+                data: {
+                    userId: session.user.id,
+                    action: 'UPDATE',
+                    entityType: 'Page',
+                    entityId: params.id,
+                    entityName: page.title || page.slug,
+                    changes: {
+                        ...(heroTitle !== undefined && { title: { old: currentPage.title, new: heroTitle } }),
+                        ...(isPublished !== undefined && { isPublished: { old: currentPage.isPublished, new: isPublished } }),
+                    },
                 },
-            },
-        });
+            });
+        } catch (auditError) {
+            console.error('Audit log failed but page updated:', auditError);
+        }
 
         return NextResponse.json(page);
     } catch (error) {
