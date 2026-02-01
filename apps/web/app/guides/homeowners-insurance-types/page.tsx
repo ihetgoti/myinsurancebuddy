@@ -2,10 +2,10 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import Link from 'next/link';
 import { prisma } from '@/lib/prisma';
-import { 
+import {
   Home, ArrowRight, CheckCircle, AlertTriangle, Shield,
   DollarSign, Building, TreePine, Waves, Wind, Flame,
-  Clock, Info, Star, MapPin, Heart
+  Clock, Info, Star, MapPin, Heart, TrendingUp
 } from 'lucide-react';
 
 export const dynamic = 'force-dynamic';
@@ -56,14 +56,14 @@ export default async function HomeownersInsuranceTypesPage() {
           <div className="max-w-3xl mx-auto">
             <div className="prose prose-lg max-w-none">
               <p className="text-xl text-slate-600 leading-relaxed mb-8">
-                Not all home insurance policies are created equal. Depending on your living situation, 
-                property type, and coverage needs, different policy forms offer varying levels of protection. 
-                Understanding the eight standard types of homeowners insurance (designated HO-1 through HO-8) 
+                Not all home insurance policies are created equal. Depending on your living situation,
+                property type, and coverage needs, different policy forms offer varying levels of protection.
+                Understanding the eight standard types of homeowners insurance (designated HO-1 through HO-8)
                 will help you choose the right coverage for your specific situation.
               </p>
 
               <h2 className="text-2xl font-bold text-slate-900 mt-12 mb-4">Quick Comparison of All Policy Types</h2>
-              
+
               <div className="overflow-x-auto mb-8">
                 <table className="w-full text-sm border-collapse">
                   <thead>
@@ -120,7 +120,7 @@ export default async function HomeownersInsuranceTypesPage() {
 
               <h2 className="text-2xl font-bold text-slate-900 mt-12 mb-4">Named Perils vs. Open Peril Coverage</h2>
               <p className="text-slate-600 mb-6">
-                Before diving into specific policy types, it's important to understand the difference between 
+                Before diving into specific policy types, it's important to understand the difference between
                 named perils and open peril (all-risk) coverage:
               </p>
 
@@ -131,7 +131,7 @@ export default async function HomeownersInsuranceTypesPage() {
                     Only covers damage caused by specifically listed events. If a peril isn't named, it's not covered.
                   </p>
                   <div className="text-xs text-slate-600">
-                    <strong>Common named perils:</strong> Fire, lightning, windstorm, hail, explosion, riot, aircraft, 
+                    <strong>Common named perils:</strong> Fire, lightning, windstorm, hail, explosion, riot, aircraft,
                     vehicles, smoke, vandalism, theft, falling objects, weight of ice/snow, freezing pipes
                   </div>
                 </div>
@@ -141,7 +141,7 @@ export default async function HomeownersInsuranceTypesPage() {
                     Covers damage from all causes except those specifically excluded in the policy. Much broader protection.
                   </p>
                   <div className="text-xs text-slate-600">
-                    <strong>Common exclusions:</strong> Floods, earthquakes, nuclear hazards, war, intentional damage, 
+                    <strong>Common exclusions:</strong> Floods, earthquakes, nuclear hazards, war, intentional damage,
                     normal wear and tear, pest infestations
                   </div>
                 </div>
@@ -156,7 +156,7 @@ export default async function HomeownersInsuranceTypesPage() {
                   <span className="bg-red-100 text-red-700 px-3 py-1 rounded-full text-xs font-medium">Limited Availability</span>
                 </div>
                 <p className="text-slate-600 text-sm mb-4">
-                  The most basic and limited homeowners insurance. Covers only the dwelling against 10 specific named perils. 
+                  The most basic and limited homeowners insurance. Covers only the dwelling against 10 specific named perils.
                   Personal property is not covered. Very few insurers offer HO-1 policies today.
                 </p>
                 <div className="grid sm:grid-cols-2 gap-3 text-sm">
@@ -184,7 +184,7 @@ export default async function HomeownersInsuranceTypesPage() {
                   <span className="bg-amber-100 text-amber-700 px-3 py-1 rounded-full text-xs font-medium">Budget Option</span>
                 </div>
                 <p className="text-slate-600 text-sm mb-4">
-                  A step up from HO-1, covering the dwelling and personal property against 16 named perils. 
+                  A step up from HO-1, covering the dwelling and personal property against 16 named perils.
                   More comprehensive than basic form but still limited compared to standard policies.
                 </p>
                 <div className="grid sm:grid-cols-2 gap-3 text-sm">
@@ -216,8 +216,8 @@ export default async function HomeownersInsuranceTypesPage() {
                   </div>
                 </div>
                 <p className="text-slate-600 text-sm mb-4">
-                  The most common homeowners insurance policy. Offers open peril coverage for the dwelling 
-                  and other structures, but named perils coverage for personal property. Provides excellent 
+                  The most common homeowners insurance policy. Offers open peril coverage for the dwelling
+                  and other structures, but named perils coverage for personal property. Provides excellent
                   protection for most homeowners.
                 </p>
                 <div className="grid sm:grid-cols-2 gap-3 text-sm mb-4">
@@ -245,7 +245,7 @@ export default async function HomeownersInsuranceTypesPage() {
                   <span className="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-xs font-medium">For Renters</span>
                 </div>
                 <p className="text-slate-600 text-sm mb-4">
-                  Commonly known as renters insurance. Covers personal property and liability but does not 
+                  Commonly known as renters insurance. Covers personal property and liability but does not
                   cover the dwelling structure (that's the landlord's responsibility).
                 </p>
                 <div className="grid sm:grid-cols-2 gap-3 text-sm">
@@ -273,7 +273,7 @@ export default async function HomeownersInsuranceTypesPage() {
                   <span className="bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full text-xs font-medium">Most Comprehensive</span>
                 </div>
                 <p className="text-slate-600 text-sm mb-4">
-                  The most extensive coverage available. Open peril protection for both dwelling and personal 
+                  The most extensive coverage available. Open peril protection for both dwelling and personal
                   property. Ideal for high-value homes and those seeking maximum protection.
                 </p>
                 <div className="grid sm:grid-cols-2 gap-3 text-sm mb-4">
@@ -299,7 +299,7 @@ export default async function HomeownersInsuranceTypesPage() {
                   <span className="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-xs font-medium">For Condos</span>
                 </div>
                 <p className="text-slate-600 text-sm mb-4">
-                  Designed specifically for condominium and co-op owners. Covers the interior of your unit, 
+                  Designed specifically for condominium and co-op owners. Covers the interior of your unit,
                   personal property, and liability. The condo association's master policy typically covers the building exterior.
                 </p>
                 <div className="grid sm:grid-cols-2 gap-3 text-sm">
@@ -327,7 +327,7 @@ export default async function HomeownersInsuranceTypesPage() {
                   <span className="bg-amber-100 text-amber-700 px-3 py-1 rounded-full text-xs font-medium">Mobile Homes</span>
                 </div>
                 <p className="text-slate-600 text-sm mb-4">
-                  Similar to HO-3 but designed specifically for mobile and manufactured homes. Provides 
+                  Similar to HO-3 but designed specifically for mobile and manufactured homes. Provides
                   open peril coverage for the dwelling and named perils for personal property.
                 </p>
                 <div className="grid sm:grid-cols-2 gap-3 text-sm">
@@ -355,8 +355,8 @@ export default async function HomeownersInsuranceTypesPage() {
                   <span className="bg-purple-100 text-purple-700 px-3 py-1 rounded-full text-xs font-medium">Older Homes</span>
                 </div>
                 <p className="text-slate-600 text-sm mb-4">
-                  Designed for older homes where the replacement cost exceeds the market value, or where 
-                  meeting modern building codes would be prohibitively expensive. Typically provides actual 
+                  Designed for older homes where the replacement cost exceeds the market value, or where
+                  meeting modern building codes would be prohibitively expensive. Typically provides actual
                   cash value coverage rather than replacement cost.
                 </p>
                 <div className="grid sm:grid-cols-2 gap-3 text-sm">
@@ -492,7 +492,7 @@ export default async function HomeownersInsuranceTypesPage() {
               <p className="text-emerald-100 mb-6">
                 Compare quotes from top insurers and find the perfect policy for your home type.
               </p>
-              <Link 
+              <Link
                 href="/get-quote?type=home"
                 className="inline-flex items-center gap-2 bg-white text-emerald-700 px-8 py-3 rounded-xl font-bold hover:bg-emerald-50 transition"
               >
@@ -505,28 +505,28 @@ export default async function HomeownersInsuranceTypesPage() {
             <div className="mt-12 pt-8 border-t border-slate-200">
               <h3 className="font-bold text-slate-900 mb-4">Related Guides</h3>
               <div className="grid sm:grid-cols-2 gap-4">
-                <Link 
+                <Link
                   href="/guides/how-much-home-insurance"
                   className="flex items-center gap-3 p-4 bg-slate-50 rounded-lg hover:bg-emerald-50 transition"
                 >
                   <DollarSign className="w-5 h-5 text-emerald-600" />
                   <span className="font-medium text-slate-700">How Much Home Insurance Do I Need?</span>
                 </Link>
-                <Link 
+                <Link
                   href="/guides/renters-insurance-worth"
                   className="flex items-center gap-3 p-4 bg-slate-50 rounded-lg hover:bg-emerald-50 transition"
                 >
                   <Shield className="w-5 h-5 text-blue-600" />
                   <span className="font-medium text-slate-700">Is Renters Insurance Worth It?</span>
                 </Link>
-                <Link 
+                <Link
                   href="/guides/lower-home-premium"
                   className="flex items-center gap-3 p-4 bg-slate-50 rounded-lg hover:bg-emerald-50 transition"
                 >
                   <TrendingUp className="w-5 h-5 text-violet-600" />
                   <span className="font-medium text-slate-700">How to Lower Your Home Insurance</span>
                 </Link>
-                <Link 
+                <Link
                   href="/guides"
                   className="flex items-center gap-3 p-4 bg-slate-50 rounded-lg hover:bg-emerald-50 transition"
                 >

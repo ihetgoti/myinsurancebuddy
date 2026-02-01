@@ -2,10 +2,10 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import Link from 'next/link';
 import { prisma } from '@/lib/prisma';
-import { 
+import {
   Home, ArrowRight, CheckCircle, Shield, AlertTriangle,
   DollarSign, FileText, Clock, Lock, TrendingDown,
-  Package, Search, Award, Wrench, Percent, Sparkles
+  Package, Search, Award, Wrench, Percent, Sparkles, TrendingUp
 } from 'lucide-react';
 
 export const dynamic = 'force-dynamic';
@@ -43,7 +43,7 @@ export default async function LowerHomePremiumPage() {
               How to Lower Your Home Insurance Premium
             </h1>
             <p className="text-emerald-100 text-lg mb-6">
-              Proven strategies to reduce your home insurance costs without sacrificing coverage. 
+              Proven strategies to reduce your home insurance costs without sacrificing coverage.
               Save hundreds—or even thousands—each year.
             </p>
             <div className="flex flex-wrap items-center gap-4 text-emerald-200 text-sm">
@@ -84,12 +84,12 @@ export default async function LowerHomePremiumPage() {
       {/* Content */}
       <section className="py-12 sm:py-16">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div class="max-w-3xl mx-auto">
+          <div className="max-w-3xl mx-auto">
             <div className="prose prose-lg max-w-none">
               <p className="text-xl text-slate-600 leading-relaxed mb-8">
-                Home insurance is essential, but that doesn't mean you have to overpay for it. The average 
-                homeowner spends over $1,400 annually on insurance, but with the right strategies, you could 
-                significantly reduce that cost. This guide covers every proven method to lower your premium 
+                Home insurance is essential, but that doesn't mean you have to overpay for it. The average
+                homeowner spends over $1,400 annually on insurance, but with the right strategies, you could
+                significantly reduce that cost. This guide covers every proven method to lower your premium
                 while maintaining the protection your home needs.
               </p>
 
@@ -101,7 +101,7 @@ export default async function LowerHomePremiumPage() {
                   <h3 className="font-bold text-slate-900">The Multi-Policy Discount</h3>
                 </div>
                 <p className="text-slate-600 mb-4">
-                  One of the easiest ways to save is to purchase multiple policies from the same insurer. 
+                  One of the easiest ways to save is to purchase multiple policies from the same insurer.
                   Most companies offer significant discounts when you bundle home and auto insurance.
                 </p>
                 <div className="grid sm:grid-cols-2 gap-4">
@@ -132,8 +132,8 @@ export default async function LowerHomePremiumPage() {
                   <div>
                     <h4 className="font-semibold text-slate-900 mb-2">Important Consideration</h4>
                     <p className="text-slate-600 text-sm">
-                      While bundling usually saves money, don't assume it's always the cheapest option. 
-                      Sometimes separate policies from different insurers cost less overall. Always compare 
+                      While bundling usually saves money, don't assume it's always the cheapest option.
+                      Sometimes separate policies from different insurers cost less overall. Always compare
                       bundled vs. separate quotes.
                     </p>
                   </div>
@@ -143,7 +143,7 @@ export default async function LowerHomePremiumPage() {
               <h2 className="text-2xl font-bold text-slate-900 mt-12 mb-4">2. Increase Your Deductible</h2>
 
               <p className="text-slate-600 mb-6">
-                Your deductible is the amount you pay out-of-pocket before insurance kicks in. Choosing a 
+                Your deductible is the amount you pay out-of-pocket before insurance kicks in. Choosing a
                 higher deductible lowers your premium because you're assuming more risk.
               </p>
 
@@ -190,13 +190,13 @@ export default async function LowerHomePremiumPage() {
                   <div>
                     <h4 className="font-semibold text-slate-900 mb-2">The Math: When Higher Deductibles Make Sense</h4>
                     <p className="text-slate-600 text-sm mb-2">
-                      If raising your deductible from $1,000 to $2,500 saves you $200/year, it will take 
-                      about 7.5 years of claim-free history to break even on one claim. If you have 
-                      sufficient emergency savings and are a low-risk homeowner, the math usually favors 
+                      If raising your deductible from $1,000 to $2,500 saves you $200/year, it will take
+                      about 7.5 years of claim-free history to break even on one claim. If you have
+                      sufficient emergency savings and are a low-risk homeowner, the math usually favors
                       higher deductibles.
                     </p>
                     <p className="text-slate-600 text-sm">
-                      <strong>Remember:</strong> Only choose a deductible you can comfortably afford to pay 
+                      <strong>Remember:</strong> Only choose a deductible you can comfortably afford to pay
                       if disaster strikes.
                     </p>
                   </div>
@@ -206,7 +206,7 @@ export default async function LowerHomePremiumPage() {
               <h2 className="text-2xl font-bold text-slate-900 mt-12 mb-4">3. Install a Security System</h2>
 
               <p className="text-slate-600 mb-6">
-                Insurance companies love security systems because they reduce the likelihood of claims. 
+                Insurance companies love security systems because they reduce the likelihood of claims.
                 The more comprehensive your system, the bigger your discount.
               </p>
 
@@ -286,7 +286,7 @@ export default async function LowerHomePremiumPage() {
                     <h4 className="font-bold text-slate-900">Roof Upgrades</h4>
                   </div>
                   <p className="text-slate-600 text-sm mb-2">
-                    A new roof can reduce premiums by 5-35%. Impact-resistant roofing materials (Class 4 rated) 
+                    A new roof can reduce premiums by 5-35%. Impact-resistant roofing materials (Class 4 rated)
                     may qualify for additional discounts, especially in hail-prone areas.
                   </p>
                   <p className="text-slate-500 text-xs">
@@ -300,7 +300,7 @@ export default async function LowerHomePremiumPage() {
                     <h4 className="font-bold text-slate-900">Electrical System Updates</h4>
                   </div>
                   <p className="text-slate-600 text-sm mb-2">
-                    Replacing knob-and-tube or aluminum wiring with modern copper wiring reduces fire risk 
+                    Replacing knob-and-tube or aluminum wiring with modern copper wiring reduces fire risk
                     significantly. Some insurers won't cover homes with outdated electrical systems.
                   </p>
                   <p className="text-slate-500 text-xs">
@@ -314,7 +314,7 @@ export default async function LowerHomePremiumPage() {
                     <h4 className="font-bold text-slate-900">Plumbing Updates</h4>
                   </div>
                   <p className="text-slate-600 text-sm mb-2">
-                    Replacing galvanized or polybutylene pipes with copper or PEX reduces leak risk. 
+                    Replacing galvanized or polybutylene pipes with copper or PEX reduces leak risk.
                     Installing a water shut-off device can also qualify for discounts.
                   </p>
                   <p className="text-slate-500 text-xs">
@@ -328,7 +328,7 @@ export default async function LowerHomePremiumPage() {
                     <h4 className="font-bold text-slate-900">Storm Resistance Improvements</h4>
                   </div>
                   <p className="text-slate-600 text-sm mb-2">
-                    In hurricane or tornado-prone areas, impact-resistant windows, storm shutters, 
+                    In hurricane or tornado-prone areas, impact-resistant windows, storm shutters,
                     reinforced garage doors, and roof straps can lead to significant savings.
                   </p>
                   <p className="text-slate-500 text-xs">
@@ -340,7 +340,7 @@ export default async function LowerHomePremiumPage() {
               <h2 className="text-2xl font-bold text-slate-900 mt-12 mb-4">5. Shop Around and Compare Quotes</h2>
 
               <p className="text-slate-600 mb-6">
-                Insurance rates can vary dramatically between companies for the exact same coverage. 
+                Insurance rates can vary dramatically between companies for the exact same coverage.
                 Shopping around is one of the most effective ways to lower your premium.
               </p>
 
@@ -392,7 +392,7 @@ export default async function LowerHomePremiumPage() {
               <h2 className="text-2xl font-bold text-slate-900 mt-12 mb-4">6. Ask About Available Discounts</h2>
 
               <p className="text-slate-600 mb-6">
-                Insurance companies offer dozens of discounts, but they don't always advertise them. 
+                Insurance companies offer dozens of discounts, but they don't always advertise them.
                 You have to ask.
               </p>
 
@@ -422,7 +422,7 @@ export default async function LowerHomePremiumPage() {
               <h2 className="text-2xl font-bold text-slate-900 mt-12 mb-4">7. Maintain Good Credit</h2>
 
               <p className="text-slate-600 mb-6">
-                In most states, insurers use credit-based insurance scores to help determine premiums. 
+                In most states, insurers use credit-based insurance scores to help determine premiums.
                 Better credit typically means lower rates.
               </p>
 
@@ -459,7 +459,7 @@ export default async function LowerHomePremiumPage() {
                   </div>
                 </div>
                 <p className="text-slate-600 text-sm mt-4">
-                  <strong>Note:</strong> California, Maryland, and Massachusetts prohibit the use of credit 
+                  <strong>Note:</strong> California, Maryland, and Massachusetts prohibit the use of credit
                   scores in home insurance pricing.
                 </p>
               </div>
@@ -467,7 +467,7 @@ export default async function LowerHomePremiumPage() {
               <h2 className="text-2xl font-bold text-slate-900 mt-12 mb-4">8. Review Your Coverage Annually</h2>
 
               <p className="text-slate-600 mb-6">
-                Your insurance needs change over time. Annual reviews ensure you're not over-insured 
+                Your insurance needs change over time. Annual reviews ensure you're not over-insured
                 or paying for coverage you no longer need.
               </p>
 
@@ -495,7 +495,7 @@ export default async function LowerHomePremiumPage() {
               <h2 className="text-2xl font-bold text-slate-900 mt-12 mb-4">9. Avoid Small Claims</h2>
 
               <p className="text-slate-600 mb-6">
-                Filing multiple small claims can lead to premium increases or even non-renewal. 
+                Filing multiple small claims can lead to premium increases or even non-renewal.
                 Sometimes paying out-of-pocket for minor issues is the smarter financial move.
               </p>
 
@@ -505,8 +505,8 @@ export default async function LowerHomePremiumPage() {
                   <div>
                     <h4 className="font-semibold text-slate-900 mb-2">The Claims Penalty</h4>
                     <p className="text-slate-600 text-sm">
-                      A single claim can increase premiums by 9-20% for 3-5 years. Multiple claims in 
-                      a short period can result in non-renewal. For damage that's only slightly above 
+                      A single claim can increase premiums by 9-20% for 3-5 years. Multiple claims in
+                      a short period can result in non-renewal. For damage that's only slightly above
                       your deductible, consider whether the payout is worth the long-term cost increase.
                     </p>
                   </div>
@@ -516,7 +516,7 @@ export default async function LowerHomePremiumPage() {
               <h2 className="text-2xl font-bold text-slate-900 mt-12 mb-4">10. Consider Usage-Based or Telematics Programs</h2>
 
               <p className="text-slate-600 mb-6">
-                Some insurers now offer programs that monitor your home's condition or your habits 
+                Some insurers now offer programs that monitor your home's condition or your habits
                 to potentially offer discounts for low-risk behavior.
               </p>
 
@@ -551,7 +551,7 @@ export default async function LowerHomePremiumPage() {
                 <div className="text-center">
                   <div className="text-4xl font-bold text-emerald-700 mb-2">$500 - $1,500+</div>
                   <p className="text-emerald-800">
-                    By combining multiple strategies, the average homeowner can save significantly 
+                    By combining multiple strategies, the average homeowner can save significantly
                     on their annual premium while maintaining excellent coverage.
                   </p>
                 </div>
@@ -564,7 +564,7 @@ export default async function LowerHomePremiumPage() {
               <p className="text-emerald-100 mb-6">
                 Compare quotes from multiple insurers and find the best rate for your coverage needs.
               </p>
-              <Link 
+              <Link
                 href="/get-quote?type=home"
                 className="inline-flex items-center gap-2 bg-white text-emerald-700 px-8 py-3 rounded-xl font-bold hover:bg-emerald-50 transition"
               >
@@ -577,28 +577,28 @@ export default async function LowerHomePremiumPage() {
             <div className="mt-12 pt-8 border-t border-slate-200">
               <h3 className="font-bold text-slate-900 mb-4">Related Guides</h3>
               <div className="grid sm:grid-cols-2 gap-4">
-                <Link 
+                <Link
                   href="/guides/how-much-home-insurance"
                   className="flex items-center gap-3 p-4 bg-slate-50 rounded-lg hover:bg-emerald-50 transition"
                 >
                   <Home className="w-5 h-5 text-emerald-600" />
                   <span className="font-medium text-slate-700">How Much Home Insurance Do You Need?</span>
                 </Link>
-                <Link 
+                <Link
                   href="/guides/renters-insurance-worth"
                   className="flex items-center gap-3 p-4 bg-slate-50 rounded-lg hover:bg-emerald-50 transition"
                 >
                   <Shield className="w-5 h-5 text-blue-600" />
                   <span className="font-medium text-slate-700">Is Renters Insurance Worth It?</span>
                 </Link>
-                <Link 
+                <Link
                   href="/guides/flood-insurance-guide"
                   className="flex items-center gap-3 p-4 bg-slate-50 rounded-lg hover:bg-emerald-50 transition"
                 >
                   <AlertTriangle className="w-5 h-5 text-cyan-600" />
                   <span className="font-medium text-slate-700">Flood Insurance Guide</span>
                 </Link>
-                <Link 
+                <Link
                   href="/guides/home-insurance-claims"
                   className="flex items-center gap-3 p-4 bg-slate-50 rounded-lg hover:bg-emerald-50 transition"
                 >
