@@ -1,0 +1,42 @@
+{
+  "_description": "Business Insurance Sample Data - Use this template for creating business/commercial insurance pages",
+  "_template": "business",
+  "_url_format": "/business-insurance/{state} or "/business-insurance/{state}/{city}",
+  "data": [
+    {
+      "state_name": "California",
+      "state_code": "CA",
+      "state_slug": "california",
+      "avg_premium": "$1,800/year",
+      "top_insurer": "Hiscox",
+      "last_updated": "2024-01-15",
+      "business_types": ["LLC", "Corporation", "Sole Proprietorship", "Partnership"],
+      "required_coverage": ["General Liability", "Workers Compensation"],
+      "avg_claim": "$15,000",
+      "intro_content": "California businesses face unique risks from earthquakes and high litigation rates. Average business insurance costs are $1,800/year.",
+      "requirements_content": "California requires workers' compensation for businesses with employees. General liability is recommended for all businesses.",
+      "cost_factors": [
+        { "factor": "Industry", "impact": "very high", "description": "Construction pays more than consulting" },
+        { "factor": "Revenue", "impact": "high", "description": "Higher revenue means higher exposure" },
+        { "factor": "Number of Employees", "impact": "high", "description": "More employees increases workers comp costs" },
+        { "factor": "Location", "impact": "medium", "description": "Earthquake zones increase property rates" }
+      ],
+      "coverage_types": [
+        { "name": "General Liability", "avg_cost": "$500-1,500/year", "description": "Covers third-party injury and property damage" },
+        { "name": "Professional Liability", "avg_cost": "$800-2,500/year", "description": "Errors and omissions coverage" },
+        { "name": "Workers Compensation", "avg_cost": "$1-3 per $100 payroll", "description": "Required if you have employees" },
+        { "name": "Commercial Property", "avg_cost": "$750-2,000/year", "description": "Covers business assets and inventory" }
+      ],
+      "faqs": [
+        {
+          "question": "Is business insurance required in California?",
+          "answer": "Workers' compensation is required with employees. Other coverage types are recommended but not mandated."
+        },
+        {
+          "question": "What does general liability cover?",
+          "answer": "Covers third-party bodily injury, property damage, and advertising injury claims."
+        }
+      ]
+    }
+  ]
+}

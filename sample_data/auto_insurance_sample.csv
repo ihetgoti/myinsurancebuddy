@@ -1,0 +1,6 @@
+state_name,state_code,state_slug,city_name,city_slug,avg_premium,min_coverage,uninsured_rate,top_insurer,last_updated,is_no_fault_state,pip_required
+California,CA,california,,,$1500/year,15/30/5,12%,State Farm,2024-01-15,false,false
+Texas,TX,texas,Houston,houston,$1400/year,30/60/25,8%,GEICO,2024-01-15,false,false
+Florida,FL,florida,Miami,miami,$1800/year,10/20/10,20%,Progressive,2024-01-15,false,false
+New York,NY,new-york,New York City,new-york-city,$1600/year,25/50/10,5%,Allstate,2024-01-15,true,true
+Illinois,IL,illinois,Chicago,chicago,$1200/year,25/50/20,11%,State Farm,2024-01-15,false,false

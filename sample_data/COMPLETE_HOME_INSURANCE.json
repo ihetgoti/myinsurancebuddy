@@ -1,0 +1,148 @@
+{
+  "_template": "home",
+  "_description": "COMPLETE Home Insurance Sample with ALL fields",
+  "data": [
+    {
+      "slug": "home-insurance/california",
+      "state_name": "California",
+      "state_code": "CA",
+      "state_slug": "california",
+      "city_name": "",
+      "city_slug": "",
+      
+      "title": "Home Insurance in California (2024 Guide)",
+      "subtitle": "Protect your California home with the right coverage",
+      "excerpt": "California homeowners face unique risks including wildfires and earthquakes. Average premiums are $1,200/year.",
+      
+      "metaTitle": "Home Insurance California | Compare Homeowners Rates (2024)",
+      "metaDescription": "Find the best home insurance in California. Protect against wildfires, earthquakes & more. Average $1,200/year. Compare quotes and save today.",
+      "metaKeywords": ["home insurance california", "homeowners insurance ca", "california home insurance rates", "wildfire insurance california", "earthquake insurance california"],
+      
+      "ogTitle": "Home Insurance California - Protect Your Home",
+      "ogDescription": "Find affordable home insurance in California. Coverage for wildfires, earthquakes & more.",
+      "ogImage": "https://myinsurancebuddies.com/images/california-home-insurance.jpg",
+      
+      "twitterTitle": "Home Insurance California | Compare Rates",
+      "twitterDesc": "Protect your CA home. Average $1,200/year. Wildfire & earthquake coverage available.",
+      
+      "robots": "index,follow",
+      "canonicalTag": "https://myinsurancebuddies.com/home-insurance/california",
+      
+      "avg_premium": "$1,200/year",
+      "avg_home_value": "$750,000",
+      "avg_rebuild_cost": "$350,000",
+      "median_home_age": "45 years",
+      "top_insurer": "State Farm",
+      "top_insurer_market_share": "18.5%",
+      
+      "last_updated": "2024-01-15",
+      "disaster_risk": "High",
+      "primary_disaster_risk": "wildfire",
+      "flood_zone": false,
+      "hurricane_risk": false,
+      "earthquake_risk": true,
+      "wildfire_risk_level": "High",
+      "tornado_risk": false,
+      "mudslide_risk": true,
+      "tsunami_risk": "Coastal areas only",
+      
+      "avg_claim": "$15,000",
+      "total_premiums_written": "$12.5B",
+      
+      "coverage_types": [
+        { "type": "HO-1 (Basic)", "avg_cost": "$800/year", "description": "Named perils only - very limited" },
+        { "type": "HO-2 (Broad)", "avg_cost": "$950/year", "description": "More named perils covered" },
+        { "type": "HO-3 (Special)", "avg_cost": "$1,200/year", "description": "Most common - all risks except exclusions" },
+        { "type": "HO-5 (Comprehensive)", "avg_cost": "$1,500/year", "description": "Open peril for dwelling and contents" },
+        { "type": "HO-6 (Condo)", "avg_cost": "$450/year", "description": "For condominium owners" }
+      ],
+      
+      "intro_content": "Protecting your home in California requires understanding local risks and coverage options. With average premiums around $1,200/year and high natural disaster risk including wildfires and earthquakes, finding the right homeowners insurance is essential. Our comprehensive guide helps you understand what's covered, what's not, and how to find the best price for your protection needs.",
+      
+      "requirements_content": "While California doesn't legally require homeowners insurance, your mortgage lender almost certainly does. Even if you own your home outright, insurance protects your largest investment from unexpected disasters, liability claims, and theft. A standard HO-3 policy is the most common, covering your dwelling, personal property, liability, and additional living expenses.",
+      
+      "cost_factors": [
+        { "factor": "Wildfire Risk Zone", "impact": "very high", "description": "High fire zones see 50-100% higher rates" },
+        { "factor": "Home Value", "impact": "high", "description": "Higher rebuild costs mean higher premiums" },
+        { "factor": "Age of Home", "impact": "medium", "description": "Older homes may cost more to insure" },
+        { "factor": "Construction Type", "impact": "medium", "description": "Wood frame vs. masonry affects rates" },
+        { "factor": "Proximity to Fire Station", "impact": "medium", "description": "Closer is better for rates" },
+        { "factor": "Credit Score", "impact": "medium", "description": "Better credit means lower rates" }
+      ],
+      
+      "discounts": [
+        { "name": "Bundle Discount", "savings": "10-25%", "description": "Combine home and auto insurance" },
+        { "name": "Security System", "savings": "5-20%", "description": "Monitored alarm systems and cameras" },
+        { "name": "New Home", "savings": "10-15%", "description": "Homes built within last 10 years" },
+        { "name": "Claims-Free", "savings": "5-10%", "description": "No claims for 3-5 years" },
+        { "name": "Impact-Resistant Roof", "savings": "5-15%", "description": "Fire-resistant roofing materials" },
+        { "name": "Defensible Space", "savings": "5-10%", "description": "Wildfire mitigation measures" }
+      ],
+      
+      "faqs": [
+        {
+          "question": "Is earthquake coverage included in standard home insurance?",
+          "answer": "No, earthquake coverage requires a separate policy or endorsement in California. The California Earthquake Authority (CEA) offers policies, or you can get coverage from private insurers."
+        },
+        {
+          "question": "What does standard home insurance cover in California?",
+          "answer": "Standard HO-3 policies cover dwelling, personal property, liability, additional living expenses, and other structures. Exclusions include floods, earthquakes, and normal wear and tear."
+        },
+        {
+          "question": "How much home insurance do I need?",
+          "answer": "You need enough coverage to rebuild your home at current construction costs, not just the purchase price. Include coverage for your personal property (typically 50-70% of dwelling coverage) and liability protection."
+        },
+        {
+          "question": "Does home insurance cover wildfires in California?",
+          "answer": "Yes, standard policies cover wildfire damage. However, in high-risk areas, you may face higher premiums, higher deductibles, or difficulty finding coverage. The California FAIR Plan offers coverage of last resort."
+        }
+      ],
+      
+      "additional_coverages": [
+        { "name": "Earthquake Insurance", "avg_cost": "$800-2,000/year", "description": "Covers earthquake damage - not included in standard policies" },
+        { "name": "Flood Insurance", "avg_cost": "$500-1,500/year", "description": "Through NFIP or private insurers" },
+        { "name": "Sewer Backup", "avg_cost": "$50-150/year", "description": "Covers sewer and drain backups" },
+        { "name": "Service Line", "avg_cost": "$30-50/year", "description": "Covers underground utility lines" },
+        { "name": "Identity Theft", "avg_cost": "$25-50/year", "description": "Recovery services for identity theft" }
+      ],
+      
+      "insurance_companies": [
+        { "name": "State Farm", "market_share": "18.5%", "avg_rate": "$1,150/year", "rating": "4.4/5" },
+        { "name": "Farmers", "market_share": "12.2%", "avg_rate": "$1,280/year", "rating": "4.2/5" },
+        { "name": "Allstate", "market_share": "8.8%", "avg_rate": "$1,350/year", "rating": "4.1/5" },
+        { "name": "Liberty Mutual", "market_share": "7.5%", "avg_rate": "$1,180/year", "rating": "4.0/5" },
+        { "name": "USAA", "market_share": "5.2%", "avg_rate": "$980/year", "rating": "4.7/5" }
+      ],
+      
+      "status": "PUBLISHED",
+      "isPublished": true,
+      "showAds": true
+    },
+    {
+      "slug": "home-insurance/florida",
+      "state_name": "Florida",
+      "state_code": "FL",
+      "state_slug": "florida",
+      "city_name": "Miami",
+      "city_slug": "miami",
+      
+      "title": "Home Insurance in Miami, FL (2024)",
+      "subtitle": "Hurricane and flood protection for Florida homes",
+      
+      "metaTitle": "Home Insurance Miami FL | Hurricane Coverage (2024)",
+      "metaDescription": "Find home insurance in Miami, Florida. Hurricane and flood coverage essential. Average $2,400/year. Compare quotes today.",
+      
+      "avg_premium": "$2,400/year",
+      "avg_home_value": "$450,000",
+      "disaster_risk": "Very High",
+      "primary_disaster_risk": "hurricane",
+      "flood_zone": true,
+      "hurricane_risk": true,
+      
+      "intro_content": "Florida has some of the highest home insurance rates due to hurricane risk. Miami homeowners need windstorm and flood coverage.",
+      
+      "status": "PUBLISHED",
+      "isPublished": true
+    }
+  ]
+}

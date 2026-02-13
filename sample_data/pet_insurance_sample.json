@@ -1,0 +1,46 @@
+{
+  "_description": "Pet Insurance Sample Data - Use this template for creating pet insurance pages",
+  "_template": "pet",
+  "_url_format": "/pet-insurance/{state} or /pet-insurance/{state}/{city}",
+  "data": [
+    {
+      "state_name": "California",
+      "state_code": "CA",
+      "state_slug": "california",
+      "avg_premium": "$45/month",
+      "top_insurer": "Trupanion",
+      "last_updated": "2024-01-15",
+      "popular_breeds": ["Labrador Retriever", "French Bulldog", "Golden Retriever"],
+      "coverage_types": ["Accident", "Illness", "Wellness"],
+      "avg_vet_cost": "$250-500/visit",
+      "intro_content": "Pet insurance helps manage unexpected veterinary costs. California pet owners pay an average of $45/month for comprehensive coverage.",
+      "requirements_content": "Pet insurance has no state mandates, but waiting periods apply for coverage. Most plans don't cover pre-existing conditions.",
+      "cost_factors": [
+        { "factor": "Pet Age", "impact": "high", "description": "Older pets cost more to insure" },
+        { "factor": "Breed", "impact": "high", "description": "Some breeds have higher health risks" },
+        { "factor": "Location", "impact": "medium", "description": "Urban areas have higher vet costs" }
+      ],
+      "coverage_comparison": [
+        { "type": "Accident Only", "avg_cost": "$15-25/month", "coverage": "Injuries from accidents" },
+        { "type": "Accident + Illness", "avg_cost": "$35-50/month", "coverage": "Accidents and illnesses" },
+        { "type": "Comprehensive", "avg_cost": "$50-70/month", "coverage": "Includes wellness care" }
+      ],
+      "common_claims": [
+        { "condition": "Ear Infection", "avg_cost": "$150-300" },
+        { "condition": "Skin Allergies", "avg_cost": "$500-1,000" },
+        { "condition": "Cruciate Ligament", "avg_cost": "$3,000-5,000" },
+        { "condition": "Foreign Object Ingestion", "avg_cost": "$1,000-3,000" }
+      ],
+      "faqs": [
+        {
+          "question": "What does pet insurance cover?",
+          "answer": "Most plans cover accidents, illnesses, and some offer wellness coverage for routine care."
+        },
+        {
+          "question": "Are pre-existing conditions covered?",
+          "answer": "No, pre-existing conditions are typically excluded. Enroll your pet when they're young and healthy."
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,5 @@
+state_name,state_code,state_slug,city_name,city_slug,avg_premium,avg_coverage,top_insurer,last_updated,avg_term_length
+California,CA,california,,,$30/month,$250000,Northwestern Mutual,2024-01-15,20 years
+New York,NY,new-york,New York City,new-york-city,$35/month,$300000,New York Life,2024-01-15,20 years
+Texas,TX,texas,Dallas,dallas,$28/month,$225000,State Farm,2024-01-15,20 years
+Florida,FL,florida,Miami,miami,$32/month,$250000,Prudential,2024-01-15,20 years

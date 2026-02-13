@@ -1,0 +1,5 @@
+state_name,state_code,state_slug,avg_premium,coverage_limits,top_insurer,last_updated,avg_net_worth
+California,CA,california,$400/year,$1M - $5M,RLI,2024-01-15,$750000+
+New York,NY,new-york,$450/year,$1M - $5M,Chubb,2024-01-15,$850000+
+Texas,TX,texas,$350/year,$1M - $5M,Travelers,2024-01-15,$650000+
+Florida,FL,florida,$425/year,$1M - $5M,AIG,2024-01-15,$700000+

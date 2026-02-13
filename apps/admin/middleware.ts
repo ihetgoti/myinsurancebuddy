@@ -12,6 +12,9 @@ export default withAuth(
                 // Allow seeding endpoint without auth
                 if (req.nextUrl.pathname === '/api/templates/seed') return true;
 
+                // Allow free models endpoint (used by auto-generate page)
+                if (req.nextUrl.pathname === '/api/free-models') return true;
+
                 // Allow external API endpoints (use API key auth instead)
                 if (req.nextUrl.pathname.startsWith('/api/external/')) return true;
 

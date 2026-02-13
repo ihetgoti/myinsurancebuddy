@@ -16,7 +16,8 @@ export async function GET(req: NextRequest) {
         modelId: true,
         name: true,
         provider: true,
-        description: true
+        description: true,
+        priority: true
       }
     });
 

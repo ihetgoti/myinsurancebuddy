@@ -1,0 +1,195 @@
+{
+  "_description": "Unified Sample - Shows minimum required fields for all insurance types",
+  "_note": "Copy this structure and add your data. Only 'state_name' is required - other fields have defaults.",
+  
+  "auto_insurance": {
+    "template": "auto",
+    "required_fields": ["state_name"],
+    "optional_fields": ["state_code", "state_slug", "city_name", "city_slug", "avg_premium", "min_coverage", "uninsured_rate", "top_insurer"],
+    "sample": [
+      {
+        "state_name": "California",
+        "state_code": "CA",
+        "state_slug": "california",
+        "avg_premium": "$1,500/year",
+        "min_coverage": "15/30/5",
+        "uninsured_rate": "12%",
+        "top_insurer": "State Farm"
+      },
+      {
+        "state_name": "Texas",
+        "state_code": "TX",
+        "state_slug": "texas",
+        "city_name": "Houston",
+        "city_slug": "houston",
+        "avg_premium": "$1,400/year",
+        "min_coverage": "30/60/25",
+        "uninsured_rate": "8%",
+        "top_insurer": "GEICO"
+      }
+    ]
+  },
+
+  "home_insurance": {
+    "template": "home",
+    "required_fields": ["state_name"],
+    "optional_fields": ["state_code", "state_slug", "city_name", "city_slug", "avg_premium", "avg_home_value", "top_insurer", "disaster_risk"],
+    "sample": [
+      {
+        "state_name": "California",
+        "state_code": "CA",
+        "state_slug": "california",
+        "avg_premium": "$1,200/year",
+        "avg_home_value": "$750,000",
+        "top_insurer": "State Farm",
+        "disaster_risk": "High"
+      },
+      {
+        "state_name": "Florida",
+        "state_code": "FL",
+        "state_slug": "florida",
+        "city_name": "Miami",
+        "city_slug": "miami",
+        "avg_premium": "$2,400/year",
+        "avg_home_value": "$450,000",
+        "top_insurer": "Citizens Insurance",
+        "disaster_risk": "Very High"
+      }
+    ]
+  },
+
+  "health_insurance": {
+    "template": "health",
+    "required_fields": ["state_name"],
+    "optional_fields": ["state_code", "state_slug", "avg_premium", "uninsured_rate", "top_insurer", "medicare_enrollment"],
+    "sample": [
+      {
+        "state_name": "California",
+        "state_code": "CA",
+        "state_slug": "california",
+        "avg_premium": "$450/month",
+        "uninsured_rate": "7%",
+        "top_insurer": "Kaiser Permanente",
+        "medicare_enrollment": "2.5M"
+      },
+      {
+        "state_name": "Texas",
+        "state_code": "TX",
+        "state_slug": "texas",
+        "avg_premium": "$420/month",
+        "uninsured_rate": "18%",
+        "top_insurer": "Blue Cross Blue Shield",
+        "medicare_enrollment": "1.8M"
+      }
+    ]
+  },
+
+  "life_insurance": {
+    "template": "life",
+    "required_fields": ["state_name"],
+    "optional_fields": ["state_code", "state_slug", "city_name", "city_slug", "avg_premium", "avg_coverage", "top_insurer"],
+    "sample": [
+      {
+        "state_name": "California",
+        "state_code": "CA",
+        "state_slug": "california",
+        "avg_premium": "$30/month",
+        "avg_coverage": "$250,000",
+        "top_insurer": "Northwestern Mutual"
+      },
+      {
+        "state_name": "New York",
+        "state_code": "NY",
+        "state_slug": "new-york",
+        "city_name": "New York City",
+        "city_slug": "new-york-city",
+        "avg_premium": "$35/month",
+        "avg_coverage": "$300,000",
+        "top_insurer": "New York Life"
+      }
+    ]
+  },
+
+  "motorcycle_insurance": {
+    "template": "motorcycle",
+    "required_fields": ["state_name"],
+    "optional_fields": ["state_code", "state_slug", "avg_premium", "min_coverage", "helmet_law", "top_insurer"],
+    "sample": [
+      {
+        "state_name": "California",
+        "state_code": "CA",
+        "state_slug": "california",
+        "avg_premium": "$800/year",
+        "min_coverage": "15/30/5",
+        "helmet_law": "Required",
+        "top_insurer": "Progressive"
+      }
+    ]
+  },
+
+  "pet_insurance": {
+    "template": "pet",
+    "required_fields": ["state_name"],
+    "optional_fields": ["state_code", "state_slug", "avg_premium", "top_insurer", "avg_vet_cost"],
+    "sample": [
+      {
+        "state_name": "California",
+        "state_code": "CA",
+        "state_slug": "california",
+        "avg_premium": "$45/month",
+        "top_insurer": "Trupanion",
+        "avg_vet_cost": "$250-500/visit"
+      }
+    ]
+  },
+
+  "business_insurance": {
+    "template": "business",
+    "required_fields": ["state_name"],
+    "optional_fields": ["state_code", "state_slug", "avg_premium", "top_insurer", "avg_claim"],
+    "sample": [
+      {
+        "state_name": "California",
+        "state_code": "CA",
+        "state_slug": "california",
+        "avg_premium": "$1,800/year",
+        "top_insurer": "Hiscox",
+        "avg_claim": "$15,000"
+      }
+    ]
+  },
+
+  "renters_insurance": {
+    "template": "renters",
+    "required_fields": ["state_name"],
+    "optional_fields": ["state_code", "state_slug", "city_name", "city_slug", "avg_premium", "avg_rent", "top_insurer"],
+    "sample": [
+      {
+        "state_name": "California",
+        "state_code": "CA",
+        "state_slug": "california",
+        "city_name": "Los Angeles",
+        "city_slug": "los-angeles",
+        "avg_premium": "$180/year",
+        "avg_rent": "$2,500/month",
+        "top_insurer": "Lemonade"
+      }
+    ]
+  },
+
+  "umbrella_insurance": {
+    "template": "umbrella",
+    "required_fields": ["state_name"],
+    "optional_fields": ["state_code", "state_slug", "avg_premium", "coverage_limits", "top_insurer"],
+    "sample": [
+      {
+        "state_name": "California",
+        "state_code": "CA",
+        "state_slug": "california",
+        "avg_premium": "$400/year",
+        "coverage_limits": "$1M - $5M",
+        "top_insurer": "RLI"
+      }
+    ]
+  }
+}

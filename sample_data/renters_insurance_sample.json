@@ -1,0 +1,51 @@
+{
+  "_description": "Renters Insurance Sample Data - Use this template for creating renters insurance pages",
+  "_template": "renters",
+  "_url_format": "/renters-insurance/{state} or "/renters-insurance/{state}/{city}",
+  "data": [
+    {
+      "state_name": "California",
+      "state_code": "CA",
+      "state_slug": "california",
+      "avg_premium": "$180/year",
+      "avg_rent": "$2,500/month",
+      "top_insurer": "Lemonade",
+      "last_updated": "2024-01-15",
+      "avg_property_value": "$35,000",
+      "intro_content": "Renters insurance protects your belongings and provides liability coverage. California renters pay an average of just $180/year.",
+      "requirements_content": "Not legally required, but most landlords require proof of renters insurance before leasing.",
+      "cost_factors": [
+        { "factor": "Coverage Amount", "impact": "high", "description": "More coverage means higher premiums" },
+        { "factor": "Deductible", "impact": "medium", "description": "Higher deductible lowers premium" },
+        { "factor": "Location", "impact": "medium", "description": "Crime rates affect premiums" },
+        { "factor": "Credit Score", "impact": "medium", "description": "Better credit means lower rates" }
+      ],
+      "coverage_types": [
+        { "name": "Personal Property", "typical_coverage": "$30,000", "description": "Covers your belongings from theft and damage" },
+        { "name": "Liability", "typical_coverage": "$100,000", "description": "Protects if someone is injured in your rental" },
+        { "name": "Loss of Use", "typical_coverage": "$9,000", "description": "Covers temporary housing after covered loss" },
+        { "name": "Medical Payments", "typical_coverage": "$1,000", "description": "Covers minor injuries to guests" }
+      ],
+      "common_claims": [
+        { "incident": "Theft", "frequency": "Most common" },
+        { "incident": "Water Damage", "frequency": "Very common" },
+        { "incident": "Fire", "frequency": "Less common but costly" }
+      ],
+      "discounts": [
+        { "name": "Bundle with Auto", "savings": "10-20%", "description": "Combine renters with car insurance" },
+        { "name": "Security System", "savings": "5-15%", "description": "Alarm system or secure building" },
+        { "name": "Claims-Free", "savings": "5-10%", "description": "No claims for 3-5 years" }
+      ],
+      "faqs": [
+        {
+          "question": "Is renters insurance required?",
+          "answer": "Not by law, but most landlords require it as a lease condition."
+        },
+        {
+          "question": "What does renters insurance cover?",
+          "answer": "Personal property, liability, additional living expenses, and medical payments to others."
+        }
+      ]
+    }
+  ]
+}

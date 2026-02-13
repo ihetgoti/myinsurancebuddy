@@ -1,0 +1,5 @@
+state_name,state_code,state_slug,avg_premium,min_coverage,helmet_law,top_insurer,last_updated
+California,CA,california,$800/year,15/30/5,Required,Progressive,2024-01-15
+Florida,FL,florida,$650/year,10/20/10,Required,GEICO,2024-01-15
+Texas,TX,texas,$550/year,30/60/25,Required,Progressive,2024-01-15
+New York,NY,new-york,$900/year,25/50/10,Required,Allstate,2024-01-15

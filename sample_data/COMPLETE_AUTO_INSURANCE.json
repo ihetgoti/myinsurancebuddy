@@ -1,0 +1,228 @@
+{
+  "_template": "auto",
+  "_description": "COMPLETE Auto Insurance Sample with ALL fields",
+  "_note": "This includes every possible field for auto insurance pages",
+  "data": [
+    {
+      "slug": "auto-insurance/california",
+      "state_name": "California",
+      "state_code": "CA",
+      "state_slug": "california",
+      "city_name": "",
+      "city_slug": "",
+      
+      "title": "Auto Insurance in California (2024 Guide)",
+      "subtitle": "Find the best car insurance rates in CA",
+      "excerpt": "California drivers pay an average of $1,500/year for auto insurance. Compare rates from top insurers and save.",
+      
+      "metaTitle": "Auto Insurance California | Compare Rates & Save (2024)",
+      "metaDescription": "Find affordable auto insurance in California. Compare quotes from top-rated insurers. Average rates $1,500/year. Get your free quote today.",
+      "metaKeywords": ["auto insurance california", "car insurance ca", "cheap auto insurance", "california car insurance rates", "best auto insurance california"],
+      
+      "ogTitle": "Auto Insurance in California - Compare & Save",
+      "ogDescription": "Find the best auto insurance rates in California. Compare quotes from top insurers.",
+      "ogImage": "https://myinsurancebuddies.com/images/california-auto-insurance.jpg",
+      "ogType": "website",
+      
+      "twitterCard": "summary_large_image",
+      "twitterTitle": "Auto Insurance California | Compare Rates",
+      "twitterDesc": "Find affordable auto insurance in CA. Average $1,500/year.",
+      "twitterImage": "https://myinsurancebuddies.com/images/california-auto-insurance.jpg",
+      
+      "robots": "index,follow",
+      "canonicalTag": "https://myinsurancebuddies.com/auto-insurance/california",
+      
+      "schemaMarkup": {
+        "@context": "https://schema.org",
+        "@type": "InsuranceAgency",
+        "name": "California Auto Insurance",
+        "description": "Auto insurance quotes for California drivers",
+        "areaServed": {
+          "@type": "State",
+          "name": "California"
+        }
+      },
+      
+      "avg_premium": "$1,500/year",
+      "min_coverage": "15/30/5",
+      "coverage_breakdown": {
+        "bodily_per_person": "15,000",
+        "bodily_per_accident": "30,000",
+        "property": "5,000"
+      },
+      "uninsured_rate": "12%",
+      "top_insurer": "State Farm",
+      "top_insurer_market_share": "14.2%",
+      "second_insurer": "GEICO",
+      "third_insurer": "Progressive",
+      
+      "last_updated": "2024-01-15",
+      "is_no_fault_state": false,
+      "pip_required": false,
+      "dmv_registration_required": true,
+      "state_laws_summary": "California follows a tort system requiring minimum liability coverage of 15/30/5",
+      
+      "intro_content": "Finding affordable auto insurance in California requires understanding local requirements and comparing rates from multiple providers. California mandates minimum liability coverage of 15/30/5, but most experts recommend higher limits to fully protect your assets. Our comprehensive guide helps you navigate the insurance landscape and find the best coverage for your needs.",
+      
+      "requirements_content": "California requires all drivers to carry minimum liability insurance of 15/30/5. This means $15,000 per person for bodily injury, $30,000 per accident for total bodily injury, and $5,000 for property damage. This coverage protects you financially if you cause an accident that injures others or damages their property.",
+      
+      "tips_content": [
+        "Compare quotes from at least 3-5 different insurers to find the best rate",
+        "Bundle your auto and home insurance for potential discounts of 10-25%",
+        "Maintain a clean driving record - accidents can raise rates by 20-40%",
+        "Ask about discounts for safe driving apps, low mileage, and safety features",
+        "Consider raising your deductible to lower your monthly premium",
+        "Review your coverage annually as your needs may change"
+      ],
+      
+      "faqs": [
+        {
+          "question": "What is the minimum auto insurance required in California?",
+          "answer": "California requires minimum liability coverage of 15/30/5, which means $15,000 per person for bodily injury, $30,000 per accident total, and $5,000 for property damage."
+        },
+        {
+          "question": "How much does car insurance cost in California?",
+          "answer": "The average car insurance premium in California is $1,500/year. However, your actual rate depends on factors like your age, driving record, vehicle type, and coverage level."
+        },
+        {
+          "question": "What factors affect auto insurance rates in California?",
+          "answer": "Key factors include your driving history, age, credit score (in most states), vehicle make and model, annual mileage, coverage limits, and deductible choices. California-specific factors like traffic density also play a role."
+        },
+        {
+          "question": "Is full coverage required?",
+          "answer": "No, California only requires liability insurance. However, if you have a car loan or lease, your lender will typically require comprehensive and collision coverage."
+        },
+        {
+          "question": "How can I lower my car insurance premium?",
+          "answer": "You can lower your premium by maintaining a clean driving record, bundling policies, increasing your deductible, asking about available discounts, and comparing quotes from multiple insurers."
+        }
+      ],
+      
+      "cost_factors": [
+        { "factor": "Driving Record", "impact": "high", "description": "Accidents and violations can increase rates 20-40%" },
+        { "factor": "Age & Experience", "impact": "high", "description": "Younger drivers pay significantly more" },
+        { "factor": "Vehicle Type", "impact": "medium", "description": "Sports cars and luxury vehicles cost more to insure" },
+        { "factor": "Credit Score", "impact": "medium", "description": "Better credit often means lower premiums" },
+        { "factor": "Annual Mileage", "impact": "medium", "description": "More driving = higher risk = higher rates" },
+        { "factor": "Coverage Level", "impact": "high", "description": "Higher limits and lower deductibles cost more" }
+      ],
+      
+      "discounts": [
+        { "name": "Multi-Policy Bundle", "savings": "10-25%", "description": "Combine your auto with home or renters insurance for discounts" },
+        { "name": "Safe Driver", "savings": "10-20%", "description": "Clean driving record for 3-5 years" },
+        { "name": "Good Student", "savings": "8-15%", "description": "Students with B average or better" },
+        { "name": "Low Mileage", "savings": "5-15%", "description": "Drive less than 7,500 miles per year" },
+        { "name": "Safety Features", "savings": "5-10%", "description": "Anti-theft devices, airbags, anti-lock brakes" },
+        { "name": "Pay in Full", "savings": "5-10%", "description": "Pay your annual premium upfront" }
+      ],
+      
+      "insurance_companies": [
+        { "name": "State Farm", "market_share": "14.2%", "avg_rate": "$1,450/year", "rating": "4.5/5" },
+        { "name": "GEICO", "market_share": "11.8%", "avg_rate": "$1,280/year", "rating": "4.3/5" },
+        { "name": "Progressive", "market_share": "10.5%", "avg_rate": "$1,350/year", "rating": "4.4/5" },
+        { "name": "Allstate", "market_share": "8.2%", "avg_rate": "$1,620/year", "rating": "4.2/5" },
+        { "name": "USAA", "market_share": "6.1%", "avg_rate": "$980/year", "rating": "4.8/5" }
+      ],
+      
+      "by_city": [
+        { "city": "Los Angeles", "avg_rate": "$1,850/year", "comparison": "+23% vs state avg" },
+        { "city": "San Francisco", "avg_rate": "$1,720/year", "comparison": "+15% vs state avg" },
+        { "city": "San Diego", "avg_rate": "$1,420/year", "comparison": "-5% vs state avg" },
+        { "city": "Sacramento", "avg_rate": "$1,480/year", "comparison": "-1% vs state avg" }
+      ],
+      
+      "statistics": {
+        "total_drivers": "26.5M",
+        "uninsured_drivers": "12%",
+        "avg_accident_rate": "8.2 per 100M miles",
+        "fatal_crashes_per_year": "3,600",
+        "dmv_offices": "172"
+      },
+      
+      "status": "PUBLISHED",
+      "isPublished": true,
+      "isHidden": false,
+      "showAds": true,
+      "bodyClasses": "auto-insurance-state-page california",
+      
+      "preloadImages": [
+        "https://myinsurancebuddies.com/images/california-hero.jpg",
+        "https://myinsurancebuddies.com/images/auto-coverage.jpg"
+      ],
+      
+      "prefetchPages": [
+        "/auto-insurance/california/los-angeles",
+        "/auto-insurance/california/san-francisco",
+        "/auto-insurance/texas"
+      ]
+    },
+    {
+      "slug": "auto-insurance/california/los-angeles",
+      "state_name": "California",
+      "state_code": "CA",
+      "state_slug": "california",
+      "city_name": "Los Angeles",
+      "city_slug": "los-angeles",
+      
+      "title": "Auto Insurance in Los Angeles, CA (2024)",
+      "subtitle": "Find the best car insurance rates in LA",
+      "excerpt": "Los Angeles drivers pay higher premiums due to traffic density. Average rates are $1,850/year.",
+      
+      "metaTitle": "Auto Insurance Los Angeles CA | Compare LA Rates (2024)",
+      "metaDescription": "Find affordable auto insurance in Los Angeles. Compare quotes from top insurers. LA average $1,850/year due to traffic. Get your free quote today.",
+      "metaKeywords": ["auto insurance los angeles", "car insurance LA", "los angeles auto insurance rates", "cheap car insurance LA", "best auto insurance los angeles"],
+      
+      "avg_premium": "$1,850/year",
+      "min_coverage": "15/30/5",
+      "uninsured_rate": "15%",
+      "top_insurer": "State Farm",
+      
+      "city_specific_factors": [
+        "High traffic congestion increases accident risk",
+        "Higher vehicle theft rates in certain areas",
+        "Parking-related incidents are common",
+        "Higher cost of vehicle repairs in LA metro"
+      ],
+      
+      "zip_codes": ["90001", "90002", "90003", "90004", "90005", "90210", "90211", "90212"],
+      
+      "status": "PUBLISHED",
+      "isPublished": true
+    },
+    {
+      "slug": "auto-insurance/texas",
+      "state_name": "Texas",
+      "state_code": "TX",
+      "state_slug": "texas",
+      "city_name": "",
+      "city_slug": "",
+      
+      "title": "Auto Insurance in Texas (2024 Guide)",
+      "subtitle": "Find the best car insurance rates in TX",
+      "excerpt": "Texas requires higher minimum coverage than most states. Average rates are $1,400/year.",
+      
+      "metaTitle": "Auto Insurance Texas | Compare TX Rates & Save (2024)",
+      "metaDescription": "Find affordable auto insurance in Texas. Compare quotes from top-rated insurers. Average rates $1,400/year. Higher minimum coverage required.",
+      "metaKeywords": ["auto insurance texas", "car insurance tx", "texas auto insurance rates", "texas car insurance requirements", "cheap auto insurance texas"],
+      
+      "avg_premium": "$1,400/year",
+      "min_coverage": "30/60/25",
+      "coverage_breakdown": {
+        "bodily_per_person": "30,000",
+        "bodily_per_accident": "60,000",
+        "property": "25,000"
+      },
+      "uninsured_rate": "8%",
+      "top_insurer": "GEICO",
+      
+      "last_updated": "2024-01-15",
+      "is_no_fault_state": false,
+      "pip_required": false,
+      
+      "intro_content": "Texas requires higher minimum auto insurance coverage than many other states. The 30/60/25 requirements provide better protection, but also mean higher premiums for minimum coverage.",
+      
+      "status": "PUBLISHED",
+      "isPublished": true
+    }
+  ]
+}

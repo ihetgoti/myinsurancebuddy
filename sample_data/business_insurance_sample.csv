@@ -1,0 +1,5 @@
+state_name,state_code,state_slug,avg_premium,top_insurer,last_updated,avg_claim
+California,CA,california,$1800/year,Hiscox,2024-01-15,$15000
+New York,NY,new-york,$2200/year,The Hartford,2024-01-15,$18000
+Texas,TX,texas,$1500/year,Travelers,2024-01-15,$14000
+Florida,FL,florida,$2000/year,CNA,2024-01-15,$16000

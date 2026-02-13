@@ -1,0 +1,83 @@
+{
+  "_description": "Auto Insurance Sample Data - Use this template for creating car/auto insurance pages",
+  "_template": "auto",
+  "_url_format": "/auto-insurance/{state} or /auto-insurance/{state}/{city}",
+  "data": [
+    {
+      "state_name": "California",
+      "state_code": "CA",
+      "state_slug": "california",
+      "avg_premium": "$1,500/year",
+      "min_coverage": "15/30/5",
+      "coverage_breakdown": {
+        "bodily_per_person": "15,000",
+        "bodily_per_accident": "30,000",
+        "property": "5,000"
+      },
+      "uninsured_rate": "12%",
+      "top_insurer": "State Farm",
+      "last_updated": "2024-01-15",
+      "is_no_fault_state": false,
+      "pip_required": false,
+      "state_laws_summary": "California follows a tort system requiring liability coverage",
+      "intro_content": "California drivers pay an average of $1,500/year for auto insurance. Understanding state requirements helps you find the best coverage.",
+      "requirements_content": "California requires minimum liability coverage of 15/30/5. This covers bodily injury and property damage you cause to others.",
+      "cost_factors": [
+        { "factor": "Driving Record", "impact": "high", "description": "Accidents can increase rates 20-40%" },
+        { "factor": "Age", "impact": "high", "description": "Drivers under 25 pay significantly more" },
+        { "factor": "Credit Score", "impact": "medium", "description": "Better credit means lower rates in CA" }
+      ],
+      "discounts": [
+        { "name": "Multi-Policy Bundle", "savings": "10-25%", "description": "Combine auto with home insurance" },
+        { "name": "Safe Driver", "savings": "10-20%", "description": "Clean record for 3+ years" },
+        { "name": "Good Student", "savings": "8-15%", "description": "B average or better" }
+      ],
+      "faqs": [
+        {
+          "question": "What is minimum auto insurance in California?",
+          "answer": "California requires 15/30/5 liability coverage: $15,000 per person, $30,000 per accident, $5,000 property damage."
+        },
+        {
+          "question": "How much does car insurance cost in California?",
+          "answer": "The average is $1,500/year, but rates vary based on your driving record, age, location, and vehicle."
+        }
+      ]
+    },
+    {
+      "state_name": "Texas",
+      "state_code": "TX",
+      "state_slug": "texas",
+      "city_name": "Houston",
+      "city_slug": "houston",
+      "avg_premium": "$1,400/year",
+      "min_coverage": "30/60/25",
+      "coverage_breakdown": {
+        "bodily_per_person": "30,000",
+        "bodily_per_accident": "60,000",
+        "property": "25,000"
+      },
+      "uninsured_rate": "8%",
+      "top_insurer": "GEICO",
+      "last_updated": "2024-01-15",
+      "is_no_fault_state": false,
+      "pip_required": false,
+      "state_laws_summary": "Texas requires higher minimum liability than most states",
+      "intro_content": "Texas requires higher minimum coverage than many states. Houston drivers face unique challenges including traffic congestion and weather risks.",
+      "requirements_content": "Texas mandates 30/60/25 liability coverage, providing better protection than the minimum required in most states.",
+      "cost_factors": [
+        { "factor": "Urban Density", "impact": "high", "description": "Houston traffic increases accident risk" },
+        { "factor": "Weather Events", "impact": "medium", "description": "Hail and flooding can damage vehicles" }
+      ],
+      "discounts": [
+        { "name": "Multi-Policy Bundle", "savings": "10-25%", "description": "Combine auto with home or renters" },
+        { "name": "Defensive Driving", "savings": "5-10%", "description": "Complete approved driving course" }
+      ],
+      "faqs": [
+        {
+          "question": "What are Texas auto insurance requirements?",
+          "answer": "Texas requires 30/60/25 liability coverage, higher than many other states."
+        }
+      ]
+    }
+  ]
+}

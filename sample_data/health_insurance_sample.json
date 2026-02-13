@@ -1,0 +1,69 @@
+{
+  "_description": "Health Insurance Sample Data - Use this template for creating health insurance pages",
+  "_template": "health",
+  "_url_format": "/health-insurance/{state} or /health-insurance/{state}/{city}",
+  "data": [
+    {
+      "state_name": "California",
+      "state_code": "CA",
+      "state_slug": "california",
+      "avg_premium": "$450/month",
+      "uninsured_rate": "7%",
+      "top_insurer": "Kaiser Permanente",
+      "medicare_enrollment": "2.5M",
+      "medicaid_expansion": true,
+      "exchange_name": "Covered California",
+      "last_updated": "2024-01-15",
+      "intro_content": "California operates Covered California, the state health insurance exchange. Average individual premiums are $450/month.",
+      "requirements_content": "The Affordable Care Act requires most Americans to have health insurance. California enforces the individual mandate with penalties.",
+      "plan_types": ["HMO", "PPO", "EPO", "POS"],
+      "cost_factors": [
+        { "factor": "Age", "impact": "high", "description": "Older adults pay up to 3x more than younger" },
+        { "factor": "Income", "impact": "high", "description": "Subsidies available based on income" },
+        { "factor": "Tobacco Use", "impact": "high", "description": "Smokers can pay up to 50% more" }
+      ],
+      "subsidies": [
+        { "name": "Premium Tax Credits", "eligibility": "100-400% of federal poverty level", "description": "Reduces monthly premium costs" },
+        { "name": "Cost-Sharing Reductions", "eligibility": "100-250% of FPL", "description": "Lowers out-of-pocket costs" }
+      ],
+      "faqs": [
+        {
+          "question": "Is health insurance mandatory in California?",
+          "answer": "Yes, California has an individual mandate with penalties for non-coverage."
+        },
+        {
+          "question": "What is Covered California?",
+          "answer": "California's health insurance marketplace where you can compare plans and access subsidies."
+        }
+      ]
+    },
+    {
+      "state_name": "Texas",
+      "state_code": "TX",
+      "state_slug": "texas",
+      "avg_premium": "$420/month",
+      "uninsured_rate": "18%",
+      "top_insurer": "Blue Cross Blue Shield",
+      "medicare_enrollment": "1.8M",
+      "medicaid_expansion": false,
+      "exchange_name": "HealthCare.gov",
+      "last_updated": "2024-01-15",
+      "intro_content": "Texas has not expanded Medicaid, leading to higher uninsured rates. Average premiums are $420/month on the exchange.",
+      "requirements_content": "While there's no federal mandate penalty, having health insurance protects against catastrophic medical costs.",
+      "plan_types": ["HMO", "PPO", "EPO"],
+      "cost_factors": [
+        { "factor": "Medicaid Gap", "impact": "high", "description": "No expansion leaves many without options" },
+        { "factor": "Rural Access", "impact": "medium", "description": "Limited providers in rural areas" }
+      ],
+      "subsidies": [
+        { "name": "Premium Tax Credits", "eligibility": "100-400% of federal poverty level", "description": "Available through HealthCare.gov" }
+      ],
+      "faqs": [
+        {
+          "question": "Did Texas expand Medicaid?",
+          "answer": "No, Texas has not expanded Medicaid, leaving a coverage gap for low-income adults."
+        }
+      ]
+    }
+  ]
+}

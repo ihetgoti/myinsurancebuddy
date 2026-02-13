@@ -1,0 +1,81 @@
+{
+  "_description": "Home Insurance Sample Data - Use this template for creating homeowners insurance pages",
+  "_template": "home",
+  "_url_format": "/home-insurance/{state} or /home-insurance/{state}/{city}",
+  "data": [
+    {
+      "state_name": "California",
+      "state_code": "CA",
+      "state_slug": "california",
+      "avg_premium": "$1,200/year",
+      "avg_home_value": "$750,000",
+      "avg_rebuild_cost": "$350,000",
+      "top_insurer": "State Farm",
+      "last_updated": "2024-01-15",
+      "disaster_risk": "High",
+      "primary_disaster_risk": "wildfire",
+      "flood_zone": false,
+      "hurricane_risk": false,
+      "earthquake_risk": true,
+      "wildfire_risk_level": "High",
+      "tornado_risk": false,
+      "intro_content": "California homeowners face unique challenges including wildfire and earthquake risks. Average premiums are $1,200/year.",
+      "requirements_content": "While not legally required, mortgage lenders mandate homeowners insurance. Standard HO-3 policies cover most perils except earthquakes and floods.",
+      "cost_factors": [
+        { "factor": "Wildfire Risk", "impact": "high", "description": "High fire zones see 50%+ higher rates" },
+        { "factor": "Home Value", "impact": "high", "description": "Higher rebuild costs mean higher premiums" },
+        { "factor": "Age of Home", "impact": "medium", "description": "Older homes may cost more to insure" }
+      ],
+      "discounts": [
+        { "name": "Bundle Discount", "savings": "10-25%", "description": "Combine with auto insurance" },
+        { "name": "Security System", "savings": "5-20%", "description": "Monitored alarm systems" },
+        { "name": "New Home", "savings": "10-15%", "description": "Homes built within last 10 years" }
+      ],
+      "faqs": [
+        {
+          "question": "Is earthquake coverage included?",
+          "answer": "No, earthquake coverage requires a separate policy or endorsement in California."
+        },
+        {
+          "question": "What does standard home insurance cover?",
+          "answer": "Standard HO-3 policies cover dwelling, personal property, liability, and additional living expenses."
+        }
+      ]
+    },
+    {
+      "state_name": "Florida",
+      "state_code": "FL",
+      "state_slug": "florida",
+      "city_name": "Miami",
+      "city_slug": "miami",
+      "avg_premium": "$2,400/year",
+      "avg_home_value": "$450,000",
+      "avg_rebuild_cost": "$280,000",
+      "top_insurer": "Citizens Insurance",
+      "last_updated": "2024-01-15",
+      "disaster_risk": "Very High",
+      "primary_disaster_risk": "hurricane",
+      "flood_zone": true,
+      "hurricane_risk": true,
+      "earthquake_risk": false,
+      "wildfire_risk_level": null,
+      "tornado_risk": false,
+      "intro_content": "Florida has some of the highest home insurance rates due to hurricane risk. Miami homeowners pay an average of $2,400/year.",
+      "requirements_content": "Florida homeowners need windstorm coverage for hurricane protection. Many areas also require flood insurance.",
+      "cost_factors": [
+        { "factor": "Hurricane Risk", "impact": "very high", "description": "Windstorm coverage is essential" },
+        { "factor": "Flood Zone", "impact": "high", "description": "Flood insurance required in many areas" }
+      ],
+      "discounts": [
+        { "name": "Wind Mitigation", "savings": "10-45%", "description": "Hurricane-resistant features" },
+        { "name": "Bundle Discount", "savings": "10-25%", "description": "Combine with auto insurance" }
+      ],
+      "faqs": [
+        {
+          "question": "Is flood insurance required in Florida?",
+          "answer": "Required in high-risk flood zones with mortgages. Recommended for all coastal areas."
+        }
+      ]
+    }
+  ]
+}

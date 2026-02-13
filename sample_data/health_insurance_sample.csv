@@ -1,0 +1,5 @@
+state_name,state_code,state_slug,avg_premium,uninsured_rate,top_insurer,medicare_enrollment,medicaid_expansion,exchange_name,last_updated
+California,CA,california,$450/month,7%,Kaiser Permanente,2.5M,true,Covered California,2024-01-15
+Texas,TX,texas,$420/month,18%,Blue Cross Blue Shield,1.8M,false,HealthCare.gov,2024-01-15
+Florida,FL,florida,$480/month,13%,Florida Blue,2.1M,false,HealthCare.gov,2024-01-15
+New York,NY,new-york,$520/month,5%,Empire Blue Cross,1.5M,true,NY State of Health,2024-01-15

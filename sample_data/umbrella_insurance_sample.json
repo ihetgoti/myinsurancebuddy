@@ -1,0 +1,56 @@
+{
+  "_description": "Umbrella Insurance Sample Data - Use this template for creating umbrella insurance pages",
+  "_template": "umbrella",
+  "_url_format": "/umbrella-insurance/{state} or "/umbrella-insurance/{state}/{city}",
+  "data": [
+    {
+      "state_name": "California",
+      "state_code": "CA",
+      "state_slug": "california",
+      "avg_premium": "$400/year",
+      "coverage_limits": "$1M - $5M",
+      "top_insurer": "RLI",
+      "last_updated": "2024-01-15",
+      "recommended_for": "High net worth individuals, landlords, business owners",
+      "avg_net_worth": "$750,000+",
+      "intro_content": "Umbrella insurance provides extra liability protection beyond your auto and home policies. California residents pay an average of $400/year for $1M coverage.",
+      "requirements_content": "Requires underlying auto and home policies with minimum liability limits, typically $300,000 for home and $250,000/$500,000 for auto.",
+      "cost_factors": [
+        { "factor": "Coverage Amount", "impact": "high", "description": "Each $1M increment costs more" },
+        { "factor": "Risk Factors", "impact": "high", "description": "Teen drivers, rental properties, pools" },
+        { "factor": "Driving Record", "impact": "medium", "description": "Accidents increase umbrella rates" }
+      ],
+      "coverage_amounts": [
+        { "limit": "$1 Million", "avg_annual_cost": "$300-500" },
+        { "limit": "$2 Million", "avg_annual_cost": "$450-700" },
+        { "limit": "$3 Million", "avg_annual_cost": "$600-900" },
+        { "limit": "$5 Million", "avg_annual_cost": "$900-1,500" }
+      ],
+      "what_it_covers": [
+        "Bodily injury liability beyond auto/home limits",
+        "Property damage liability",
+        "Libel, slander, and defamation",
+        "Legal defense costs",
+        "False arrest and imprisonment",
+        "Rental property liability"
+      ],
+      "who_needs_it": [
+        { "profile": "Homeowners with pools", "risk": "Higher injury liability" },
+        { "profile": "Landlords", "risk": "Tenant injury claims" },
+        { "profile": "Parents of teen drivers", "risk": "Higher accident risk" },
+        { "profile": "High income earners", "risk": "Lawsuit target" },
+        { "profile": "Dog owners", "risk": "Bite liability" }
+      ],
+      "faqs": [
+        {
+          "question": "How much umbrella insurance do I need?",
+          "answer": "Coverage should equal your net worth. Most experts recommend at least $1-2 million."
+        },
+        {
+          "question": "What does umbrella insurance NOT cover?",
+          "answer": "Does not cover your own injuries, business losses, or intentional acts."
+        }
+      ]
+    }
+  ]
+}

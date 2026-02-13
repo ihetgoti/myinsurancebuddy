@@ -1,0 +1,70 @@
+{
+  "_description": "Life Insurance Sample Data - Use this template for creating life insurance pages",
+  "_template": "life",
+  "_url_format": "/life-insurance/{state} or /life-insurance/{state}/{city}",
+  "data": [
+    {
+      "state_name": "California",
+      "state_code": "CA",
+      "state_slug": "california",
+      "avg_premium": "$30/month",
+      "avg_coverage": "$250,000",
+      "top_insurer": "Northwestern Mutual",
+      "last_updated": "2024-01-15",
+      "policy_types": ["Term Life", "Whole Life", "Universal Life", "Variable Life"],
+      "avg_term_length": "20 years",
+      "intro_content": "Life insurance provides financial protection for your loved ones. California residents pay an average of $30/month for a $250,000 policy.",
+      "requirements_content": "Life insurance requires a medical exam for most policies. Rates depend on age, health, and lifestyle factors.",
+      "cost_factors": [
+        { "factor": "Age", "impact": "very high", "description": "Rates increase significantly with age" },
+        { "factor": "Health", "impact": "high", "description": "Medical conditions affect eligibility and rates" },
+        { "factor": "Gender", "impact": "medium", "description": "Women typically pay less than men" },
+        { "factor": "Smoking", "impact": "very high", "description": "Smokers pay 2-3x more than non-smokers" }
+      ],
+      "policy_comparison": [
+        { "type": "Term Life", "avg_cost": "$25-35/month", "best_for": "Temporary coverage needs" },
+        { "type": "Whole Life", "avg_cost": "$200-300/month", "best_for": "Permanent coverage with cash value" },
+        { "type": "Universal Life", "avg_cost": "$150-250/month", "best_for": "Flexible premiums and coverage" }
+      ],
+      "faqs": [
+        {
+          "question": "How much life insurance do I need?",
+          "answer": "Most experts recommend 10-12 times your annual income to replace your earnings."
+        },
+        {
+          "question": "What is the difference between term and whole life?",
+          "answer": "Term provides coverage for a specific period; whole life provides lifelong coverage with a cash value component."
+        }
+      ]
+    },
+    {
+      "state_name": "New York",
+      "state_code": "NY",
+      "state_slug": "new-york",
+      "city_name": "New York City",
+      "city_slug": "new-york-city",
+      "avg_premium": "$35/month",
+      "avg_coverage": "$300,000",
+      "top_insurer": "New York Life",
+      "last_updated": "2024-01-15",
+      "policy_types": ["Term Life", "Whole Life", "Universal Life"],
+      "avg_term_length": "20 years",
+      "intro_content": "New York has strong consumer protections for life insurance. NYC residents pay slightly higher rates due to cost of living.",
+      "requirements_content": "New York requires a 10-day free look period for life insurance policies. Medical exams are standard for coverage over $100,000.",
+      "cost_factors": [
+        { "factor": "Cost of Living", "impact": "medium", "description": "Higher coverage amounts needed in NYC" },
+        { "factor": "Occupation", "impact": "medium", "description": "High-risk jobs increase premiums" }
+      ],
+      "policy_comparison": [
+        { "type": "Term Life", "avg_cost": "$30-40/month", "best_for": "Young families" },
+        { "type": "Whole Life", "avg_cost": "$250-350/month", "best_for": "Estate planning" }
+      ],
+      "faqs": [
+        {
+          "question": "Can I get life insurance without a medical exam?",
+          "answer": "Yes, no-exam policies exist but typically have lower coverage limits and higher premiums."
+        }
+      ]
+    }
+  ]
+}

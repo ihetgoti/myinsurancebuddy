@@ -1,0 +1,46 @@
+{
+  "_description": "Motorcycle Insurance Sample Data - Use this template for creating motorcycle insurance pages",
+  "_template": "motorcycle",
+  "_url_format": "/motorcycle-insurance/{state} or /motorcycle-insurance/{state}/{city}",
+  "data": [
+    {
+      "state_name": "California",
+      "state_code": "CA",
+      "state_slug": "california",
+      "avg_premium": "$800/year",
+      "min_coverage": "15/30/5",
+      "helmet_law": "Required",
+      "top_insurer": "Progressive",
+      "last_updated": "2024-01-15",
+      "bike_types": ["Cruiser", "Sport Bike", "Touring", "Standard"],
+      "intro_content": "California motorcycle insurance averages $800/year. Lane splitting is legal, but riders face higher accident risks.",
+      "requirements_content": "California requires minimum liability coverage of 15/30/5. Helmets are mandatory for all riders.",
+      "cost_factors": [
+        { "factor": "Bike Type", "impact": "high", "description": "Sport bikes cost more to insure than cruisers" },
+        { "factor": "Rider Age", "impact": "high", "description": "Riders under 25 pay significantly more" },
+        { "factor": "Lane Splitting", "impact": "medium", "description": "Legal in CA but increases accident risk" }
+      ],
+      "coverage_options": [
+        { "name": "Liability", "required": true, "description": "Covers damage you cause to others" },
+        { "name": "Collision", "required": false, "description": "Covers damage to your bike" },
+        { "name": "Comprehensive", "required": false, "description": "Covers theft and non-collision damage" },
+        { "name": "Uninsured Motorist", "required": false, "description": "Protects against uninsured drivers" }
+      ],
+      "discounts": [
+        { "name": "Safety Course", "savings": "10-15%", "description": "Complete MSF rider course" },
+        { "name": "Multi-Policy", "savings": "10-20%", "description": "Bundle with auto or home" },
+        { "name": "Anti-Theft", "savings": "5-10%", "description": "Garage parking or alarm system" }
+      ],
+      "faqs": [
+        {
+          "question": "Is motorcycle insurance required in California?",
+          "answer": "Yes, minimum liability coverage is mandatory. You must show proof of insurance to register your bike."
+        },
+        {
+          "question": "Does California require helmets?",
+          "answer": "Yes, all motorcycle riders and passengers must wear DOT-approved helmets."
+        }
+      ]
+    }
+  ]
+}

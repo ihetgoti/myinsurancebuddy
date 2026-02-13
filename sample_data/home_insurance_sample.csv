@@ -1,0 +1,5 @@
+state_name,state_code,state_slug,city_name,city_slug,avg_premium,avg_home_value,avg_rebuild_cost,top_insurer,last_updated,disaster_risk,primary_disaster_risk,flood_zone,hurricane_risk,earthquake_risk
+California,CA,california,,,$1200/year,$750000,$350000,State Farm,2024-01-15,High,wildfire,false,false,true
+Florida,FL,florida,Miami,miami,$2400/year,$450000,$280000,Citizens Insurance,2024-01-15,Very High,hurricane,true,true,false
+Texas,TX,texas,Houston,houston,$1800/year,$320000,$220000,USAA,2024-01-15,High,flood,true,false,false
+New York,NY,new-york,New York City,new-york-city,$1100/year,$680000,$400000,Allstate,2024-01-15,Low,weather,false,false,false

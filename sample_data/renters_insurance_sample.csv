@@ -1,0 +1,5 @@
+state_name,state_code,state_slug,city_name,city_slug,avg_premium,avg_rent,top_insurer,last_updated,avg_property_value
+California,CA,california,Los Angeles,los-angeles,$180/year,$2500/month,Lemonade,2024-01-15,$35000
+New York,NY,new-york,New York City,new-york-city,$220/year,$3200/month,Jetty,2024-01-15,$40000
+Texas,TX,texas,Austin,austin,$160/year,$1800/month,Assurant,2024-01-15,$30000
+Florida,FL,florida,Miami,miami,$175/year,$2400/month,State Farm,2024-01-15,$32000

@@ -1,0 +1,5 @@
+state_name,state_code,state_slug,avg_premium,top_insurer,last_updated,avg_vet_cost
+California,CA,california,$45/month,Trupanion,2024-01-15,$250-500/visit
+New York,NY,new-york,$55/month,Healthy Paws,2024-01-15,$300-600/visit
+Texas,TX,texas,$40/month,Nationwide,2024-01-15,$200-450/visit
+Florida,FL,florida,$42/month,Petplan,2024-01-15,$225-475/visit

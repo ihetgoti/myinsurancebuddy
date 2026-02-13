@@ -32,7 +32,6 @@ import {
     Info,
     ArrowRight,
     AlertTriangle,
-    RefreshCw,
     MessageSquare,
     Sparkles,
     Key,
@@ -43,7 +42,6 @@ import {
     Code,
     Mail
 } from 'lucide-react';
-import JobProgressBar from './JobProgressBar';
 
 interface AdminLayoutProps {
     children: ReactNode;
@@ -202,9 +200,6 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                 { href: '/dashboard/page-data', label: 'Page Data', icon: <Database size={18} strokeWidth={1.5} /> },
                 { href: '/dashboard/blog', label: 'Blog Posts', icon: <FileText size={18} strokeWidth={1.5} /> },
                 { href: '/dashboard/templates', label: 'Templates', icon: <LayoutTemplate size={18} strokeWidth={1.5} /> },
-                { href: '/dashboard/bulk-generate', label: 'Bulk Generate', icon: <Database size={18} strokeWidth={1.5} /> },
-                { href: '/dashboard/bulk-edit', label: 'Bulk Edit (CSV)', icon: <RefreshCw size={18} strokeWidth={1.5} /> },
-                { href: '/dashboard/bulk-editor', label: 'Bulk Templates', icon: <Zap size={18} strokeWidth={1.5} /> },
                 { href: '/dashboard/media', label: 'Media Library', icon: <ImageIcon size={18} strokeWidth={1.5} /> },
             ],
         },
@@ -217,7 +212,6 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
         {
             title: 'AI Content',
             items: [
-                { href: '/dashboard/auto-generate', label: 'Auto Generate', icon: <Zap size={18} strokeWidth={1.5} /> },
                 { href: '/dashboard/ai-content', label: 'AI Generation', icon: <Sparkles size={18} strokeWidth={1.5} /> },
                 { href: '/dashboard/ai-ranking', label: 'AI Ranking', icon: <Trophy size={18} strokeWidth={1.5} /> },
                 { href: '/dashboard/keywords', label: 'SEO Keywords', icon: <Target size={18} strokeWidth={1.5} /> },
@@ -434,11 +428,6 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                         </div>
                     ))}
                 </nav>
-
-                {/* Job Progress */}
-                <div className="px-3 pb-2 flex-shrink-0">
-                    <JobProgressBar />
-                </div>
 
                 {/* User Profile Footer */}
                 <div className="p-4 border-t border-slate-800/50 bg-slate-950/30 flex-shrink-0">
