@@ -32,6 +32,7 @@ import {
     Info,
     ArrowRight,
     AlertTriangle,
+    RefreshCw,
     MessageSquare,
     Sparkles,
     Key,
