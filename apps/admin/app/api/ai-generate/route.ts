@@ -21,12 +21,17 @@ export async function POST(req: NextRequest) {
       filters,
       sections = ['intro', 'requirements', 'faqs', 'tips'],
       model,
+      providerId, // Specific AI provider to use (optional)
       batchSize = 10,
       delayBetweenBatches = 1000,
       priority = 'all', // 'all', 'major-cities', 'states-only'
       regenerate = false, // Set to true to regenerate AI content for pages that already have it
       includeDrafts = false, // Set to true to include unpublished/draft pages
-      templateId // Optional template to use for prompts
+      templateId, // Optional template to use for prompts
+      perSection = false, // If true, generate each section with separate API request
+      jobGroupId, // Optional job group for parallel processing
+      jobName, // Optional custom job name
+      dedupKey // Optional deduplication key
     } = body;
 
     // Build page query based on filters
@@ -123,19 +128,59 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    // Validate provider if specified
+    if (providerId) {
+      const provider = await prisma.aIProvider.findUnique({
+        where: { id: providerId }
+      });
+      if (!provider) {
+        return NextResponse.json(
+          { error: 'Invalid provider ID' },
+          { status: 400 }
+        );
+      }
+      if (!provider.isActive) {
+        return NextResponse.json(
+          { error: 'Selected provider is not active' },
+          { status: 400 }
+        );
+      }
+    }
+
+    // Get insurance type name for job naming
+    let insuranceTypeName = 'Insurance';
+    if (filters?.insuranceTypeId) {
+      const insuranceType = await prisma.insuranceType.findUnique({
+        where: { id: filters.insuranceTypeId },
+        select: { name: true }
+      });
+      if (insuranceType) {
+        insuranceTypeName = insuranceType.name;
+      }
+    }
+
+    // Generate job name
+    const generatedJobName = jobName || 
+      `${insuranceTypeName} - ${filters?.geoLevel || 'All'} Pages - ${new Date().toLocaleDateString()}`;
+
     // Create AI generation job
     const job = await prisma.aIGenerationJob.create({
       data: {
-        name: `AI Content Generation - ${new Date().toISOString()}`,
+        name: generatedJobName,
+        description: `Generating ${sections.length} sections for ${pageIds.length} pages`,
         pageIds,
         sections,
-        model: model || 'anthropic/claude-haiku',
-        promptTemplate: 'Generate unique, location-specific insurance content for {{location}}',
-        filters: { ...filters, templateId },
+        providerId: providerId || undefined,
+        model: model || 'deepseek/deepseek-r1:free',
+        promptTemplateId: templateId || undefined,
+        filters: { ...filters, templateId, perSection },
         batchSize,
         delayBetweenBatches,
+        perSection,
         totalPages: pageIds.length,
         status: 'PROCESSING',
+        jobGroupId: jobGroupId || undefined,
+        dedupKey: dedupKey || `${insuranceTypeName}-${filters?.geoLevel || 'all'}-${Date.now()}`,
         createdById: session.user?.id,
         startedAt: new Date()
       }
@@ -146,14 +191,22 @@ export async function POST(req: NextRequest) {
       batchSize,
       delayBetweenBatches,
       model,
+      providerId, // Pass provider to use for this job
       templatePrompts,
       keywordConfig,
+      perSection,
+      dedupKey: job.dedupKey,
       onProgress: async (progress) => {
         // Update job progress
+        // In per-section mode, processed is work units; convert to pages for storage
+        const processedPages = perSection 
+          ? Math.floor(progress.processed / sections.length)
+          : progress.processed;
+        
         await prisma.aIGenerationJob.update({
           where: { id: job.id },
           data: {
-            processedPages: progress.processed,
+            processedPages,
             status: progress.paused ? 'PAUSED' : 'PROCESSING'
           }
         });
@@ -185,11 +238,18 @@ export async function POST(req: NextRequest) {
       console.error(`AI generation job ${job.id} failed:`, error);
     });
 
+    const totalApiCalls = perSection ? pageIds.length * sections.length : pageIds.length;
+    
     return NextResponse.json({
       success: true,
       jobId: job.id,
       totalPages: pageIds.length,
-      message: `Started AI generation for ${pageIds.length} pages`
+      totalSections: sections.length,
+      perSectionMode: perSection,
+      estimatedApiCalls: totalApiCalls,
+      message: perSection 
+        ? `Started AI generation for ${pageIds.length} pages with ${sections.length} sections each (${totalApiCalls} total API calls)`
+        : `Started AI generation for ${pageIds.length} pages`
     });
   } catch (error: any) {
     console.error('AI generation error:', error);

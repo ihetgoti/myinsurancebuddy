@@ -102,7 +102,38 @@ export interface AIContentRequest {
     claimsProcessPrompt?: string;
     buyersGuidePrompt?: string;
     metaTagsPrompt?: string;
+    // AI generation settings
+    temperature?: number;
+    maxTokens?: number;
+    // Example formats for consistent output - ALL 12 SECTIONS
+    exampleFormats?: {
+      intro?: string;
+      requirements?: string;
+      faqs?: Array<{ question: string; answer: string }>;
+      tips?: string[];
+      costBreakdown?: any;
+      comparison?: any;
+      discounts?: any;
+      localStats?: any;
+      coverageGuide?: any;
+      claimsProcess?: any;
+      buyersGuide?: any;
+      metaTags?: any;
+    };
   };
+  /**
+   * If true, generate each section with a separate API request.
+   * This provides better error handling and quality but uses more API calls.
+   */
+  perSection?: boolean;
+  /**
+   * Deduplication key to ensure unique content across pages
+   */
+  dedupKey?: string;
+  /**
+   * Previously generated content hashes to avoid duplication
+   */
+  existingContentHashes?: string[];
 }
 
 export interface CostBreakdownItem {
@@ -321,16 +352,48 @@ export class OpenRouterService {
     try {
       // Build the prompt
       const prompt = this.buildPrompt(request);
-
-      const response = await fetch(provider.apiEndpoint || 'https://openrouter.ai/api/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${provider.apiKey}`,
-          'HTTP-Referer': process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
-          'X-Title': 'Insurance Buddy AI Content Generator'
-        },
-        body: JSON.stringify({
+      
+      // Determine if this is NVIDIA API
+      const isNvidia = provider.provider === 'nvidia' || 
+                       provider.apiEndpoint?.includes('nvidia.com') ||
+                       provider.apiKey?.startsWith('nvapi-');
+      
+      // Build request body based on provider type
+      let requestBody: any;
+      let headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${provider.apiKey}`
+      };
+      
+      if (isNvidia) {
+        // NVIDIA API format
+        requestBody = {
+          model: request.model || provider.preferredModel,
+          messages: [
+            {
+              role: 'system',
+              content: request.templatePrompts?.systemPrompt || 'You are a helpful assistant that generates insurance content.'
+            },
+            {
+              role: 'user',
+              content: prompt
+            }
+          ],
+          temperature: request.templatePrompts?.temperature ?? 0.7,
+          max_tokens: request.templatePrompts?.maxTokens ?? 4000,
+          stream: false
+        };
+        
+        // Add any custom headers from provider config
+        if (provider.headers) {
+          headers = { ...headers, ...provider.headers };
+        }
+      } else {
+        // Standard OpenAI/OpenRouter format
+        headers['HTTP-Referer'] = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+        headers['X-Title'] = 'Insurance Buddy AI Content Generator';
+        
+        requestBody = {
           model: await this.getSafeModel(request.model || provider.preferredModel, request.forceFreeModels !== false),
           messages: [
             {
@@ -342,10 +405,19 @@ export class OpenRouterService {
               content: prompt
             }
           ],
-          temperature: 0.7,
-          max_tokens: 4000
-        })
-      });
+          temperature: request.templatePrompts?.temperature ?? 0.7,
+          max_tokens: request.templatePrompts?.maxTokens ?? 4000
+        };
+      }
+
+      const response = await fetch(
+        provider.apiEndpoint || 'https://openrouter.ai/api/v1/chat/completions', 
+        {
+          method: 'POST',
+          headers,
+          body: JSON.stringify(requestBody)
+        }
+      );
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
@@ -506,9 +578,116 @@ export class OpenRouterService {
 
   /**
    * Generate AI content for a page
+   * @param request - The content generation request
+   * @param specificProvider - Optional specific provider to use (bypasses failover)
    */
-  static async generateContent(request: AIContentRequest): Promise<AIContentResponse> {
+  static async generateContent(
+    request: AIContentRequest, 
+    specificProvider?: any
+  ): Promise<AIContentResponse> {
+    // If perSection mode is enabled, generate each section separately
+    if (request.perSection && request.sections.length > 1) {
+      return this.generateContentPerSection(request, specificProvider);
+    }
+    
+    // If specific provider is provided, use it directly
+    if (specificProvider) {
+      return this.tryGenerateWithProvider(request, specificProvider);
+    }
+    
     return this.generateContentWithFailover(request);
+  }
+
+  /**
+   * Generate content one section at a time (one API request per section)
+   * This provides better error handling and potentially higher quality content
+   */
+  static async generateContentPerSection(
+    request: AIContentRequest,
+    specificProvider?: any
+  ): Promise<AIContentResponse & { sectionResults?: Record<string, { success: boolean; error?: string }> }> {
+    const { sections, pageData } = request;
+    const results: any = {};
+    const sectionResults: Record<string, { success: boolean; error?: string }> = {};
+    
+    let totalTokensUsed = 0;
+    let totalCost = 0;
+    let lastProvider = '';
+    let hasErrors = false;
+
+    console.log(`📝 Generating content per section for ${pageData.slug}:`);
+    console.log(`   Sections: ${sections.join(', ')}`);
+    console.log(`   Provider: ${specificProvider?.name || 'Auto-select (failover)'}`);
+
+    // Generate each section separately
+    for (const section of sections) {
+      try {
+        console.log(`   → Generating section: ${section}...`);
+        
+        const sectionRequest: AIContentRequest = {
+          ...request,
+          sections: [section] // Only request this one section
+        };
+
+        // Use specific provider if provided, otherwise use failover
+        const response = specificProvider 
+          ? await this.tryGenerateWithProvider(sectionRequest, specificProvider)
+          : await this.generateContentWithFailover(sectionRequest);
+
+        if (response.success && response.content) {
+          // Merge the section content into results
+          const sectionContent = response.content[section as keyof typeof response.content];
+          if (sectionContent !== undefined) {
+            results[section] = sectionContent;
+            sectionResults[section] = { success: true };
+            console.log(`   ✓ Section "${section}" generated successfully`);
+          } else {
+            console.warn(`   ⚠ Section "${section}" returned empty content`);
+            sectionResults[section] = { success: false, error: 'Empty content returned' };
+            hasErrors = true;
+          }
+
+          totalTokensUsed += response.tokensUsed || 0;
+          totalCost += response.cost || 0;
+          if (response.provider) lastProvider = response.provider;
+        } else {
+          console.error(`   ✗ Section "${section}" failed: ${response.error}`);
+          sectionResults[section] = { success: false, error: response.error };
+          hasErrors = true;
+        }
+
+        // Small delay between sections to avoid rate limits
+        if (sections.indexOf(section) < sections.length - 1) {
+          await new Promise(resolve => setTimeout(resolve, 500));
+        }
+      } catch (error: any) {
+        console.error(`   ✗ Section "${section}" error: ${error.message}`);
+        sectionResults[section] = { success: false, error: error.message };
+        hasErrors = true;
+        
+        // If it's a rate limit error on all providers, stop immediately
+        if (error.name === 'AllProvidersRateLimitedError') {
+          throw error;
+        }
+      }
+    }
+
+    const allFailed = sections.every(s => !sectionResults[s]?.success);
+    
+    return {
+      success: !allFailed, // Success if at least one section succeeded
+      content: results,
+      tokensUsed: totalTokensUsed,
+      cost: totalCost,
+      provider: lastProvider,
+      sectionResults,
+      error: hasErrors && !allFailed 
+        ? `Some sections failed: ${Object.entries(sectionResults)
+            .filter(([, r]) => !r.success)
+            .map(([s, r]) => `${s} (${r.error})`)
+            .join(', ')}`
+        : allFailed ? 'All sections failed to generate' : undefined
+    };
   }
 
   /**
@@ -583,12 +762,55 @@ export class OpenRouterService {
 
       prompts.push(`\n${section.toUpperCase()}:`);
       prompts.push(sectionPrompt.replace(/\{\{location\}\}/g, locationName).replace(/\{\{niche\}\}/g, pageData.insuranceType));
+      
+      // Add example format if available
+      const exampleFormat = this.getExampleFormatForSection(section, templatePrompts?.exampleFormats);
+      if (exampleFormat) {
+        prompts.push(`\nEXAMPLE FORMAT for ${section.toUpperCase()}:`);
+        prompts.push(typeof exampleFormat === 'string' ? exampleFormat : JSON.stringify(exampleFormat, null, 2));
+        prompts.push(`\nFollow the above format structure but create COMPLETELY ORIGINAL content. Do not copy the example text.`);
+      }
     });
+    
+    // Add deduplication instruction if dedup key is provided
+    if (request.dedupKey) {
+      prompts.push(`\n\n=== CONTENT UNIQUENESS REQUIREMENT ===`);
+      prompts.push(`This content MUST be unique and different from other pages.`);
+      prompts.push(`Focus on specific details about ${locationName} to make this content location-specific.`);
+      prompts.push(`Avoid generic phrases that could apply to any location.`);
+      prompts.push(`Include specific local factors, statistics, or considerations for ${locationName}.`);
+    }
 
     prompts.push(`\nReturn the content in JSON format with the following structure:`);
     prompts.push(JSON.stringify(this.getExpectedStructure(sections), null, 2));
 
     return prompts.join('\n');
+  }
+  
+  /**
+   * Get example format for a section - ALL 12 SECTIONS
+   */
+  private static getExampleFormatForSection(
+    section: AIContentSection, 
+    exampleFormats?: AIContentRequest['templatePrompts']['exampleFormats']
+  ): string | object | undefined {
+    if (!exampleFormats) return undefined;
+    
+    switch (section) {
+      case 'intro': return exampleFormats.intro;
+      case 'requirements': return exampleFormats.requirements;
+      case 'faqs': return exampleFormats.faqs;
+      case 'tips': return exampleFormats.tips;
+      case 'costBreakdown': return exampleFormats.costBreakdown;
+      case 'comparison': return exampleFormats.comparison;
+      case 'discounts': return exampleFormats.discounts;
+      case 'localStats': return exampleFormats.localStats;
+      case 'coverageGuide': return exampleFormats.coverageGuide;
+      case 'claimsProcess': return exampleFormats.claimsProcess;
+      case 'buyersGuide': return exampleFormats.buyersGuide;
+      case 'metaTags': return exampleFormats.metaTags;
+      default: return undefined;
+    }
   }
 
   /**
@@ -932,6 +1154,10 @@ export interface BatchProgress {
   paused?: boolean;
   resumeAt?: Date;
   lastProcessedIndex?: number;
+  /** Whether per-section generation mode is active */
+  perSectionMode?: boolean;
+  /** Current section being processed (if in per-section mode) */
+  currentSection?: string;
 }
 
 export async function batchGenerateContent(
@@ -941,11 +1167,18 @@ export async function batchGenerateContent(
     batchSize?: number;
     delayBetweenBatches?: number;
     model?: string;
+    providerId?: string; // Specific provider to use
     forceFreeModels?: boolean; // Default: true (protects deposit!)
     templatePrompts?: AIContentRequest['templatePrompts'];
     keywordConfig?: AIContentRequest['keywordConfig'];
     onProgress?: (progress: BatchProgress) => void;
     startIndex?: number; // For resuming
+    /**
+     * If true, generate each section with a separate API request.
+     * Better quality and error handling but uses more API calls.
+     */
+    perSection?: boolean;
+    dedupKey?: string; // For content deduplication
   } = {}
 ): Promise<{
   successful: number;
@@ -959,12 +1192,20 @@ export async function batchGenerateContent(
     batchSize = 10,
     delayBetweenBatches = 1000,
     model,
+    providerId,
     forceFreeModels = true, // Default to true to protect your deposit!
     templatePrompts,
     keywordConfig,
     onProgress,
-    startIndex = 0
+    startIndex = 0,
+    perSection = false,
+    dedupKey
   } = options;
+  
+  // Calculate total work units for progress tracking
+  // In per-section mode: totalSections = pageIds.length * sections.length
+  // In normal mode: totalSections = pageIds.length
+  const totalWorkUnits = perSection ? pageIds.length * sections.length : pageIds.length;
 
   const results = {
     successful: 0,
@@ -974,6 +1215,18 @@ export async function batchGenerateContent(
     resumeAt: undefined as Date | undefined,
     lastProcessedIndex: startIndex
   };
+
+  // Fetch specific provider if requested
+  let specificProvider = null;
+  if (providerId) {
+    specificProvider = await prisma.aIProvider.findUnique({
+      where: { id: providerId }
+    });
+    if (!specificProvider) {
+      throw new Error(`Provider ${providerId} not found`);
+    }
+    console.log(`🔌 Using specific provider: ${specificProvider.name} (${specificProvider.provider})`);
+  }
 
   // Process in batches starting from startIndex
   for (let i = startIndex; i < pageIds.length; i += batchSize) {
@@ -1018,21 +1271,26 @@ export async function batchGenerateContent(
     // Process batch in parallel
     const promises = pages.map(async (page) => {
       try {
-        const response = await OpenRouterService.generateContent({
-          pageData: {
-            id: page.id,
-            slug: page.slug,
-            insuranceType: page.insuranceType?.name || 'Insurance',
-            state: page.state?.name,
-            city: page.city?.name,
-            customData: page.customData
+        const response = await OpenRouterService.generateContent(
+          {
+            pageData: {
+              id: page.id,
+              slug: page.slug,
+              insuranceType: page.insuranceType?.name || 'Insurance',
+              state: page.state?.name,
+              city: page.city?.name,
+              customData: page.customData
+            },
+            sections,
+            model,
+            forceFreeModels,
+            templatePrompts,
+            keywordConfig,
+            perSection,
+            dedupKey
           },
-          sections,
-          model,
-          forceFreeModels,
-          templatePrompts,
-          keywordConfig
-        });
+          specificProvider // Pass specific provider if set
+        );
 
         if (response.success && response.content) {
           // Build update data
@@ -1113,12 +1371,20 @@ export async function batchGenerateContent(
 
     // Progress callback
     if (onProgress) {
+      const processedPages = Math.min(i + batchSize, pageIds.length);
+      // In per-section mode, report work units for more granular progress
+      const processedUnits = perSection 
+        ? Math.min(i * sections.length + batch.length * sections.length, totalWorkUnits)
+        : processedPages;
+      const totalUnits = perSection ? totalWorkUnits : pageIds.length;
+      
       onProgress({
-        processed: Math.min(i + batchSize, pageIds.length),
-        total: pageIds.length,
+        processed: processedUnits,
+        total: totalUnits,
         successful: results.successful,
         failed: results.failed,
-        lastProcessedIndex: i + batch.length
+        lastProcessedIndex: i + batch.length,
+        perSectionMode: perSection
       });
     }
 

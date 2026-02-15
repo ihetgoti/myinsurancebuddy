@@ -1,7 +1,7 @@
 generator client {
-  provider      = "prisma-client-js"
+  provider        = "prisma-client-js"
   previewFeatures = ["fullTextSearch", "fullTextIndex"]
-  binaryTargets = ["native", "debian-openssl-3.0.x"]
+  binaryTargets   = ["native", "debian-openssl-3.0.x"]
 }
 
 datasource db {
@@ -14,32 +14,32 @@ datasource db {
 // ============================================
 
 model User {
-  id           String     @id @default(uuid())
-  email        String     @unique
+  id           String    @id @default(uuid())
+  email        String    @unique
   name         String?
   passwordHash String
-  role         UserRole   @default(EDITOR)
-  isActive     Boolean    @default(true)
+  role         UserRole  @default(EDITOR)
+  isActive     Boolean   @default(true)
   avatar       String?
-  preferences  Json?      // UI preferences, dashboard layout
+  preferences  Json? // UI preferences, dashboard layout
   lastLoginAt  DateTime?
-  createdAt    DateTime   @default(now())
-  updatedAt    DateTime   @updatedAt
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
 
   // Password reset fields
-  resetOtp        String?
-  resetOtpExpiry  DateTime?
+  resetOtp       String?
+  resetOtpExpiry DateTime?
 
-  auditLogs       AuditLog[]
-  createdPages    Page[]           @relation("PageCreator")
-  updatedPages    Page[]           @relation("PageUpdater")
-  createdTemplates Template[]      @relation("TemplateCreator")
-  bulkJobs        BulkJob[]
-  comments        PageComment[]
-  apiKeys         ApiKey[]
-  notifications   Notification[]
-  blogPosts       BlogPost[]
-  aiJobs          AIGenerationJob[]
+  auditLogs         AuditLog[]
+  createdPages      Page[]             @relation("PageCreator")
+  updatedPages      Page[]             @relation("PageUpdater")
+  createdTemplates  Template[]         @relation("TemplateCreator")
+  bulkJobs          BulkJob[]
+  comments          PageComment[]
+  apiKeys           ApiKey[]
+  notifications     Notification[]
+  blogPosts         BlogPost[]
+  aiJobs            AIGenerationJob[]
   aiPromptTemplates AIPromptTemplate[] @relation("AIPromptCreator")
 }
 
@@ -65,7 +65,7 @@ model Notification {
   type      NotificationType @default(INFO)
   title     String
   message   String
-  link      String?          // Optional link to navigate to
+  link      String? // Optional link to navigate to
   isRead    Boolean          @default(false)
   createdAt DateTime         @default(now())
 
@@ -80,12 +80,12 @@ model ApiKey {
   user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   name        String
   keyHash     String    @unique
-  permissions Json      // ["read", "write", "delete", "bulk"]
+  permissions Json // ["read", "write", "delete", "bulk"]
   lastUsedAt  DateTime?
   expiresAt   DateTime?
   isActive    Boolean   @default(true)
   createdAt   DateTime  @default(now())
-  
+
   @@index([userId])
   @@index([keyHash])
 }
@@ -95,13 +95,13 @@ model ApiKey {
 // ============================================
 
 model SiteSettings {
-  id                    String   @id @default(uuid())
-  siteName              String   @default("MyInsuranceBuddies")
-  siteUrl               String   @default("https://myinsurancebuddies.com")
-  siteDescription       String?
-  siteLogo              String?
-  siteFavicon           String?
-  
+  id              String  @id @default(uuid())
+  siteName        String  @default("MyInsuranceBuddies")
+  siteUrl         String  @default("https://myinsurancebuddies.com")
+  siteDescription String?
+  siteLogo        String?
+  siteFavicon     String?
+
   // Global SEO
   defaultMetaTitle      String?
   defaultMetaDesc       String?
@@ -111,59 +111,59 @@ model SiteSettings {
   googleSearchConsoleId String?
   bingWebmasterToolsId  String?
   facebookPixelId       String?
-  
+
   // Schema.org defaults
-  organizationName      String?
-  organizationLogo      String?
-  organizationPhone     String?
-  organizationEmail     String?
-  organizationAddress   Json?    // {street, city, state, zip, country}
-  socialProfiles        Json?    // [{platform, url}]
-  
+  organizationName    String?
+  organizationLogo    String?
+  organizationPhone   String?
+  organizationEmail   String?
+  organizationAddress Json? // {street, city, state, zip, country}
+  socialProfiles      Json? // [{platform, url}]
+
   // Sitemap settings
-  sitemapEnabled        Boolean  @default(true)
-  sitemapChangeFreq     String   @default("weekly") // daily, weekly, monthly
-  sitemapPriority       Float    @default(0.8)
-  sitemapMaxUrls        Int      @default(50000)
-  sitemapAutoGenerate   Boolean  @default(true)
-  sitemapLastGenerated  DateTime?
-  
+  sitemapEnabled       Boolean   @default(true)
+  sitemapChangeFreq    String    @default("weekly") // daily, weekly, monthly
+  sitemapPriority      Float     @default(0.8)
+  sitemapMaxUrls       Int       @default(50000)
+  sitemapAutoGenerate  Boolean   @default(true)
+  sitemapLastGenerated DateTime?
+
   // Robots.txt
-  robotsTxtContent      String?
-  
+  robotsTxtContent String?
+
   // Custom code injection
-  headScripts           String?  // Scripts to inject in <head>
-  bodyStartScripts      String?  // Scripts after <body>
-  bodyEndScripts        String?  // Scripts before </body>
-  customCss             String?
-  
+  headScripts      String? // Scripts to inject in <head>
+  bodyStartScripts String? // Scripts after <body>
+  bodyEndScripts   String? // Scripts before </body>
+  customCss        String?
+
   // Feature flags
-  enableComments        Boolean  @default(false)
-  enableRatings         Boolean  @default(false)
-  enableSearch          Boolean  @default(true)
-  enableBreadcrumbs     Boolean  @default(true)
-  enableTableOfContents Boolean  @default(true)
-  enableRelatedPages    Boolean  @default(true)
-  enableSocialShare     Boolean  @default(true)
-  
+  enableComments        Boolean @default(false)
+  enableRatings         Boolean @default(false)
+  enableSearch          Boolean @default(true)
+  enableBreadcrumbs     Boolean @default(true)
+  enableTableOfContents Boolean @default(true)
+  enableRelatedPages    Boolean @default(true)
+  enableSocialShare     Boolean @default(true)
+
   // Ads Configuration
-  adsEnabled            Boolean  @default(true)  // Master switch for all ads
-  adsenseId             String?  // Google AdSense Publisher ID (ca-pub-xxx)
-  adSlots               Json?    // {"header": "slot-id", "sidebar": "slot-id"}
-  customAdCode          String?  @db.Text // Custom ad script if not AdSense
-  
+  adsEnabled   Boolean @default(true) // Master switch for all ads
+  adsenseId    String? // Google AdSense Publisher ID (ca-pub-xxx)
+  adSlots      Json? // {"header": "slot-id", "sidebar": "slot-id"}
+  customAdCode String? @db.Text // Custom ad script if not AdSense
+
   // Maintenance
-  maintenanceMode       Boolean  @default(false)
-  maintenanceMessage    String?
-  
+  maintenanceMode    Boolean @default(false)
+  maintenanceMessage String?
+
   // Auto Sitemap Submission
-  autoSitemapSubmit     Boolean  @default(false)
-  sitemapSubmitSchedule String   @default("daily") // hourly, daily, weekly
-  sitemapSearchEngines  Json?    @default("[\"google\", \"bing\"]")
+  autoSitemapSubmit     Boolean   @default(false)
+  sitemapSubmitSchedule String    @default("daily") // hourly, daily, weekly
+  sitemapSearchEngines  Json?     @default("[\"google\", \"bing\"]")
   lastSitemapSubmit     DateTime?
-  
-  createdAt             DateTime @default(now())
-  updatedAt             DateTime @updatedAt
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 // ============================================
@@ -171,54 +171,54 @@ model SiteSettings {
 // ============================================
 
 model InsuranceType {
-  id              String    @id @default(uuid())
-  name            String    // "Car Insurance", "Health Insurance"
-  slug            String    @unique // "car-insurance"
-  pluralName      String?   // "Car Insurances" for listings
-  shortName       String?   // "Auto" for compact displays
-  icon            String?   // Emoji or icon class
-  iconSvg         String?   // Custom SVG icon
-  color           String?   // Brand color hex
-  description     String?   @db.Text
-  longDescription String?   @db.Text
-  
+  id              String  @id @default(uuid())
+  name            String // "Car Insurance", "Health Insurance"
+  slug            String  @unique // "car-insurance"
+  pluralName      String? // "Car Insurances" for listings
+  shortName       String? // "Auto" for compact displays
+  icon            String? // Emoji or icon class
+  iconSvg         String? // Custom SVG icon
+  color           String? // Brand color hex
+  description     String? @db.Text
+  longDescription String? @db.Text
+
   // SEO
-  metaTitle       String?
-  metaDesc        String?   @db.Text
-  ogImage         String?
-  keywords        String[]  // SEO keywords array
-  
+  metaTitle String?
+  metaDesc  String?  @db.Text
+  ogImage   String?
+  keywords  String[] // SEO keywords array
+
   // Schema.org
-  schemaType      String?   // "InsuranceAgency", "FinancialService"
-  
+  schemaType String? // "InsuranceAgency", "FinancialService"
+
   // Content
-  heroTitle       String?
-  heroSubtitle    String?
-  heroImage       String?
-  heroCta         String?
-  heroCtaUrl      String?
-  
+  heroTitle    String?
+  heroSubtitle String?
+  heroImage    String?
+  heroCta      String?
+  heroCtaUrl   String?
+
   // Statistics (for display)
-  avgSavings      String?   // "$500/year"
-  totalProviders  Int?
-  totalReviews    Int?
-  avgRating       Float?
-  
+  avgSavings     String? // "$500/year"
+  totalProviders Int?
+  totalReviews   Int?
+  avgRating      Float?
+
   // Display settings
-  isActive        Boolean   @default(true)
-  isFeatured      Boolean   @default(false)
-  showInNav       Boolean   @default(true)
-  showInFooter    Boolean   @default(true)
-  sortOrder       Int       @default(0)
-  
+  isActive     Boolean @default(true)
+  isFeatured   Boolean @default(false)
+  showInNav    Boolean @default(true)
+  showInFooter Boolean @default(true)
+  sortOrder    Int     @default(0)
+
   // Relations
-  parentId        String?
-  parent          InsuranceType?  @relation("SubTypes", fields: [parentId], references: [id])
-  subTypes        InsuranceType[] @relation("SubTypes")
-  
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-  
+  parentId String?
+  parent   InsuranceType?  @relation("SubTypes", fields: [parentId], references: [id])
+  subTypes InsuranceType[] @relation("SubTypes")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   pages             Page[]
   bulkJobs          BulkJob[]
   carriers          Carrier[]
@@ -226,7 +226,8 @@ model InsuranceType {
   callOffers        CallOffer[]
   affiliatePartners AffiliatePartner[]
   keywordConfigs    KeywordConfig[] // SEO keyword strategies
-  
+  aiPromptTemplates AIPromptTemplate[] // AI prompt templates for this niche
+
   @@index([isActive])
   @@index([sortOrder])
   @@index([parentId])
@@ -237,85 +238,85 @@ model InsuranceType {
 // ============================================
 
 model Carrier {
-  id              String    @id @default(uuid())
-  name            String    // "GEICO", "State Farm"
-  slug            String    @unique
-  logo            String?
-  logoLight       String?   // For dark backgrounds
-  logoDark        String?   // For light backgrounds
-  website         String?
-  phone           String?
-  
+  id        String  @id @default(uuid())
+  name      String // "GEICO", "State Farm"
+  slug      String  @unique
+  logo      String?
+  logoLight String? // For dark backgrounds
+  logoDark  String? // For light backgrounds
+  website   String?
+  phone     String?
+
   // Company info
-  description     String?   @db.Text
-  foundedYear     Int?
-  headquarters    String?
-  amBestRating    String?   // "A+", "A", etc.
-  jdPowerRating   Float?
-  bbbbRating      String?   // "A+", "A", etc.
-  
+  description   String? @db.Text
+  foundedYear   Int?
+  headquarters  String?
+  amBestRating  String? // "A+", "A", etc.
+  jdPowerRating Float?
+  bbbbRating    String? // "A+", "A", etc.
+
   // Ratings & Reviews
-  avgRating       Float?
-  totalReviews    Int       @default(0)
-  
+  avgRating    Float?
+  totalReviews Int    @default(0)
+
   // Features
-  features        Json?     // [{name, available: boolean}]
-  pros            String[]
-  cons            String[]
-  
+  features Json? // [{name, available: boolean}]
+  pros     String[]
+  cons     String[]
+
   // Pricing
-  avgMonthlyRate  Float?
-  minMonthlyRate  Float?
-  maxMonthlyRate  Float?
-  
+  avgMonthlyRate Float?
+  minMonthlyRate Float?
+  maxMonthlyRate Float?
+
   // Availability
-  availableStates String[]  // State codes where available
-  
+  availableStates String[] // State codes where available
+
   // SEO
-  metaTitle       String?
-  metaDesc        String?   @db.Text
-  
+  metaTitle String?
+  metaDesc  String? @db.Text
+
   // Display
-  isActive        Boolean   @default(true)
-  isFeatured      Boolean   @default(false)
-  isPartner       Boolean   @default(false)  // Affiliate partner
-  partnerUrl      String?   // Affiliate link
-  sortOrder       Int       @default(0)
-  
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-  
-  insuranceTypes  InsuranceType[]
-  reviews         CarrierReview[]
-  
+  isActive   Boolean @default(true)
+  isFeatured Boolean @default(false)
+  isPartner  Boolean @default(false) // Affiliate partner
+  partnerUrl String? // Affiliate link
+  sortOrder  Int     @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  insuranceTypes InsuranceType[]
+  reviews        CarrierReview[]
+
   @@index([isActive])
   @@index([slug])
 }
 
 model CarrierReview {
-  id          String   @id @default(uuid())
-  carrierId   String
-  carrier     Carrier  @relation(fields: [carrierId], references: [id], onDelete: Cascade)
-  
+  id        String  @id @default(uuid())
+  carrierId String
+  carrier   Carrier @relation(fields: [carrierId], references: [id], onDelete: Cascade)
+
   authorName  String
   authorEmail String?
-  authorState String?  // State code
-  
-  rating      Int      // 1-5
-  title       String?
-  content     String   @db.Text
-  pros        String?  @db.Text
-  cons        String?  @db.Text
-  
-  isVerified  Boolean  @default(false)
-  isApproved  Boolean  @default(false)
-  isFeatured  Boolean  @default(false)
-  
-  helpfulCount Int     @default(0)
-  
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  
+  authorState String? // State code
+
+  rating  Int // 1-5
+  title   String?
+  content String  @db.Text
+  pros    String? @db.Text
+  cons    String? @db.Text
+
+  isVerified Boolean @default(false)
+  isApproved Boolean @default(false)
+  isFeatured Boolean @default(false)
+
+  helpfulCount Int @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   @@index([carrierId])
   @@index([isApproved])
   @@index([rating])
@@ -326,65 +327,65 @@ model CarrierReview {
 // ============================================
 
 model Country {
-  id           String   @id @default(uuid())
-  code         String   @unique // "us", "ca", "uk"
-  code3        String?  // "USA", "CAN", "GBR"
-  name         String   // "United States"
-  nativeName   String?  // Native language name
-  flag         String?  // Emoji flag or URL
-  currency     String?  // "USD"
-  phoneCode    String?  // "+1"
-  
+  id         String  @id @default(uuid())
+  code       String  @unique // "us", "ca", "uk"
+  code3      String? // "USA", "CAN", "GBR"
+  name       String // "United States"
+  nativeName String? // Native language name
+  flag       String? // Emoji flag or URL
+  currency   String? // "USD"
+  phoneCode  String? // "+1"
+
   // SEO
-  metaTitle    String?
-  metaDesc     String?  @db.Text
-  
-  isActive     Boolean  @default(true)
-  sortOrder    Int      @default(0)
-  
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-  
-  states       State[]
-  pages        Page[]
-  
+  metaTitle String?
+  metaDesc  String? @db.Text
+
+  isActive  Boolean @default(true)
+  sortOrder Int     @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  states State[]
+  pages  Page[]
+
   @@index([isActive])
   @@index([code])
 }
 
 model State {
-  id           String   @id @default(uuid())
-  countryId    String
-  country      Country  @relation(fields: [countryId], references: [id], onDelete: Cascade)
-  
-  name         String   // "California"
-  slug         String   // "california"
-  code         String?  // "CA"
-  
+  id        String  @id @default(uuid())
+  countryId String
+  country   Country @relation(fields: [countryId], references: [id], onDelete: Cascade)
+
+  name String // "California"
+  slug String // "california"
+  code String? // "CA"
+
   // Additional data
-  capital      String?
-  largestCity  String?
-  population   Int?
-  area         Float?   // Square miles
-  timezone     String?
-  
+  capital     String?
+  largestCity String?
+  population  Int?
+  area        Float? // Square miles
+  timezone    String?
+
   // Insurance specific
-  minCoverage  Json?    // {liability: "25/50/25", etc.}
-  avgPremium   Float?
-  
+  minCoverage Json? // {liability: "25/50/25", etc.}
+  avgPremium  Float?
+
   // SEO
-  metaTitle    String?
-  metaDesc     String?  @db.Text
-  
-  isActive     Boolean  @default(true)
-  sortOrder    Int      @default(0)
-  
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-  
-  cities       City[]
-  pages        Page[]
-  
+  metaTitle String?
+  metaDesc  String? @db.Text
+
+  isActive  Boolean @default(true)
+  sortOrder Int     @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  cities City[]
+  pages  Page[]
+
   @@unique([countryId, slug])
   @@unique([countryId, code])
   @@index([countryId])
@@ -393,39 +394,39 @@ model State {
 }
 
 model City {
-  id           String   @id @default(uuid())
-  stateId      String
-  state        State    @relation(fields: [stateId], references: [id], onDelete: Cascade)
-  
-  name         String   // "Los Angeles"
-  slug         String   // "los-angeles"
-  
+  id      String @id @default(uuid())
+  stateId String
+  state   State  @relation(fields: [stateId], references: [id], onDelete: Cascade)
+
+  name String // "Los Angeles"
+  slug String // "los-angeles"
+
   // Additional data
-  population   Int?
-  area         Float?
-  latitude     Float?
-  longitude    Float?
-  timezone     String?
-  zipCodes     String[] // Array of ZIP codes
-  
+  population Int?
+  area       Float?
+  latitude   Float?
+  longitude  Float?
+  timezone   String?
+  zipCodes   String[] // Array of ZIP codes
+
   // Insurance specific
   avgPremium   Float?
   crimeRate    Float?
   trafficScore Float?
-  
+
   // SEO
-  metaTitle    String?
-  metaDesc     String?  @db.Text
-  
-  isActive     Boolean  @default(true)
-  isMajorCity  Boolean  @default(false)
-  sortOrder    Int      @default(0)
-  
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-  
-  pages        Page[]
-  
+  metaTitle String?
+  metaDesc  String? @db.Text
+
+  isActive    Boolean @default(true)
+  isMajorCity Boolean @default(false)
+  sortOrder   Int     @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  pages Page[]
+
   @@unique([stateId, slug])
   @@index([stateId])
   @@index([isActive])
@@ -438,41 +439,41 @@ model City {
 // ============================================
 
 model ComponentDefinition {
-  id              String   @id @default(uuid())
-  name            String   // "Hero Section", "FAQ Accordion"
-  slug            String   @unique
-  category        String   // "hero", "content", "cta", "form", "social"
-  description     String?
-  thumbnail       String?  // Preview image
-  
+  id          String  @id @default(uuid())
+  name        String // "Hero Section", "FAQ Accordion"
+  slug        String  @unique
+  category    String // "hero", "content", "cta", "form", "social"
+  description String?
+  thumbnail   String? // Preview image
+
   // Component schema
-  schema          Json     // JSON Schema for props
-  defaultProps    Json?    // Default property values
-  
+  schema       Json // JSON Schema for props
+  defaultProps Json? // Default property values
+
   // Rendering
-  renderType      String   @default("react") // "react", "html", "markdown"
-  componentCode   String?  @db.Text // For custom components
-  
+  renderType    String  @default("react") // "react", "html", "markdown"
+  componentCode String? @db.Text // For custom components
+
   // Styling
-  defaultStyles   Json?    // Default Tailwind classes or CSS
-  styleVariants   Json?    // [{name, styles}]
-  
+  defaultStyles Json? // Default Tailwind classes or CSS
+  styleVariants Json? // [{name, styles}]
+
   // Settings
-  isCore          Boolean  @default(false) // System component
-  isActive        Boolean  @default(true)
-  allowCustomCss  Boolean  @default(true)
-  allowCustomJs   Boolean  @default(false)
-  
+  isCore         Boolean @default(false) // System component
+  isActive       Boolean @default(true)
+  allowCustomCss Boolean @default(true)
+  allowCustomJs  Boolean @default(false)
+
   // Responsive
-  mobileHidden    Boolean  @default(false)
-  tabletHidden    Boolean  @default(false)
-  desktopHidden   Boolean  @default(false)
-  
-  sortOrder       Int      @default(0)
-  
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-  
+  mobileHidden  Boolean @default(false)
+  tabletHidden  Boolean @default(false)
+  desktopHidden Boolean @default(false)
+
+  sortOrder Int @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   @@index([category])
   @@index([isActive])
 }
@@ -482,87 +483,87 @@ model ComponentDefinition {
 // ============================================
 
 model Template {
-  id              String    @id @default(uuid())
-  name            String    // "City Page Template"
-  slug            String    // No longer unique - allows variations
-  description     String?   @db.Text
-  thumbnail       String?   // Preview image URL
-  htmlContent     String?   @db.Text
-  
+  id          String  @id @default(uuid())
+  name        String // "City Page Template"
+  slug        String // No longer unique - allows variations
+  description String? @db.Text
+  thumbnail   String? // Preview image URL
+  htmlContent String? @db.Text
+
   // Template type
-  type            TemplateType @default(PAGE)
-  category        String?   // "insurance", "location", "carrier", "guide"
-  
+  type     TemplateType @default(PAGE)
+  category String? // "insurance", "location", "carrier", "guide"
+
   // Structure
-  sections        Json      @default("[]") // Array of section configs
-  headerConfig    Json?     // Header overrides
-  footerConfig    Json?     // Footer overrides
-  sidebarConfig   Json?     // Sidebar settings
-  
+  sections      Json  @default("[]") // Array of section configs
+  headerConfig  Json? // Header overrides
+  footerConfig  Json? // Footer overrides
+  sidebarConfig Json? // Sidebar settings
+
   // Variables (placeholders)
-  variables       Json?     // System variables available
-  customVariables Json?     // [{name, label, type, required, defaultValue, options}]
-  
+  variables       Json? // System variables available
+  customVariables Json? // [{name, label, type, required, defaultValue, options}]
+
   // SEO Template
-  seoTitleTemplate    String?  // "{{insurance_type}} in {{city}}, {{state}} | Best Rates"
-  seoDescTemplate     String?  // Template with variables
+  seoTitleTemplate    String? // "{{insurance_type}} in {{city}}, {{state}} | Best Rates"
+  seoDescTemplate     String? // Template with variables
   seoKeywordsTemplate String?
   ogTitleTemplate     String?
   ogDescTemplate      String?
-  
+
   // Schema.org template
-  schemaTemplate  Json?     // JSON-LD template with variables
-  
+  schemaTemplate Json? // JSON-LD template with variables
+
   // Styling
-  customCss       String?   @db.Text
-  customJs        String?   @db.Text
-  colorScheme     Json?     // {primary, secondary, accent, background}
-  fontConfig      Json?     // {heading, body}
-  
+  customCss   String? @db.Text
+  customJs    String? @db.Text
+  colorScheme Json? // {primary, secondary, accent, background}
+  fontConfig  Json? // {heading, body}
+
   // Layout
-  layout          String    @default("default") // "default", "sidebar-left", "sidebar-right", "full-width"
-  maxWidth        String?   // "1200px", "full"
-  
+  layout   String  @default("default") // "default", "sidebar-left", "sidebar-right", "full-width"
+  maxWidth String? // "1200px", "full"
+
   // Settings
-  isActive        Boolean   @default(true)
-  isDefault       Boolean   @default(false) // Default for new pages
-  isLocked        Boolean   @default(false) // Cannot be deleted
-  showAffiliates  Boolean   @default(true)  // Show affiliate partner buttons
-  includeHeader   Boolean   @default(true)  // Show global header
-  includeFooter   Boolean   @default(true)  // Show global footer
-  
+  isActive       Boolean @default(true)
+  isDefault      Boolean @default(false) // Default for new pages
+  isLocked       Boolean @default(false) // Cannot be deleted
+  showAffiliates Boolean @default(true) // Show affiliate partner buttons
+  includeHeader  Boolean @default(true) // Show global header
+  includeFooter  Boolean @default(true) // Show global footer
+
   // Creator
-  createdById     String?
-  createdBy       User?     @relation("TemplateCreator", fields: [createdById], references: [id])
-  
+  createdById String?
+  createdBy   User?   @relation("TemplateCreator", fields: [createdById], references: [id])
+
   // Versioning
-  version         Int       @default(1)
-  parentId        String?   // For version history
-  
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-  
-  pages           Page[]
-  bulkJobs        BulkJob[]
-  
+  version  Int     @default(1)
+  parentId String? // For version history
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  pages    Page[]
+  bulkJobs BulkJob[]
+
   @@index([type])
   @@index([isActive])
   @@index([category])
 }
 
 enum TemplateType {
-  PAGE          // Regular page
-  LANDING       // Landing page
-  BLOG          // Blog post
-  CATEGORY      // Category listing
-  CARRIER       // Carrier review page
-  COMPARISON    // Comparison page
-  CALCULATOR    // Calculator tool
-  GUIDE         // How-to guide
-  HTML          // Raw HTML template
-  FAQ           // FAQ page
-  GLOSSARY      // Glossary term
-  CUSTOM        // Custom type
+  PAGE // Regular page
+  LANDING // Landing page
+  BLOG // Blog post
+  CATEGORY // Category listing
+  CARRIER // Carrier review page
+  COMPARISON // Comparison page
+  CALCULATOR // Calculator tool
+  GUIDE // How-to guide
+  HTML // Raw HTML template
+  FAQ // FAQ page
+  GLOSSARY // Glossary term
+  CUSTOM // Custom type
 }
 
 // ============================================
@@ -570,131 +571,158 @@ enum TemplateType {
 // ============================================
 
 model Page {
-  id              String        @id @default(uuid())
-  
+  id String @id @default(uuid())
+
   // URL & Routing
-  slug            String        // Full URL path: "car-insurance/california/los-angeles"
-  canonicalUrl    String?       // Override canonical
-  redirectTo      String?       // 301 redirect if set
-  
+  slug         String // Full URL path: "car-insurance/california/los-angeles"
+  canonicalUrl String? // Override canonical
+  redirectTo   String? // 301 redirect if set
+
   // Hierarchy
   insuranceTypeId String?
   insuranceType   InsuranceType? @relation(fields: [insuranceTypeId], references: [id])
   geoLevel        GeoLevel?
   countryId       String?
-  country         Country?      @relation(fields: [countryId], references: [id])
+  country         Country?       @relation(fields: [countryId], references: [id])
   stateId         String?
-  state           State?        @relation(fields: [stateId], references: [id])
+  state           State?         @relation(fields: [stateId], references: [id])
   cityId          String?
-  city            City?         @relation(fields: [cityId], references: [id])
-  
+  city            City?          @relation(fields: [cityId], references: [id])
+
   // Template
-  templateId      String?
-  template        Template?     @relation(fields: [templateId], references: [id])
-  
+  templateId String?
+  template   Template? @relation(fields: [templateId], references: [id])
+
   // Content
-  title           String?       // Page title (H1)
-  subtitle        String?
-  excerpt         String?       @db.Text // Short description
-  content         Json          @default("[]") // Page builder sections
-  
+  title    String? // Page title (H1)
+  subtitle String?
+  excerpt  String? @db.Text // Short description
+  content  Json    @default("[]") // Page builder sections
+
   // Custom data (for CSV imports)
-  customData      Json?         // Any additional data from CSV
+  customData Json? // Any additional data from CSV
 
   // AI-generated content tracking
-  aiGeneratedContent Json?      // AI-generated sections: {intro, requirements, faqs, tips, etc.}
-  aiGeneratedAt      DateTime?  // When AI content was generated
-  aiModel            String?    // Model used (e.g., "gpt-3.5-turbo", "claude-haiku")
-  aiPromptVersion    String?    // Version of prompt used
-  isAiGenerated      Boolean    @default(false)
+  aiGeneratedContent Json? // AI-generated sections: {intro, requirements, faqs, tips, etc.}
+  aiGeneratedAt      DateTime? // When AI content was generated
+  aiModel            String? // Model used (e.g., "gpt-3.5-turbo", "claude-haiku")
+  aiPromptVersion    String? // Version of prompt used
+  isAiGenerated      Boolean   @default(false)
   
+  // Extended AI Content Sections (20+ sections for rich pages)
+  aiHeroSection         Json? // Hero headline, subheadline, hook
+  aiKeyTakeaways        Json? // Quick summary bullets (for featured snippets)
+  aiQuickAnswers        Json? // Direct answer boxes (People Also Ask style)
+  aiProsCons            Json? // Pros and cons comparison
+  aiTopProviders        Json? // Top 3-5 providers with details
+  aiPricingTable        Json? // Structured pricing comparison
+  aiLocalInsights       Json? // City/state specific insights
+  aiCommonMistakes      Json? // Common mistakes to avoid
+  aiExpertTips          Json? // Expert-level insider tips
+  aiSavingStrategies    Json? // Specific money-saving strategies
+  aiRegulatoryInfo      Json? // State-specific regulations
+  aiIndustryTrends      Json? // Current industry trends
+  aiUserTestimonials    Json? // Generated testimonial styles
+  aiFaqSchemaMarkup     Json? // FAQPage schema structured content
+  aiHowToSchema         Json? // HowTo schema content
+  aiBreadcrumbSchema    Json? // BreadcrumbList schema
+  aiSocialPosts         Json? // Social media post variations
+  aiEmailTemplate       Json? // Email capture template
+  aiLongFormGuide       Json? // Extended comprehensive guide (2000+ words)
+  aiComparisonMatrix    Json? // Side-by-side comparison matrix
+  aiGlossaryTerms       Json? // Relevant glossary terms for the page
+  aiRelatedQuestions    Json? // Related questions (People Also Ask)
+  aiTrustSignals        Json? // Trust badges, guarantees, certifications
+  aiUrgencyTriggers     Json? // Urgency/scarcity messaging
+  aiPersonalizationVars Json? // Dynamic personalization variables
+
   // SEO - Basic
   metaTitle       String?
-  metaDescription String?       @db.Text
+  metaDescription String?  @db.Text
   metaKeywords    String[]
-  
+
   // SEO - Open Graph
-  ogTitle         String?
-  ogDescription   String?       @db.Text
-  ogImage         String?
-  ogType          String        @default("website")
-  
+  ogTitle       String?
+  ogDescription String? @db.Text
+  ogImage       String?
+  ogType        String  @default("website")
+
   // SEO - Twitter Card
-  twitterCard     String        @default("summary_large_image")
-  twitterTitle    String?
-  twitterDesc     String?
-  twitterImage    String?
-  
+  twitterCard  String  @default("summary_large_image")
+  twitterTitle String?
+  twitterDesc  String?
+  twitterImage String?
+
   // SEO - Advanced
-  robots          String?       // "index,follow" or "noindex,nofollow"
-  canonicalTag    String?
-  hreflangTags    Json?         // [{lang: "en-us", url: "..."}]
-  
+  robots       String? // "index,follow" or "noindex,nofollow"
+  canonicalTag String?
+  hreflangTags Json? // [{lang: "en-us", url: "..."}]
+
   // Schema.org
-  schemaMarkup    Json?         // JSON-LD structured data
-  breadcrumbs     Json?         // Custom breadcrumb override
-  
+  schemaMarkup Json? // JSON-LD structured data
+  breadcrumbs  Json? // Custom breadcrumb override
+
   // Performance
-  preloadImages   String[]      // URLs to preload
-  prefetchPages   String[]      // URLs to prefetch
-  
+  preloadImages String[] // URLs to preload
+  prefetchPages String[] // URLs to prefetch
+
   // Styling overrides
-  customCss       String?       @db.Text
-  customJs        String?       @db.Text
-  bodyClasses     String?       // Additional body classes
-  
+  customCss   String? @db.Text
+  customJs    String? @db.Text
+  bodyClasses String? // Additional body classes
+
   // Status
-  status          PageStatus    @default(DRAFT)
-  isPublished     Boolean       @default(false)
-  publishedAt     DateTime?
-  unpublishedAt   DateTime?     // Auto-unpublish date
-  
+  status        PageStatus @default(DRAFT)
+  isPublished   Boolean    @default(false)
+  publishedAt   DateTime?
+  unpublishedAt DateTime? // Auto-unpublish date
+
   // Scheduling
-  scheduledAt     DateTime?     // Auto-publish date
-  
+  scheduledAt DateTime? // Auto-publish date
+
   // Visibility
-  isPasswordProtected Boolean   @default(false)
-  password        String?
-  isHidden        Boolean       @default(false) // Hidden from sitemap/search
-  
+  isPasswordProtected Boolean @default(false)
+  password            String?
+  isHidden            Boolean @default(false) // Hidden from sitemap/search
+
   // Analytics
-  viewCount       Int           @default(0)
-  uniqueViews     Int           @default(0)
-  avgTimeOnPage   Int?          // Seconds
-  bounceRate      Float?
-  
+  viewCount     Int    @default(0)
+  uniqueViews   Int    @default(0)
+  avgTimeOnPage Int? // Seconds
+  bounceRate    Float?
+
   // Engagement
-  rating          Float?
-  ratingCount     Int           @default(0)
-  shareCount      Int           @default(0)
-  
+  rating      Float?
+  ratingCount Int    @default(0)
+  shareCount  Int    @default(0)
+
   // Ads Control
-  showAds         Boolean       @default(true) // Whether to show ads on this page
-  
+  showAds Boolean @default(true) // Whether to show ads on this page
+
   // Audit
-  createdById     String?
-  createdBy       User?         @relation("PageCreator", fields: [createdById], references: [id])
-  updatedById     String?
-  updatedBy       User?         @relation("PageUpdater", fields: [updatedById], references: [id])
-  
+  createdById String?
+  createdBy   User?   @relation("PageCreator", fields: [createdById], references: [id])
+  updatedById String?
+  updatedBy   User?   @relation("PageUpdater", fields: [updatedById], references: [id])
+
   // Versioning
-  version         Int           @default(1)
-  
+  version Int @default(1)
+
   // Internal notes
-  internalNotes   String?       @db.Text
-  
+  internalNotes String? @db.Text
+
   // AI Content Scoring
-  contentScores   Json?         // {overall, readability, seo, etc.}
-  lastScoredAt    DateTime?
-  
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
-  
+  contentScores Json? // {overall, readability, seo, etc.}
+  lastScoredAt  DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   // Relations
-  comments        PageComment[]
-  versions        PageVersion[]
-  abTests         ABTest[]
-  
+  comments PageComment[]
+  versions PageVersion[]
+  abTests  ABTest[]
+
   @@unique([slug])
   @@index([insuranceTypeId])
   @@index([geoLevel])
@@ -712,11 +740,11 @@ model Page {
 }
 
 enum GeoLevel {
-  NONE      // No geo targeting
-  NICHE     // /car-insurance (niche homepage)
-  COUNTRY   // /car-insurance/us
-  STATE     // /car-insurance/us/california
-  CITY      // /car-insurance/us/california/los-angeles
+  NONE // No geo targeting
+  NICHE // /car-insurance (niche homepage)
+  COUNTRY // /car-insurance/us
+  STATE // /car-insurance/us/california
+  CITY // /car-insurance/us/california/los-angeles
 }
 
 enum PageStatus {
@@ -730,40 +758,40 @@ enum PageStatus {
 }
 
 model PageVersion {
-  id          String   @id @default(uuid())
-  pageId      String
-  page        Page     @relation(fields: [pageId], references: [id], onDelete: Cascade)
-  
-  version     Int
-  content     Json     // Full page content snapshot
-  metadata    Json?    // SEO and settings snapshot
-  
+  id     String @id @default(uuid())
+  pageId String
+  page   Page   @relation(fields: [pageId], references: [id], onDelete: Cascade)
+
+  version  Int
+  content  Json // Full page content snapshot
+  metadata Json? // SEO and settings snapshot
+
   changeNote  String?
   changedById String?
-  
-  createdAt   DateTime @default(now())
-  
+
+  createdAt DateTime @default(now())
+
   @@unique([pageId, version])
   @@index([pageId])
 }
 
 model PageComment {
-  id          String   @id @default(uuid())
-  pageId      String
-  page        Page     @relation(fields: [pageId], references: [id], onDelete: Cascade)
-  userId      String
-  user        User     @relation(fields: [userId], references: [id])
-  
-  content     String   @db.Text
-  isResolved  Boolean  @default(false)
-  
-  parentId    String?
-  parent      PageComment?  @relation("CommentReplies", fields: [parentId], references: [id])
-  replies     PageComment[] @relation("CommentReplies")
-  
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  
+  id     String @id @default(uuid())
+  pageId String
+  page   Page   @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  content    String  @db.Text
+  isResolved Boolean @default(false)
+
+  parentId String?
+  parent   PageComment?  @relation("CommentReplies", fields: [parentId], references: [id])
+  replies  PageComment[] @relation("CommentReplies")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   @@index([pageId])
   @@index([userId])
 }
@@ -773,31 +801,31 @@ model PageComment {
 // ============================================
 
 model ABTest {
-  id              String   @id @default(uuid())
-  pageId          String
-  page            Page     @relation(fields: [pageId], references: [id], onDelete: Cascade)
-  
-  name            String
-  description     String?
-  
+  id     String @id @default(uuid())
+  pageId String
+  page   Page   @relation(fields: [pageId], references: [id], onDelete: Cascade)
+
+  name        String
+  description String?
+
   // Variants
-  variants        Json     // [{id, name, content, weight}]
-  
+  variants Json // [{id, name, content, weight}]
+
   // Metrics
-  primaryMetric   String   // "conversion", "time_on_page", "bounce_rate"
-  
+  primaryMetric String // "conversion", "time_on_page", "bounce_rate"
+
   // Status
-  status          ABTestStatus @default(DRAFT)
-  startDate       DateTime?
-  endDate         DateTime?
-  
+  status    ABTestStatus @default(DRAFT)
+  startDate DateTime?
+  endDate   DateTime?
+
   // Results
-  results         Json?    // Calculated results
-  winnerId        String?  // Winning variant ID
-  
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-  
+  results  Json? // Calculated results
+  winnerId String? // Winning variant ID
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   @@index([pageId])
   @@index([status])
 }
@@ -815,67 +843,67 @@ enum ABTestStatus {
 // ============================================
 
 model BulkJob {
-  id              String        @id @default(uuid())
-  name            String        // "Car Insurance - All US Cities"
-  description     String?
-  
+  id          String  @id @default(uuid())
+  name        String // "Car Insurance - All US Cities"
+  description String?
+
   // Source
   templateId      String
-  template        Template      @relation(fields: [templateId], references: [id])
+  template        Template       @relation(fields: [templateId], references: [id])
   insuranceTypeId String?
   insuranceType   InsuranceType? @relation(fields: [insuranceTypeId], references: [id])
-  
+
   // Geo targeting
-  geoLevel        GeoLevel?
-  countryId       String?
-  stateId         String?
-  
+  geoLevel  GeoLevel?
+  countryId String?
+  stateId   String?
+
   // Data source
-  dataSource      DataSource    @default(CSV)
-  csvData         Json?         // Uploaded CSV as JSON array
-  csvFileName     String?       // Original filename
-  apiEndpoint     String?       // External API to fetch data
-  
+  dataSource  DataSource @default(CSV)
+  csvData     Json? // Uploaded CSV as JSON array
+  csvFileName String? // Original filename
+  apiEndpoint String? // External API to fetch data
+
   // Variable mapping
-  variableMapping Json?         // {csvColumn: templateVariable}
-  defaultValues   Json?         // Default values for missing data
-  
+  variableMapping Json? // {csvColumn: templateVariable}
+  defaultValues   Json? // Default values for missing data
+
   // URL generation
-  slugPattern     String?       // "{{insurance_type}}/{{state}}/{{city}}"
-  slugTransform   String?       // "lowercase", "kebab-case"
-  
+  slugPattern   String? // "{{insurance_type}}/{{state}}/{{city}}"
+  slugTransform String? // "lowercase", "kebab-case"
+
   // Processing
-  status          JobStatus     @default(PENDING)
-  totalRows       Int           @default(0)
-  processedRows   Int           @default(0)
-  createdPages    Int           @default(0)
-  updatedPages    Int           @default(0)
-  skippedPages    Int           @default(0)
-  failedPages     Int           @default(0)
-  
+  status        JobStatus @default(PENDING)
+  totalRows     Int       @default(0)
+  processedRows Int       @default(0)
+  createdPages  Int       @default(0)
+  updatedPages  Int       @default(0)
+  skippedPages  Int       @default(0)
+  failedPages   Int       @default(0)
+
   // Error handling
-  errorLog        Json?         // [{row, error}]
-  errorMessage    String?
-  
+  errorLog     Json? // [{row, error}]
+  errorMessage String?
+
   // Options
-  publishOnCreate Boolean       @default(false)
-  updateExisting  Boolean       @default(false)
-  skipExisting    Boolean       @default(true)
-  validateData    Boolean       @default(true)
-  dryRun          Boolean       @default(false)
-  
+  publishOnCreate Boolean @default(false)
+  updateExisting  Boolean @default(false)
+  skipExisting    Boolean @default(true)
+  validateData    Boolean @default(true)
+  dryRun          Boolean @default(false)
+
   // Scheduling
-  scheduledAt     DateTime?
-  startedAt       DateTime?
-  completedAt     DateTime?
-  
+  scheduledAt DateTime?
+  startedAt   DateTime?
+  completedAt DateTime?
+
   // Creator
-  createdById     String?
-  createdBy       User?         @relation(fields: [createdById], references: [id])
-  
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
-  
+  createdById String?
+  createdBy   User?   @relation(fields: [createdById], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   @@index([status])
   @@index([templateId])
   @@index([insuranceTypeId])
@@ -904,44 +932,44 @@ enum JobStatus {
 // ============================================
 
 model Sitemap {
-  id              String   @id @default(uuid())
-  name            String   // "sitemap-car-insurance.xml"
-  slug            String   @unique
-  
+  id   String @id @default(uuid())
+  name String // "sitemap-car-insurance.xml"
+  slug String @unique
+
   // Type
-  type            SitemapType @default(PAGES)
-  
+  type SitemapType @default(PAGES)
+
   // Filters
   insuranceTypeId String?
   geoLevel        GeoLevel?
-  
+
   // Settings
-  changeFreq      String   @default("weekly")
-  priority        Float    @default(0.8)
-  maxUrls         Int      @default(50000)
-  
+  changeFreq String @default("weekly")
+  priority   Float  @default(0.8)
+  maxUrls    Int    @default(50000)
+
   // Generated content
-  content         String?  @db.Text // XML content
-  urlCount        Int      @default(0)
-  
+  content  String? @db.Text // XML content
+  urlCount Int     @default(0)
+
   // Status
-  isActive        Boolean  @default(true)
-  lastGenerated   DateTime?
-  
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-  
+  isActive      Boolean   @default(true)
+  lastGenerated DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   @@index([type])
   @@index([isActive])
 }
 
 enum SitemapType {
-  INDEX     // sitemap-index.xml
-  PAGES     // Regular pages
+  INDEX // sitemap-index.xml
+  PAGES // Regular pages
   LOCATIONS // State/City pages
-  CARRIERS  // Carrier pages
-  BLOG      // Blog posts
-  CUSTOM    // Custom sitemap
+  CARRIERS // Carrier pages
+  BLOG // Blog posts
+  CUSTOM // Custom sitemap
 }
 
 // ============================================
@@ -949,53 +977,53 @@ enum SitemapType {
 // ============================================
 
 model FAQ {
-  id              String   @id @default(uuid())
-  question        String
-  answer          String   @db.Text
-  
+  id       String @id @default(uuid())
+  question String
+  answer   String @db.Text
+
   // Categorization
   insuranceTypeId String?
   insuranceType   InsuranceType? @relation(fields: [insuranceTypeId], references: [id])
   category        String?
   tags            String[]
-  
+
   // Display
-  isActive        Boolean  @default(true)
-  isFeatured      Boolean  @default(false)
-  sortOrder       Int      @default(0)
-  
+  isActive   Boolean @default(true)
+  isFeatured Boolean @default(false)
+  sortOrder  Int     @default(0)
+
   // Schema.org
-  includeInSchema Boolean  @default(true)
-  
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-  
+  includeInSchema Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   @@index([insuranceTypeId])
   @@index([isActive])
   @@index([category])
 }
 
 model GlossaryTerm {
-  id              String   @id @default(uuid())
-  term            String
-  slug            String   @unique
-  definition      String   @db.Text
-  
+  id         String @id @default(uuid())
+  term       String
+  slug       String @unique
+  definition String @db.Text
+
   // Extended content
   extendedContent String?  @db.Text
   relatedTerms    String[] // Slugs of related terms
-  
+
   // Categorization
-  category        String?
-  tags            String[]
-  
+  category String?
+  tags     String[]
+
   // Display
-  isActive        Boolean  @default(true)
-  sortOrder       Int      @default(0)
-  
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-  
+  isActive  Boolean @default(true)
+  sortOrder Int     @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   @@index([isActive])
   @@index([category])
 }
@@ -1005,20 +1033,20 @@ model GlossaryTerm {
 // ============================================
 
 model Redirect {
-  id          String   @id @default(uuid())
-  fromPath    String   @unique
-  toPath      String
-  type        Int      @default(301) // 301, 302, 307, 308
-  
-  isActive    Boolean  @default(true)
-  isRegex     Boolean  @default(false)
-  
-  hitCount    Int      @default(0)
-  lastHitAt   DateTime?
-  
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  
+  id       String @id @default(uuid())
+  fromPath String @unique
+  toPath   String
+  type     Int    @default(301) // 301, 302, 307, 308
+
+  isActive Boolean @default(true)
+  isRegex  Boolean @default(false)
+
+  hitCount  Int       @default(0)
+  lastHitAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   @@index([fromPath])
   @@index([isActive])
 }
@@ -1028,36 +1056,36 @@ model Redirect {
 // ============================================
 
 model Media {
-  id          String   @id @default(uuid())
-  filename    String
+  id           String @id @default(uuid())
+  filename     String
   originalName String
-  path        String
-  url         String
-  
+  path         String
+  url          String
+
   // Metadata
-  mimeType    String?
-  width       Int?
-  height      Int?
-  sizeBytes   Int?
-  
+  mimeType  String?
+  width     Int?
+  height    Int?
+  sizeBytes Int?
+
   // SEO
-  altText     String?
-  title       String?
-  caption     String?
-  
+  altText String?
+  title   String?
+  caption String?
+
   // Organization
-  folder      String?
-  tags        String[]
-  
+  folder String?
+  tags   String[]
+
   // Variants (thumbnails, etc.)
-  variants    Json?    // [{size, url, width, height}]
-  
+  variants Json? // [{size, url, width, height}]
+
   // Audit
-  uploadedBy  String?
-  
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  
+  uploadedBy String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   @@index([folder])
   @@index([mimeType])
 }
@@ -1067,25 +1095,25 @@ model Media {
 // ============================================
 
 model AuditLog {
-  id          String   @id @default(uuid())
-  userId      String?
-  user        User?    @relation(fields: [userId], references: [id])
-  
-  action      String   // "create", "update", "delete", "publish", "bulk_generate"
-  entityType  String   // "Page", "Template", "BulkJob"
-  entityId    String
-  entityName  String?  // Human readable name
-  
+  id     String  @id @default(uuid())
+  userId String?
+  user   User?   @relation(fields: [userId], references: [id])
+
+  action     String // "create", "update", "delete", "publish", "bulk_generate"
+  entityType String // "Page", "Template", "BulkJob"
+  entityId   String
+  entityName String? // Human readable name
+
   // Changes
-  changes     Json?    // {field: {old, new}}
-  metadata    Json?    // Additional context
-  
+  changes  Json? // {field: {old, new}}
+  metadata Json? // Additional context
+
   // Request info
-  ipAddress   String?
-  userAgent   String?
-  
-  createdAt   DateTime @default(now())
-  
+  ipAddress String?
+  userAgent String?
+
+  createdAt DateTime @default(now())
+
   @@index([userId])
   @@index([entityType])
   @@index([entityId])
@@ -1098,59 +1126,59 @@ model AuditLog {
 // ============================================
 
 model BlogCategory {
-  id          String     @id @default(uuid())
+  id          String   @id @default(uuid())
   name        String
-  slug        String     @unique
+  slug        String   @unique
   description String?
-  color       String?    // Hex color for UI
-  isActive    Boolean    @default(true)
-  sortOrder   Int        @default(0)
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
-  
-  posts       BlogPost[]
-  
+  color       String? // Hex color for UI
+  isActive    Boolean  @default(true)
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  posts BlogPost[]
+
   @@index([isActive])
   @@index([slug])
 }
 
 model BlogPost {
-  id              String        @id @default(uuid())
-  title           String
-  slug            String        @unique
-  excerpt         String?       @db.Text
-  content         String        @db.Text
-  
+  id      String  @id @default(uuid())
+  title   String
+  slug    String  @unique
+  excerpt String? @db.Text
+  content String  @db.Text
+
   // Media
-  featuredImage   String?
-  featuredAlt     String?
-  
+  featuredImage String?
+  featuredAlt   String?
+
   // Categorization
-  categoryId      String?
-  category        BlogCategory? @relation(fields: [categoryId], references: [id])
-  tags            String[]
-  
+  categoryId String?
+  category   BlogCategory? @relation(fields: [categoryId], references: [id])
+  tags       String[]
+
   // Author
-  authorId        String?
-  author          User?         @relation(fields: [authorId], references: [id])
-  authorName      String?       // Fallback if author deleted
-  
+  authorId   String?
+  author     User?   @relation(fields: [authorId], references: [id])
+  authorName String? // Fallback if author deleted
+
   // SEO
   metaTitle       String?
   metaDescription String?
   ogImage         String?
-  
+
   // Publishing
-  isPublished     Boolean       @default(false)
-  isFeatured      Boolean       @default(false)
-  publishedAt     DateTime?
-  
+  isPublished Boolean   @default(false)
+  isFeatured  Boolean   @default(false)
+  publishedAt DateTime?
+
   // Stats
-  viewCount       Int           @default(0)
-  
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
-  
+  viewCount Int @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   @@index([isPublished])
   @@index([isFeatured])
   @@index([categoryId])
@@ -1163,30 +1191,30 @@ model BlogPost {
 // ============================================
 
 model ScheduledTask {
-  id          String   @id @default(uuid())
-  name        String
-  type        String   // "sitemap_generate", "page_publish", "bulk_job"
-  
+  id   String @id @default(uuid())
+  name String
+  type String // "sitemap_generate", "page_publish", "bulk_job"
+
   // Schedule
-  cronExpression String?  // "0 0 * * *" for daily
-  nextRunAt   DateTime?
-  lastRunAt   DateTime?
-  
+  cronExpression String? // "0 0 * * *" for daily
+  nextRunAt      DateTime?
+  lastRunAt      DateTime?
+
   // Target
-  targetType  String?
-  targetId    String?
-  
+  targetType String?
+  targetId   String?
+
   // Config
-  config      Json?
-  
+  config Json?
+
   // Status
-  isActive    Boolean  @default(true)
-  lastStatus  String?  // "success", "failed"
-  lastError   String?
-  
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  
+  isActive   Boolean @default(true)
+  lastStatus String? // "success", "failed"
+  lastError  String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   @@index([isActive])
   @@index([nextRunAt])
 }
@@ -1196,27 +1224,27 @@ model ScheduledTask {
 // ============================================
 
 model Webhook {
-  id          String   @id @default(uuid())
-  name        String
-  url         String
-  
+  id   String @id @default(uuid())
+  name String
+  url  String
+
   // Events
-  events      String[] // ["page.created", "page.published", "bulk_job.completed"]
-  
+  events String[] // ["page.created", "page.published", "bulk_job.completed"]
+
   // Security
-  secret      String?
-  
+  secret String?
+
   // Status
-  isActive    Boolean  @default(true)
-  
+  isActive Boolean @default(true)
+
   // Stats
   lastTriggeredAt DateTime?
-  successCount    Int     @default(0)
-  failureCount    Int     @default(0)
-  
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  
+  successCount    Int       @default(0)
+  failureCount    Int       @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   @@index([isActive])
 }
 
@@ -1225,26 +1253,26 @@ model Webhook {
 // ============================================
 
 model AnalyticsSnapshot {
-  id          String   @id @default(uuid())
-  date        DateTime @db.Date
-  
+  id   String   @id @default(uuid())
+  date DateTime @db.Date
+
   // Counts
-  totalPages      Int
-  publishedPages  Int
-  draftPages      Int
-  
-  totalViews      Int
-  uniqueVisitors  Int
-  
+  totalPages     Int
+  publishedPages Int
+  draftPages     Int
+
+  totalViews     Int
+  uniqueVisitors Int
+
   // By type
-  pagesByType     Json?  // {insuranceTypeId: count}
-  viewsByType     Json?  // {insuranceTypeId: views}
-  
+  pagesByType Json? // {insuranceTypeId: count}
+  viewsByType Json? // {insuranceTypeId: views}
+
   // Top pages
-  topPages        Json?  // [{pageId, views}]
-  
-  createdAt   DateTime @default(now())
-  
+  topPages Json? // [{pageId, views}]
+
+  createdAt DateTime @default(now())
+
   @@unique([date])
   @@index([date])
 }
@@ -1254,24 +1282,24 @@ model AnalyticsSnapshot {
 // ============================================
 
 model AffiliatePartner {
-  id              String   @id @default(uuid())
-  name            String   // Display name e.g., "Auto Insurance Offer"
-  
+  id   String @id @default(uuid())
+  name String // Display name e.g., "Auto Insurance Offer"
+
   // MarketCall settings - Simple!
-  marketCallUrl   String   // Direct MarketCall form URL
-  insuranceTypeId String?  // Link to insurance type (niche)
+  marketCallUrl   String // Direct MarketCall form URL
+  insuranceTypeId String? // Link to insurance type (niche)
   insuranceType   InsuranceType? @relation(fields: [insuranceTypeId], references: [id])
-  
+
   // Simple display
-  isActive        Boolean  @default(true)
-  priority        Int      @default(0)  // Higher = shown first
-  
+  isActive Boolean @default(true)
+  priority Int     @default(0) // Higher = shown first
+
   // Auto-generated tracking (system handles this)
-  subId           String?  // Auto-generated for tracking
-  
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-  
+  subId String? // Auto-generated for tracking
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   @@index([isActive])
   @@index([insuranceTypeId])
   @@index([priority])
@@ -1282,62 +1310,62 @@ model AffiliatePartner {
 // ============================================
 
 model CallOffer {
-  id              String    @id @default(uuid())
-  name            String    // "Auto Insurance - California"
+  id   String @id @default(uuid())
+  name String // "Auto Insurance - California"
 
   // Marketcall campaign settings
-  campaignId      String    // Marketcall campaign ID e.g. "330575"
-  subId           String?   // Optional subid for tracking
-  phoneMask       String    @default("(xxx) xxx-xx-xx")
+  campaignId String // Marketcall campaign ID e.g. "330575"
+  subId      String? // Optional subid for tracking
+  phoneMask  String  @default("(xxx) xxx-xx-xx")
 
   // Form redirect URL for lead capture
-  formRedirectUrl String?   // MarketCall form URL for lead generation
+  formRedirectUrl String? // MarketCall form URL for lead generation
 
   // Targeting
   insuranceTypeId String?
   insuranceType   InsuranceType? @relation(fields: [insuranceTypeId], references: [id])
-  geoLevel        GeoLevel?      // STATE, CITY, etc.
-  stateIds        String[]       // Specific state IDs (empty = all)
+  geoLevel        GeoLevel? // STATE, CITY, etc.
+  stateIds        String[] // Specific state IDs (empty = all)
 
   // DYNAMIC PRICING - Promotional Rates
   // These display on pages to attract users
-  displayPrice         Float?    // e.g., 59 - The "Starting from" price shown
-  displayPriceLabel    String    @default("Starting from") // "Starting from", "As low as", "Only"
-  displayPricePeriod   String    @default("/month") // "/month", "/year", ""
-  regularPrice         Float?    // e.g., 150 - Original price for comparison
-  savingsAmount        Float?    // e.g., 91 - How much they save (150 - 59)
-  savingsPercentage    Int?      // e.g., 60 - Savings %
-  priceDisclaimer      String?   @default("*Rates vary based on driver profile") // Small print
-  
+  displayPrice       Float? // e.g., 59 - The "Starting from" price shown
+  displayPriceLabel  String  @default("Starting from") // "Starting from", "As low as", "Only"
+  displayPricePeriod String  @default("/month") // "/month", "/year", ""
+  regularPrice       Float? // e.g., 150 - Original price for comparison
+  savingsAmount      Float? // e.g., 91 - How much they save (150 - 59)
+  savingsPercentage  Int? // e.g., 60 - Savings %
+  priceDisclaimer    String? @default("*Rates vary based on driver profile") // Small print
+
   // Promotional messaging
-  promoHeadline      String?   // e.g., "Limited Time: Save up to 60%"
-  promoSubheadline   String?   // e.g., "Drivers in {state} are qualifying for rates as low as ${displayPrice}"
-  urgencyText        String?   // e.g., "Offer ends soon", "Limited spots available"
-  
+  promoHeadline    String? // e.g., "Limited Time: Save up to 60%"
+  promoSubheadline String? // e.g., "Drivers in {state} are qualifying for rates as low as ${displayPrice}"
+  urgencyText      String? // e.g., "Offer ends soon", "Limited spots available"
+
   // CTA Button text
-  ctaText            String    @default("Get Your Free Quote") 
-  ctaSubtext         String?   // e.g., "Takes 2 minutes • No obligation"
+  ctaText    String  @default("Get Your Free Quote")
+  ctaSubtext String? // e.g., "Takes 2 minutes • No obligation"
 
   // Control
-  isActive        Boolean   @default(true)
-  priority        Int       @default(0)  // Higher = preferred when multiple match
-  
+  isActive Boolean @default(true)
+  priority Int     @default(0) // Higher = preferred when multiple match
+
   // Schedule (for time-limited offers)
-  promoStartDate   DateTime?  // When promo starts (null = always active)
-  promoEndDate     DateTime?  // When promo ends (null = no end date)
-  
+  promoStartDate DateTime? // When promo starts (null = always active)
+  promoEndDate   DateTime? // When promo ends (null = no end date)
+
   // Marketcall Integration
-  marketcallOfferId    String?   // Offer ID from Marketcall
-  marketcallCampaignId String?   // Campaign ID for tracking
-  scriptUrl            String?   // Marketcall script URL (e.g., https://js.marketcall.com/...)
-  scriptCode           String?   @db.Text // The actual JavaScript code to embed
-  phoneNumber          String?   // Fallback phone number (if script doesn't load)
+  marketcallOfferId    String? // Offer ID from Marketcall
+  marketcallCampaignId String? // Campaign ID for tracking
+  scriptUrl            String? // Marketcall script URL (e.g., https://js.marketcall.com/...)
+  scriptCode           String? @db.Text // The actual JavaScript code to embed
+  phoneNumber          String? // Fallback phone number (if script doesn't load)
 
   // Notes
-  notes           String?   @db.Text
+  notes String? @db.Text
 
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([insuranceTypeId])
   @@index([isActive])
@@ -1346,14 +1374,14 @@ model CallOffer {
 
 // Global Marketcall settings
 model CallTrackingSettings {
-  id              String    @id @default(uuid())
-  provider        String    @default("marketcall")
-  siteId          String    // Marketcall site ID e.g. "2477"
-  serviceBaseUrl  String    @default("//www.marketcall.com")
-  isEnabled       Boolean   @default(true)
+  id             String  @id @default(uuid())
+  provider       String  @default("marketcall")
+  siteId         String // Marketcall site ID e.g. "2477"
+  serviceBaseUrl String  @default("//www.marketcall.com")
+  isEnabled      Boolean @default(true)
 
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 // ============================================
@@ -1361,69 +1389,87 @@ model CallTrackingSettings {
 // ============================================
 
 model AIProvider {
-  id              String    @id @default(uuid())
-  name            String    // "OpenRouter Account 1", "OpenRouter Account 2"
-  provider        String    @default("openrouter") // "openrouter", "openai", "anthropic"
-  apiKey          String    // Encrypted API key
-  apiEndpoint     String    @default("https://openrouter.ai/api/v1/chat/completions")
+  id          String @id @default(uuid())
+  name        String // "OpenRouter Account 1", "NVIDIA NIM", "Custom API"
+  provider    String @default("openrouter") // "openrouter", "openai", "anthropic", "nvidia", "custom"
+  apiKey      String // Encrypted API key
+  apiEndpoint String @default("https://openrouter.ai/api/v1/chat/completions")
 
   // Model preferences - USE ONLY :free MODELS!
-  preferredModel  String    @default("deepseek/deepseek-r1:free") // FREE MODEL ONLY
-  fallbackModel   String?   // Backup model if preferred fails
+  preferredModel String  @default("deepseek/deepseek-r1:free") // FREE MODEL ONLY
+  fallbackModel  String? // Backup model if preferred fails
+
+  // Provider-specific settings
+  headers       Json? // Custom headers for API requests
+  requestFormat Json? // Custom request body format
+  responsePath  String? // JSON path to extract response (e.g., "choices.0.message.content")
 
   // Rate limiting
-  maxRequestsPerMinute Int   @default(60)
-  maxTokensPerRequest  Int   @default(4000)
+  maxRequestsPerMinute Int @default(60)
+  maxTokensPerRequest  Int @default(4000)
 
   // Budget tracking
-  totalBudget     Float?    // Total budget in dollars
-  usedBudget      Float     @default(0) // Amount spent so far
-  requestCount    Int       @default(0)
-  lastUsedAt      DateTime?
+  totalBudget  Float? // Total budget in dollars
+  usedBudget   Float     @default(0) // Amount spent so far
+  requestCount Int       @default(0)
+  lastUsedAt   DateTime?
 
   // Status
-  isActive        Boolean   @default(true)
-  priority        Int       @default(0) // Lower = used first
+  isActive  Boolean @default(true)
+  priority  Int     @default(0) // Lower = used first
+  isDefault Boolean @default(false) // Default provider for new jobs
 
   // Error tracking (for rate limit handling)
-  lastError       String?   // Last error message (e.g., "RATE_LIMITED")
-  lastErrorAt     DateTime? // When the last error occurred
-  metadata        Json?     // Additional metadata {rateLimitResetAt, etc.}
+  lastError   String? // Last error message (e.g., "RATE_LIMITED")
+  lastErrorAt DateTime? // When the last error occurred
+  metadata    Json? // Additional metadata {rateLimitResetAt, etc.}
 
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  aiJobs          AIGenerationJob[]
+  aiJobs AIGenerationJob[]
 
   @@index([isActive])
   @@index([priority])
 }
 
 model AIGenerationJob {
-  id              String    @id @default(uuid())
-  name            String    // "Auto Insurance - California Cities"
+  id          String  @id @default(uuid())
+  name        String // "Auto Insurance - California Cities"
+  description String? // Optional description for the job
 
   // Target pages
-  pageIds         String[]  // Specific page IDs to generate content for
-  filters         Json?     // {insuranceTypeId, stateId, cityId, geoLevel}
+  pageIds String[] // Specific page IDs to generate content for
+  filters Json? // {insuranceTypeId, stateId, cityId, geoLevel, perSection}
 
   // Content sections to generate
-  sections        String[]  // ["intro", "requirements", "faqs", "tips"]
+  sections String[] // ["intro", "requirements", "faqs", "tips"]
 
   // SEO Keywords configuration
-  keywords        Json?     // {primary: "auto insurance", secondary: ["car insurance", "vehicle coverage"], density: 2}
+  keywords Json? // {primary: "auto insurance", secondary: ["car insurance", "vehicle coverage"], density: 2}
 
-  // AI settings
-  providerId      String?
-  provider        AIProvider? @relation(fields: [providerId], references: [id])
-  model           String    @default("deepseek/deepseek-r1:free") // FREE MODEL ONLY
-  promptTemplate  String    @db.Text // Template with {{variables}}
-  temperature     Float     @default(0.7)
-  maxTokens       Int       @default(2000)
+  // AI Provider settings - LOCKED when job starts
+  providerId String?
+  provider   AIProvider? @relation(fields: [providerId], references: [id])
+  model      String      @default("deepseek/deepseek-r1:free") // Model to use
+
+  // Prompt Template - can be niche-specific
+  promptTemplateId String?
+  promptTemplate   AIPromptTemplate? @relation(fields: [promptTemplateId], references: [id])
+
+  // Generation settings
+  temperature Float   @default(0.7)
+  maxTokens   Int     @default(2000)
+  perSection  Boolean @default(false) // One API call per section
+
+  // Content deduplication
+  dedupKey        String? // Key for deduplication (e.g., "auto-insurance-content-hash")
+  contentHash     String? // Hash of generated content for uniqueness check
+  uniquenessScore Float? // 0-100 score of content uniqueness
 
   // Batching
-  batchSize       Int       @default(10) // Process N pages at a time
-  delayBetweenBatches Int   @default(1000) // Milliseconds
+  batchSize           Int @default(10) // Process N pages at a time
+  delayBetweenBatches Int @default(1000) // Milliseconds
 
   // Progress
   status          JobStatus @default(PENDING)
@@ -1433,32 +1479,62 @@ model AIGenerationJob {
   failedPages     Int       @default(0)
 
   // Costs
-  totalTokensUsed Int       @default(0)
-  estimatedCost   Float     @default(0)
+  totalTokensUsed Int   @default(0)
+  estimatedCost   Float @default(0)
 
   // Error handling
-  errorLog        Json?     // [{pageId, error}]
+  errorLog Json? // [{pageId, error, section}]
 
   // Scheduling
-  scheduledAt     DateTime?
-  startedAt       DateTime?
-  completedAt     DateTime?
+  scheduledAt DateTime?
+  startedAt   DateTime?
+  completedAt DateTime?
 
   // Pause/Resume support
-  pausedAt        DateTime?  // When the job was paused (rate limits)
-  resumedAt       DateTime?  // When the job was last resumed
-  autoResumeAt    DateTime?  // When the job should auto-resume
-  resumeState     Json?      // {lastProcessedStateId, lastProcessedCityId, processedCount}
+  pausedAt     DateTime? // When the job was paused (rate limits)
+  resumedAt    DateTime? // When the job was last resumed
+  autoResumeAt DateTime? // When the job should auto-resume
+  resumeState  Json? // {lastProcessedStateId, lastProcessedCityId, processedCount}
+
+  // Parallel job grouping - jobs with same groupId run in parallel
+  jobGroupId String?
+  jobGroup   AIGenerationJobGroup? @relation(fields: [jobGroupId], references: [id])
 
   // Creator
-  createdById     String?
-  createdBy       User?     @relation(fields: [createdById], references: [id])
+  createdById String?
+  createdBy   User?   @relation(fields: [createdById], references: [id])
 
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([status])
   @@index([providerId])
+  @@index([promptTemplateId])
+  @@index([jobGroupId])
+}
+
+// Job Group for parallel content generation
+model AIGenerationJobGroup {
+  id          String  @id @default(uuid())
+  name        String // "Batch Generation - Jan 2024"
+  description String?
+
+  // Group status
+  status        JobStatus @default(PENDING)
+  totalJobs     Int       @default(0)
+  completedJobs Int       @default(0)
+  failedJobs    Int       @default(0)
+
+  // Jobs in this group
+  jobs AIGenerationJob[]
+
+  // Settings for all jobs in group
+  sharedSettings Json? // Common settings across jobs
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status])
 }
 
 // ============================================
@@ -1466,17 +1542,17 @@ model AIGenerationJob {
 // ============================================
 
 model FreeAIModel {
-  id          String    @id @default(uuid())
-  modelId     String    @unique // e.g., "deepseek/deepseek-r1:free"
-  name        String    // Display name e.g., "DeepSeek R1 (Free)"
-  provider    String    // e.g., "deepseek", "google", "meta"
-  description String?   // Optional description
-  isActive    Boolean   @default(true)
-  priority    Int       @default(0) // Lower = higher priority
-  
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  
+  id          String  @id @default(uuid())
+  modelId     String  @unique // e.g., "deepseek/deepseek-r1:free"
+  name        String // Display name e.g., "DeepSeek R1 (Free)"
+  provider    String // e.g., "deepseek", "google", "meta"
+  description String? // Optional description
+  isActive    Boolean @default(true)
+  priority    Int     @default(0) // Lower = higher priority
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   @@index([isActive])
   @@index([priority])
 }
@@ -1486,98 +1562,153 @@ model FreeAIModel {
 // ============================================
 
 model KeywordConfig {
-  id          String    @id @default(uuid())
-  name        String    // "Auto Insurance Keywords", "Home Insurance SEO"
-  description String?   @db.Text
-  
+  id          String  @id @default(uuid())
+  name        String // "Auto Insurance Keywords", "Home Insurance SEO"
+  description String? @db.Text
+
   // Primary keyword - main target
-  primaryKeyword    String    // e.g., "auto insurance california"
-  
+  primaryKeyword String // e.g., "auto insurance california"
+
   // Secondary keywords - related terms
-  secondaryKeywords String[]  // e.g., ["car insurance", "vehicle coverage", "auto policy"]
-  
+  secondaryKeywords String[] // e.g., ["car insurance", "vehicle coverage", "auto policy"]
+
   // Long-tail keywords - specific phrases
-  longTailKeywords  String[]  // e.g., ["cheap auto insurance california", "best car insurance rates"]
-  
+  longTailKeywords String[] // e.g., ["cheap auto insurance california", "best car insurance rates"]
+
   // LSI keywords - semantically related
-  lsiKeywords       String[]  // e.g., ["premium", "deductible", "coverage limits"]
-  
+  lsiKeywords String[] // e.g., ["premium", "deductible", "coverage limits"]
+
   // Configuration
-  targetDensity     Float     @default(2.0)  // Target keyword density (%)
-  maxDensity        Float     @default(3.0)  // Maximum allowed density (%)
-  
+  targetDensity Float @default(2.0) // Target keyword density (%)
+  maxDensity    Float @default(3.0) // Maximum allowed density (%)
+
   // Placement requirements
-  requireInTitle    Boolean   @default(true)
-  requireInH1       Boolean   @default(true)
-  requireInH2       Boolean   @default(true)
-  requireInFirst100 Boolean   @default(true)
-  requireInMeta     Boolean   @default(true)
-  
+  requireInTitle    Boolean @default(true)
+  requireInH1       Boolean @default(true)
+  requireInH2       Boolean @default(true)
+  requireInFirst100 Boolean @default(true)
+  requireInMeta     Boolean @default(true)
+
   // Insurance type this config applies to
-  insuranceTypeId   String?
-  insuranceType     InsuranceType? @relation(fields: [insuranceTypeId], references: [id])
-  
-  isActive    Boolean   @default(true)
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  
+  insuranceTypeId String?
+  insuranceType   InsuranceType? @relation(fields: [insuranceTypeId], references: [id])
+
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   @@index([insuranceTypeId])
   @@index([isActive])
 }
 
 model AIPromptTemplate {
-  id              String    @id @default(uuid())
-  name            String    // "Auto Insurance - Major Cities", "Health - State Pages"
-  description     String?   @db.Text
+  id          String  @id @default(uuid())
+  name        String // "Auto Insurance - Major Cities", "Health - State Pages"
+  description String? @db.Text
+
+  // Category for organization
+  category String? // "auto-insurance", "home-insurance", "health-insurance", etc.
 
   // Targeting - which pages use this template
-  insuranceTypeId String?   // Specific insurance type (null = all)
+  insuranceTypeId String? // Specific insurance type (null = all)
+  insuranceType   InsuranceType? @relation(fields: [insuranceTypeId], references: [id])
   geoLevel        GeoLevel? // CITY, STATE, etc. (null = all)
-  isMajorCity     Boolean?  // Only major cities (null = all)
+  isMajorCity     Boolean? // Only major cities (null = all)
 
-  // Prompt sections - Original
-  systemPrompt       String    @db.Text // System role instruction
-  introPrompt        String?   @db.Text // Custom prompt for intro section
-  requirementsPrompt String?   @db.Text // Custom prompt for requirements
-  faqsPrompt         String?   @db.Text // Custom prompt for FAQs
-  tipsPrompt         String?   @db.Text // Custom prompt for tips
+  // Prompt sections with example formats
+  systemPrompt       String  @db.Text // System role instruction
+  introPrompt        String? @db.Text // Custom prompt for intro section
+  requirementsPrompt String? @db.Text // Custom prompt for requirements
+  faqsPrompt         String? @db.Text // Custom prompt for FAQs
+  tipsPrompt         String? @db.Text // Custom prompt for tips
 
   // Prompt sections - New SEO sections
-  costBreakdownPrompt  String?   @db.Text // Cost factors breakdown
-  comparisonPrompt     String?   @db.Text // Provider comparison
-  discountsPrompt      String?   @db.Text // Available discounts
-  localStatsPrompt     String?   @db.Text // Location-specific statistics
-  coverageGuidePrompt  String?   @db.Text // Coverage types guide
-  claimsProcessPrompt  String?   @db.Text // Claims filing process
-  buyersGuidePrompt    String?   @db.Text // Step-by-step buying guide
-  metaTagsPrompt       String?   @db.Text // SEO meta tags generation
+  costBreakdownPrompt String? @db.Text // Cost factors breakdown
+  comparisonPrompt    String? @db.Text // Provider comparison
+  discountsPrompt     String? @db.Text // Available discounts
+  localStatsPrompt    String? @db.Text // Location-specific statistics
+  coverageGuidePrompt String? @db.Text // Coverage types guide
+  claimsProcessPrompt String? @db.Text // Claims filing process
+  buyersGuidePrompt   String? @db.Text // Step-by-step buying guide
+  metaTagsPrompt      String? @db.Text // SEO meta tags generation
+  
+  // Extended Prompt Sections (20+ for rich content)
+  heroSectionPrompt      String? @db.Text // Hero headline and hook
+  keyTakeawaysPrompt     String? @db.Text // Quick summary bullets
+  quickAnswersPrompt     String? @db.Text // Direct answer boxes
+  prosConsPrompt         String? @db.Text // Pros and cons comparison
+  topProvidersPrompt     String? @db.Text // Top providers showcase
+  pricingTablePrompt     String? @db.Text // Pricing comparison table
+  localInsightsPrompt    String? @db.Text // City/state insights
+  commonMistakesPrompt   String? @db.Text // Mistakes to avoid
+  expertTipsPrompt       String? @db.Text // Expert insider tips
+  savingStrategiesPrompt String? @db.Text // Money-saving strategies
+  regulatoryInfoPrompt   String? @db.Text // State regulations
+  industryTrendsPrompt   String? @db.Text // Current trends
+  testimonialsPrompt     String? @db.Text // Testimonial content
+  socialPostsPrompt      String? @db.Text // Social media posts
+  emailTemplatePrompt    String? @db.Text // Email capture template
+  longFormGuidePrompt    String? @db.Text // Extended guide (2000+ words)
+  comparisonMatrixPrompt String? @db.Text // Side-by-side matrix
+  glossaryTermsPrompt    String? @db.Text // Relevant glossary terms
+  relatedQuestionsPrompt String? @db.Text // Related/People Also Ask
+  trustSignalsPrompt     String? @db.Text // Trust badges/guarantees
+  urgencyTriggersPrompt  String? @db.Text // Urgency messaging
+  schemaMarkupPrompt     String? @db.Text // JSON-LD schema generation
+
+  // Example output formats - shown to AI for consistent formatting
+  exampleIntroFormat         String? @db.Text // Example intro format
+  exampleFaqsFormat          Json? // Example FAQ structure
+  exampleTipsFormat          Json? // Example tips array
+  exampleCostBreakdownFormat Json? // Example cost breakdown structure
+  exampleMetaTagsFormat      Json? // Example meta tags
+  exampleHeroFormat          Json? // Example hero section
+  exampleKeyTakeawaysFormat  Json? // Example key takeaways
+  exampleProsConsFormat      Json? // Example pros/cons
+  examplePricingTableFormat  Json? // Example pricing table
+  exampleLongFormFormat      Json? // Example long-form guide
 
   // AI settings for this template
-  model           String    @default("xiaomi/mimo-v2-flash")
-  temperature     Float     @default(0.7)
-  maxTokens       Int       @default(2000)
+  model       String @default("deepseek/deepseek-r1:free")
+  temperature Float  @default(0.7)
+  maxTokens   Int    @default(2000)
 
   // Template variables available
-  availableVars   Json?     // List of variables this template can use
-  exampleOutput   Json?     // Example of what this template generates
+  availableVars Json? // List of variables this template can use
+  exampleOutput Json? // Example of what this template generates
+
+  // Deduplication settings
+  dedupEnabled       Boolean @default(true) // Enable deduplication for this template
+  dedupStrategy      String  @default("semantic") // "exact", "semantic", "none"
+  minUniquenessScore Float   @default(80.0) // Minimum uniqueness score (0-100)
 
   // Usage
-  isActive        Boolean   @default(true)
-  isDefault       Boolean   @default(false) // Default for matching criteria
-  priority        Int       @default(0) // Higher = preferred when multiple match
-  usageCount      Int       @default(0) // Track how many times used
+  isActive   Boolean @default(true)
+  isDefault  Boolean @default(false) // Default for matching criteria
+  isSystem   Boolean @default(false) // System template (can't delete)
+  priority   Int     @default(0) // Higher = preferred when multiple match
+  usageCount Int     @default(0) // Track how many times used
+
+  // Manual edit tracking - to look like manually created
+  lastEditedAt   DateTime? @updatedAt
+  lastEditedById String?
+  editHistory    Json? // [{editedAt, editedBy, changes}]
 
   // Audit
-  createdById     String?
-  createdBy       User?     @relation("AIPromptCreator", fields: [createdById], references: [id])
+  createdById String?
+  createdBy   User?   @relation("AIPromptCreator", fields: [createdById], references: [id])
 
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  // Relations
+  aiJobs AIGenerationJob[] // Jobs using this template
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([insuranceTypeId])
   @@index([geoLevel])
   @@index([isActive])
   @@index([isDefault])
+  @@index([category])
 }
 
 // ============================================
@@ -1585,10 +1716,10 @@ model AIPromptTemplate {
 // ============================================
 
 enum PopupType {
-  SCROLL        // Trigger on scroll percentage
-  EXIT_INTENT   // Trigger on exit intent (mouse leave, back button)
-  TIMED         // Trigger after X seconds
-  CLICK         // Trigger on specific element click
+  SCROLL // Trigger on scroll percentage
+  EXIT_INTENT // Trigger on exit intent (mouse leave, back button)
+  TIMED // Trigger after X seconds
+  CLICK // Trigger on specific element click
 }
 
 enum PopupPosition {
@@ -1605,56 +1736,56 @@ enum PopupSize {
 }
 
 model Popup {
-  id              String       @id @default(uuid())
-  name            String       // Internal name for admin
+  id   String @id @default(uuid())
+  name String // Internal name for admin
 
   // Content
-  title           String
-  subtitle        String?
-  description     String?      @db.Text
-  ctaText         String       @default("Get Quote")
-  ctaUrl          String       // URL or tel: link
+  title            String
+  subtitle         String?
+  description      String? @db.Text
+  ctaText          String  @default("Get Quote")
+  ctaUrl           String // URL or tel: link
   secondaryCtaText String?
   secondaryCtaUrl  String?
-  phoneNumber     String?      // Display phone number
-  imageUrl        String?      // Optional header image
-  badgeText       String?      // e.g., "Limited Time Offer"
+  phoneNumber      String? // Display phone number
+  imageUrl         String? // Optional header image
+  badgeText        String? // e.g., "Limited Time Offer"
 
   // Styling
-  accentColor     String       @default("blue") // blue, emerald, orange, purple, red
+  accentColor     String        @default("blue") // blue, emerald, orange, purple, red
   position        PopupPosition @default(CENTER)
-  size            PopupSize    @default(MD)
-  showTrustBadges Boolean      @default(true)
+  size            PopupSize     @default(MD)
+  showTrustBadges Boolean       @default(true)
 
   // Trigger settings
-  type            PopupType    @default(SCROLL)
-  scrollPercentage Int?        @default(50) // For SCROLL type: 0-100
-  delaySeconds    Int?         @default(0)  // Additional delay after trigger
+  type             PopupType @default(SCROLL)
+  scrollPercentage Int?      @default(50) // For SCROLL type: 0-100
+  delaySeconds     Int?      @default(0) // Additional delay after trigger
 
   // Frequency settings
-  showOncePerSession Boolean   @default(true)
-  showOncePerDay     Boolean   @default(false)
-  cookieKey       String?      // Custom storage key
+  showOncePerSession Boolean @default(true)
+  showOncePerDay     Boolean @default(false)
+  cookieKey          String? // Custom storage key
 
   // Targeting
-  insuranceTypeIds String[]    // Show only for these insurance types (empty = all)
-  stateIds         String[]    // Show only for these states (empty = all)
-  pageTypes        String[]    // Show only on these page types: "insurance", "blog", "landing"
-  excludePageSlugs String[]    // Exclude specific page slugs
+  insuranceTypeIds String[] // Show only for these insurance types (empty = all)
+  stateIds         String[] // Show only for these states (empty = all)
+  pageTypes        String[] // Show only on these page types: "insurance", "blog", "landing"
+  excludePageSlugs String[] // Exclude specific page slugs
 
   // Control
-  isActive        Boolean      @default(true)
-  priority        Int          @default(0) // Higher = shown first when multiple match
+  isActive Boolean @default(true)
+  priority Int     @default(0) // Higher = shown first when multiple match
 
   // Schedule (optional)
-  startDate       DateTime?
-  endDate         DateTime?
+  startDate DateTime?
+  endDate   DateTime?
 
   // Notes
-  notes           String?      @db.Text
+  notes String? @db.Text
 
-  createdAt       DateTime     @default(now())
-  updatedAt       DateTime     @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([isActive])
   @@index([type])
@@ -1666,49 +1797,49 @@ model Popup {
 // ============================================
 
 enum LeadStatus {
-  NEW           // Freshly captured
-  CONTACTED     // Reached out to
-  QUALIFIED     // Verified as legitimate lead
-  CONVERTED     // Purchased policy
-  DISQUALIFIED  // Not a valid lead
-  DUPLICATE     // Duplicate submission
+  NEW // Freshly captured
+  CONTACTED // Reached out to
+  QUALIFIED // Verified as legitimate lead
+  CONVERTED // Purchased policy
+  DISQUALIFIED // Not a valid lead
+  DUPLICATE // Duplicate submission
 }
 
 model Lead {
-  id              String      @id @default(uuid())
-  
+  id String @id @default(uuid())
+
   // Contact information
-  firstName       String?
-  lastName        String?
-  email           String?
-  phoneNumber     String?
-  zipCode         String      // Required field
-  
+  firstName   String?
+  lastName    String?
+  email       String?
+  phoneNumber String?
+  zipCode     String // Required field
+
   // Lead context
-  insuranceType   String?     // What insurance they're looking for
-  source          String      @default("web") // web, popup, phone_click, affiliate
-  
+  insuranceType String? // What insurance they're looking for
+  source        String  @default("web") // web, popup, phone_click, affiliate
+
   // Attribution
-  referrer        String?     // HTTP referrer
-  utmSource       String?     // Campaign source
-  utmMedium       String?     // Campaign medium
-  utmCampaign     String?     // Campaign name
-  ipAddress       String?
-  userAgent       String?
-  
+  referrer    String? // HTTP referrer
+  utmSource   String? // Campaign source
+  utmMedium   String? // Campaign medium
+  utmCampaign String? // Campaign name
+  ipAddress   String?
+  userAgent   String?
+
   // Additional data (custom fields, form data, etc.)
-  metadata        Json?
-  
+  metadata Json?
+
   // Status and lifecycle
-  status          LeadStatus  @default(NEW)
-  qualifiedAt     DateTime?
-  convertedAt     DateTime?
-  notes           String?     @db.Text
-  
+  status      LeadStatus @default(NEW)
+  qualifiedAt DateTime?
+  convertedAt DateTime?
+  notes       String?    @db.Text
+
   // Timestamps
-  createdAt       DateTime    @default(now())
-  updatedAt       DateTime    @updatedAt
-  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   @@index([zipCode])
   @@index([insuranceType])
   @@index([status])

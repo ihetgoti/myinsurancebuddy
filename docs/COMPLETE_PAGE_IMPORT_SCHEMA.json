@@ -1,0 +1,430 @@
+{
+  "_documentation": {
+    "description": "Complete Page Import Schema for myinsurancebuddies.com",
+    "usage": "Use this schema for Google Sheets mass generation or CSV import",
+    "endpoints": {
+      "bulk_create": "POST /api/pages/bulk",
+      "bulk_update": "POST /api/pages/bulk-update",
+      "single_page": "POST /api/pages"
+    },
+    "ai_auto_generation_sections": [
+      "intro", "requirements", "faqs", "tips", "costBreakdown",
+      "comparison", "discounts", "localStats", "coverageGuide",
+      "claimsProcess", "buyersGuide", "metaTags"
+    ]
+  },
+
+  "_example_csv_header": "slug|title|subtitle|excerpt|metaTitle|metaDescription|metaKeywords|ogTitle|ogDescription|ogImage|twitterTitle|twitterDesc|canonicalUrl|robots|insuranceType|state|city|avg_premium|min_coverage|uninsured_rate|intro|requirements|tips_section|faq_q1|faq_a1|customCss|schema_markup|isPublished|showAds",
+
+  "page_record": {
+    "_section_1_identity": "=== PAGE IDENTITY & SLUG ===",
+    "slug": "car-insurance/california/los-angeles",
+    "_slug_pattern": "{insurance-type}/{state}/{city} or {insurance-type}/{state}",
+    "_slug_auto_generated": "If empty, auto-generated from state/city names",
+
+    "_section_2_basic_content": "=== BASIC CONTENT ===",
+    "title": "Cheapest Car Insurance in Los Angeles, California",
+    "subtitle": "Compare affordable auto insurance rates and save up to $500/year",
+    "excerpt": "Find the best car insurance rates in Los Angeles. Compare quotes from top providers like State Farm, GEICO, Progressive, and more. Average savings of $487/year.",
+    
+    "heroTitle": "Cheapest Car Insurance in Los Angeles",
+    "heroSubtitle": "Compare rates from 50+ insurance providers and find the best deal for your budget",
+    "heroCtaText": "Get Free Quotes",
+    "heroCtaUrl": "/get-quote",
+    "heroBackgroundImage": "https://cdn.example.com/hero-la.jpg",
+    "heroBackgroundType": "gradient",
+
+    "_section_3_seo_basic": "=== SEO - BASIC META TAGS ===",
+    "metaTitle": "Cheapest Car Insurance in Los Angeles, CA (2024) | Save $500+",
+    "metaDescription": "Find the cheapest car insurance in Los Angeles, CA. Compare quotes from top providers. Average rates from $1,200/year. Get your free quote today and save up to $500!",
+    "metaKeywords": [
+      "cheap car insurance los angeles",
+      "affordable auto insurance california",
+      "lowest car insurance rates LA",
+      "best car insurance deals",
+      "compare car insurance quotes"
+    ],
+
+    "_section_4_open_graph": "=== SEO - OPEN GRAPH (Facebook/LinkedIn) ===",
+    "ogTitle": "Cheapest Car Insurance in Los Angeles | Save Up to $500/Year",
+    "ogDescription": "Compare affordable car insurance rates in Los Angeles from 50+ top providers. Average savings of $487/year. Get your free quote in 2 minutes!",
+    "ogImage": "https://cdn.example.com/og-car-insurance-la.jpg",
+    "ogType": "website",
+    "ogUrl": "https://myinsurancebuddies.com/car-insurance/california/los-angeles",
+
+    "_section_5_twitter": "=== SEO - TWITTER CARD ===",
+    "twitterCard": "summary_large_image",
+    "twitterTitle": "Cheapest Car Insurance in Los Angeles, CA",
+    "twitterDesc": "Compare quotes & save $500+ on auto insurance in LA. Free comparison tool.",
+    "twitterImage": "https://cdn.example.com/twitter-car-insurance-la.jpg",
+
+    "_section_6_advanced_seo": "=== SEO - ADVANCED ===",
+    "canonicalUrl": "https://myinsurancebuddies.com/car-insurance/california/los-angeles",
+    "canonicalTag": "https://myinsurancebuddies.com/car-insurance/california/los-angeles",
+    "robots": "index,follow",
+    "hreflangTags": [
+      { "lang": "en-us", "url": "https://myinsurancebuddies.com/car-insurance/california/los-angeles" },
+      { "lang": "es-us", "url": "https://myinsurancebuddies.com/es/car-insurance/california/los-angeles" }
+    ],
+
+    "_section_7_schema_markup": "=== SCHEMA.ORG STRUCTURED DATA (JSON-LD) ===",
+    "schemaMarkup": {
+      "@context": "https://schema.org",
+      "@type": "InsuranceAgency",
+      "name": "My Insurance Buddies - Los Angeles Car Insurance",
+      "description": "Compare cheap car insurance quotes in Los Angeles",
+      "url": "https://myinsurancebuddies.com/car-insurance/california/los-angeles",
+      "areaServed": {
+        "@type": "City",
+        "name": "Los Angeles",
+        "containedInPlace": {
+          "@type": "State",
+          "name": "California"
+        }
+      },
+      "offers": {
+        "@type": "Offer",
+        "price": "1200",
+        "priceCurrency": "USD",
+        "priceValidUntil": "2024-12-31"
+      },
+      "aggregateRating": {
+        "@type": "AggregateRating",
+        "ratingValue": "4.8",
+        "reviewCount": "12500"
+      },
+      "breadcrumb": {
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+          { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://myinsurancebuddies.com/" },
+          { "@type": "ListItem", "position": 2, "name": "Car Insurance", "item": "https://myinsurancebuddies.com/car-insurance" },
+          { "@type": "ListItem", "position": 3, "name": "California", "item": "https://myinsurancebuddies.com/car-insurance/california" },
+          { "@type": "ListItem", "position": 4, "name": "Los Angeles" }
+        ]
+      },
+      "faqPage": {
+        "@type": "FAQPage",
+        "mainEntity": [
+          {
+            "@type": "Question",
+            "name": "What is the cheapest car insurance in Los Angeles?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "The cheapest car insurance in Los Angeles typically starts around $800/year for minimum coverage..."
+            }
+          }
+        ]
+      }
+    },
+
+    "_section_8_relationships": "=== HIERARCHY & RELATIONSHIPS ===",
+    "insuranceType": "car-insurance",
+    "_insuranceType_options": ["car-insurance", "home-insurance", "health-insurance", "life-insurance", "motorcycle-insurance", "pet-insurance", "business-insurance", "renters-insurance"],
+    "geoLevel": "CITY",
+    "_geoLevel_options": ["NONE", "NICHE", "COUNTRY", "STATE", "CITY"],
+    "country": "United States",
+    "countryCode": "US",
+    "state": "California",
+    "stateCode": "CA",
+    "stateSlug": "california",
+    "city": "Los Angeles",
+    "citySlug": "los-angeles",
+    "templateId": "",
+
+    "_section_9_custom_data_variables": "=== CUSTOM DATA VARIABLES (For Template Rendering) ===",
+    "customData": {
+      "avg_premium": "$1,847/year",
+      "min_premium": "$892/year",
+      "max_premium": "$3,200/year",
+      "avg_premium_national": "$1,565/year",
+      "premium_comparison": "18% above national average",
+      
+      "min_coverage": "15/30/5",
+      "min_coverage_explained": "$15,000 bodily injury per person / $30,000 per accident / $5,000 property damage",
+      "recommended_coverage": "100/300/100",
+      "full_coverage_avg": "$2,400/year",
+      
+      "uninsured_rate": "15%",
+      "uninsured_rate_national": "12.6%",
+      "accident_rate": "12.3 per 100,000",
+      "theft_rate": "425 per 100,000 vehicles",
+      
+      "top_insurer_1": "State Farm",
+      "top_insurer_1_avg_rate": "$1,650/year",
+      "top_insurer_2": "GEICO",
+      "top_insurer_2_avg_rate": "$1,520/year",
+      "top_insurer_3": "Progressive",
+      "top_insurer_3_avg_rate": "$1,780/year",
+      "top_insurer_4": "Allstate",
+      "top_insurer_4_avg_rate": "$1,920/year",
+      "top_insurer_5": "Farmers",
+      "top_insurer_5_avg_rate": "$1,850/year",
+      
+      "population": "3.9 million",
+      "median_age": "35.8",
+      "median_income": "$65,290",
+      "vehicle_count": "2.1 million",
+      
+      "weather_risk": "High",
+      "weather_factors": "Earthquakes, wildfires, flooding",
+      "traffic_congestion_rank": "#1 worst in US",
+      "avg_commute_time": "31 minutes",
+      
+      "discounts_available": [
+        { "name": "Safe Driver", "savings": "10-20%", "description": "Clean driving record for 3+ years" },
+        { "name": "Multi-Policy", "savings": "10-25%", "description": "Bundle auto with home or renters" },
+        { "name": "Good Student", "savings": "8-15%", "description": "B average or better" },
+        { "name": "Low Mileage", "savings": "5-15%", "description": "Under 7,500 miles/year" },
+        { "name": "Anti-theft", "savings": "5-10%", "description": "Vehicle with approved anti-theft system" },
+        { "name": "Pay in Full", "savings": "5-10%", "description": "Pay annual premium upfront" }
+      ],
+      
+      "zip_codes": "90001, 90002, 90003, 90004, 90005, 90006, 90007, 90008, 90010, 90011, 90012, 90013, 90014, 90015, 90016, 90017, 90018, 90019, 90020, 90021",
+      
+      "local_office_1_name": "State Farm - Downtown LA",
+      "local_office_1_address": "123 Main St, Los Angeles, CA 90012",
+      "local_office_1_phone": "(213) 555-0100",
+      
+      "dmv_info": "California DMV - Los Angeles",
+      "dmv_address": "3615 S Hope St, Los Angeles, CA 90007",
+      "dmv_phone": "(800) 777-0133"
+    },
+
+    "_section_10_ai_generated_content": "=== AI GENERATED CONTENT SECTIONS ===",
+    "aiGeneratedContent": {
+      "intro": "Looking for cheapest car insurance in Los Angeles? You're in the right place...",
+      
+      "requirements": "California requires minimum liability coverage of 15/30/5...",
+      
+      "faqs": [
+        { "question": "How do I find the cheapest car insurance in Los Angeles?", "answer": "To find the cheapest rates..." },
+        { "question": "What is the average car insurance cost in LA?", "answer": "The average driver pays around $1,847/year..." },
+        { "question": "Is minimum coverage enough in California?", "answer": "While 15/30/5 meets legal requirements..." },
+        { "question": "How can I lower my car insurance premiums?", "answer": "1. Compare quotes from multiple providers..." },
+        { "question": "What discounts are available in Los Angeles?", "answer": "Top discounts include safe driver (10-20%), multi-policy (10-25%)..." }
+      ],
+      
+      "tips": [
+        "Compare quotes from at least 5-7 different insurance companies",
+        "Ask about all available discounts including safe driver and good student",
+        "Consider raising your deductible to $1,000 to lower premiums",
+        "Bundle your auto insurance with home or renters insurance",
+        "Maintain a clean driving record - accidents increase rates 30-50%",
+        "Take defensive driving courses for 5-15% discount",
+        "Install anti-theft devices to reduce comprehensive costs"
+      ],
+      
+      "costBreakdown": [
+        { "factor": "Minimum Coverage", "impact": "$892/year", "description": "State required 15/30/5 liability only" },
+        { "factor": "Full Coverage", "impact": "$2,400/year", "description": "Includes collision and comprehensive" },
+        { "factor": "Good Credit", "impact": "Save 15-25%", "description": "Better credit scores get lower rates" },
+        { "factor": "Clean Record", "impact": "Save 20-40%", "description": "No accidents or violations in 3 years" },
+        { "factor": "Young Driver", "impact": "+50-100%", "description": "Drivers under 25 pay significantly more" }
+      ],
+      
+      "comparison": [
+        { 
+          "name": "State Farm", 
+          "strengths": ["Local agents", "Strong financial rating", "Good customer service"], 
+          "weaknesses": ["Higher rates for some drivers", "Limited online tools"], 
+          "bestFor": "Drivers who want personal service",
+          "priceRange": "$1,400-$2,100/year"
+        },
+        { 
+          "name": "GEICO", 
+          "strengths": ["Low rates", "Excellent mobile app", "Easy online quotes"], 
+          "weaknesses": ["Limited local agents", "Claims can be slow"], 
+          "bestFor": "Tech-savvy drivers seeking lowest rates",
+          "priceRange": "$1,200-$1,900/year"
+        }
+      ],
+      
+      "discounts": [
+        { "name": "Multi-Policy Bundle", "savings": "10-25%", "qualification": "Combine auto with home/renters", "isLocal": false },
+        { "name": "Safe Driver", "savings": "10-20%", "qualification": "Clean record 3+ years", "isLocal": false },
+        { "name": "California Good Driver", "savings": "20%", "qualification": "No accidents/violations 3+ years", "isLocal": true },
+        { "name": "Good Student", "savings": "8-15%", "qualification": "B average or better", "isLocal": false }
+      ],
+      
+      "localStats": [
+        { "stat": "Average Premium", "value": "$1,847/year", "impact": "Higher than national average", "comparison": "18% above $1,565 national avg" },
+        { "stat": "Uninsured Drivers", "value": "15%", "impact": "Increases costs for insured drivers", "comparison": "Higher than 12.6% national avg" },
+        { "stat": "Vehicle Theft Rate", "value": "425 per 100k", "impact": "Affects comprehensive rates", "comparison": "Among highest in California" },
+        { "stat": "Traffic Congestion", "value": "#1 Worst in US", "impact": "Higher accident risk", "comparison": "LA drivers lose 119 hrs/year" }
+      ],
+      
+      "coverageGuide": [
+        { "type": "Liability Only", "description": "Covers damage you cause to others", "recommended": "15/30/5 minimum", "whenNeeded": "Budget-conscious drivers with older vehicles" },
+        { "type": "Full Coverage", "description": "Liability + collision + comprehensive", "recommended": "100/300/100 + $500 deductibles", "whenNeeded": "Newer vehicles, financed/leased cars" },
+        { "type": "Uninsured Motorist", "description": "Protects you from uninsured drivers", "recommended": "Match liability limits", "whenNeeded": "Required in CA, highly recommended in LA" }
+      ],
+      
+      "claimsProcess": {
+        "steps": [
+          "Report the accident to police and exchange information",
+          "Document the scene with photos and witness contact info",
+          "Contact your insurance company within 24 hours",
+          "Get repair estimates from approved shops",
+          "Review settlement offer and negotiate if needed"
+        ],
+        "documents": ["Police report", "Photos of damage", "Medical records", "Repair estimates", "Proof of income (for lost wages)"],
+        "timeline": "Most claims resolved within 30-45 days",
+        "resources": ["California Department of Insurance", "DMV accident reporting guide"]
+      },
+      
+      "buyersGuide": {
+        "steps": [
+          "Assess your coverage needs based on vehicle value",
+          "Gather driving history and vehicle information",
+          "Get quotes from at least 5 different insurers",
+          "Compare coverage limits and deductibles",
+          "Ask about all available discounts",
+          "Check insurer financial ratings and reviews",
+          "Review policy carefully before signing"
+        ],
+        "lookFor": ["A-rated financial strength", "24/7 claims service", "Local agent availability", "Digital tools and mobile app"],
+        "redFlags": ["Unusually low quotes", "High complaint ratios", "Pressure to buy immediately", "Unclear coverage terms"],
+        "questions": ["What discounts do I qualify for?", "How does my deductible affect my premium?", "What's the claims process?"]
+      },
+      
+      "metaTags": {
+        "metaTitle": "Cheapest Car Insurance in Los Angeles, CA (2024) | Save $500+",
+        "metaDescription": "Find the cheapest car insurance in Los Angeles. Compare quotes from top providers. Average rates from $1,200/year. Get your free quote today!",
+        "metaKeywords": ["cheap car insurance los angeles", "affordable auto insurance", "LA car insurance rates"],
+        "ogTitle": "Cheapest Car Insurance in Los Angeles | Save $500/Year",
+        "ogDescription": "Compare affordable car insurance rates in LA from 50+ providers. Average savings $487/year."
+      }
+    },
+
+    "_section_11_content_sections": "=== PAGE BUILDER CONTENT SECTIONS (50+ Components) ===",
+    "content": [
+      {
+        "componentId": "hero-centered",
+        "props": {
+          "title": "Cheapest Car Insurance in Los Angeles",
+          "subtitle": "Compare rates from 50+ insurance providers and save up to $500/year",
+          "primaryCta": "Get Free Quotes",
+          "primaryCtaUrl": "/get-quote",
+          "backgroundType": "gradient",
+          "gradientFrom": "#0f172a",
+          "gradientTo": "#1e3a5f",
+          "showTrustBadges": true,
+          "showRating": true,
+          "ratingValue": 4.8,
+          "ratingCount": "12,500+ reviews"
+        }
+      },
+      {
+        "componentId": "content-text",
+        "props": {
+          "content": "{{ai_generated_intro}}",
+          "alignment": "left",
+          "maxWidth": "lg"
+        }
+      },
+      {
+        "componentId": "content-accordion",
+        "props": {
+          "title": "Frequently Asked Questions",
+          "subtitle": "Common questions about car insurance in Los Angeles",
+          "items": "{{ai_generated_faqs}}",
+          "includeSchema": true,
+          "style": "default"
+        }
+      },
+      {
+        "componentId": "stats-counter",
+        "props": {
+          "stats": [
+            { "value": "500", "label": "Average Savings", "prefix": "$", "suffix": "/year" },
+            { "value": "50", "label": "Insurance Partners", "suffix": "+" },
+            { "value": "1200000", "label": "Quotes Generated", "suffix": "+" },
+            { "value": "4.8", "label": "Customer Rating", "suffix": "/5" }
+          ],
+          "animate": true,
+          "backgroundColor": "#f8fafc"
+        }
+      },
+      {
+        "componentId": "content-comparison",
+        "props": {
+          "title": "Compare Top Insurance Providers",
+          "items": "{{ai_generated_comparison}}",
+          "highlightBest": true
+        }
+      },
+      {
+        "componentId": "cta-banner",
+        "props": {
+          "title": "Ready to Save on Car Insurance?",
+          "subtitle": "Get personalized quotes in 2 minutes",
+          "primaryCta": "Compare Quotes Now",
+          "primaryCtaUrl": "/get-quote",
+          "backgroundColor": "#0f172a",
+          "pattern": "dots"
+        }
+      }
+    ],
+
+    "_section_12_styling": "=== CUSTOM STYLING ===",
+    "customCss": "/* Custom CSS for this page */\n.hero-section { background-position: center; }\n.cta-button { font-weight: 600; }",
+    "customJs": "// Custom JavaScript\nconsole.log('Page loaded: Los Angeles Car Insurance');",
+    "bodyClasses": "page-car-insurance state-california city-los-angeles",
+
+    "_section_13_performance": "=== PERFORMANCE OPTIMIZATION ===",
+    "preloadImages": [
+      "https://cdn.example.com/hero-la.jpg",
+      "https://cdn.example.com/logo-statefarm.png"
+    ],
+    "prefetchPages": [
+      "/car-insurance/california",
+      "/get-quote"
+    ],
+
+    "_section_14_status": "=== PUBLISHING STATUS ===",
+    "isPublished": true,
+    "status": "PUBLISHED",
+    "publishedAt": "2024-01-15T10:00:00Z",
+    "scheduledAt": null,
+    "unpublishedAt": null,
+    
+    "isPasswordProtected": false,
+    "password": null,
+    "isHidden": false,
+    
+    "_section_15_ads": "=== ADS & MONETIZATION ===",
+    "showAds": true,
+    "adSettings": {
+      "displayPositions": ["header", "sidebar", "inline", "footer"],
+      "adDensity": "medium",
+      "excludeFromAds": false
+    },
+
+    "_section_16_tracking": "=== AI GENERATION TRACKING ===",
+    "isAiGenerated": true,
+    "aiModel": "deepseek/deepseek-r1:free",
+    "aiGeneratedAt": "2024-01-15T10:00:00Z",
+    "aiPromptVersion": "v2.1",
+    
+    "_section_17_analytics": "=== ANALYTICS (Auto-populated) ===",
+    "viewCount": 15420,
+    "uniqueViews": 12300,
+    "avgTimeOnPage": 185,
+    "bounceRate": 0.42,
+    "rating": 4.7,
+    "ratingCount": 89,
+    "shareCount": 245,
+
+    "_section_18_versioning": "=== VERSIONING ===",
+    "version": 3,
+    "internalNotes": "Updated with new 2024 rates and added GEICO comparison data. Optimized meta tags for 'cheapest' keyword.",
+
+    "_section_19_breadcrumbs": "=== BREADCRUMBS ===",
+    "breadcrumbs": [
+      { "label": "Home", "url": "/" },
+      { "label": "Car Insurance", "url": "/car-insurance" },
+      { "label": "California", "url": "/car-insurance/california" },
+      { "label": "Los Angeles", "url": null }
+    ]
+  }
+}
